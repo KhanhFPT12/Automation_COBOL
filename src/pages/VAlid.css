@@ -1,0 +1,17 @@
+@import './pages.css';
+
+.valid-suite { margin-bottom: 12px; padding: 16px 20px; }
+
+.suite-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.suite-header-left { display: flex; align-items: center; gap: 10px; }
+.suite-chevron { font-size: 16px; color: #6b7280; }
+.suite-name { font-weight: 600; color: #1a1a2e; font-size: 14px; }
+.suite-meta { font-size: 12px; color: #9ca3af; }
+.suite-counts { display: flex; gap: 12px; font-size: 13px; font-weight: 600; }

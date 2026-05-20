@@ -1,0 +1,44 @@
+@import './pages.css';
+
+.sprint-summary { margin-bottom: 20px; }
+
+.sprint-kpi-row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.sprint-kpi {
+  text-align: center;
+  min-width: 80px;
+}
+.sprint-kpi p { font-size: 12px; color: #6b7280; margin-top: 4px; }
+
+.sprint-card { margin-bottom: 12px; padding: 16px 20px; }
+
+.sprint-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sprint-header-left { display: flex; align-items: center; gap: 10px; }
+.sprint-chevron { font-size: 16px; color: #6b7280; }
+.sprint-id { font-weight: 600; color: #1a1a2e; font-size: 14px; margin-right: 12px; }
+.sprint-period { font-size: 12px; color: #9ca3af; }
+
+.assignee-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e17055;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  margin-right: 6px;
+}
