@@ -1,0 +1,1 @@
+python bms2react.py -bms "C:\Users\demolab\Desktop\FHM\CICS2React\CICS2React\py\convertTo_CICS_MainFrame\bms_src" -react "C:\Users\demolab\Desktop\FHM\CICS2React\CICS2React\frontend\src\pages\BMSPage"

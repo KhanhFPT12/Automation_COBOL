@@ -1,0 +1,132 @@
+     A*****************************************************************
+     A*                                                               *
+     A*   ｼｽﾃﾑ名:システム管理　　                                 *
+     A*  機能名 :ライブラリー申請管理　新規登録画面               *
+     A*   PGM ID. : LIB120AD                                          *
+     A*                                                               *
+     A*  作成日 : 2002.09.06.  T.M.S.MICHIZAWA                      *
+     A*                                                               *
+     A*****************************************************************
+     A*
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      PRINT(QPRINT)
+      **********************
+     A          R FMT01                     TEXT('入力画面'  )
+      **********************
+     A N01                                  CF01(01)
+     A                                      CF10(10)
+     A*
+     A                                  1  3'登　録'
+     A                                  1 27'ライブラリー申請登録'
+     A                                      DSPATR(HI RI)
+     A                                  1 58DATE
+     A                                      EDTCDE(Y)
+     A  01                              1 71'入　力'
+     A  02                              1 71'確　認'
+     A  03                              1 71'処理中'
+     A  03                                  COLOR(RED)
+     A*
+     A                                  3  5'ライブラリー：'
+     A            F1LIBL        10   B  3 22
+     A  01                                  DSPATR(UL CS)
+     A  11                                  DSPATR(RI PC)
+     A N01                                  DSPATR(PR)
+     A                                  3 36'申請者：'
+     A            F1SYNM        32   O  3 47
+     A*
+     A                                  5  5'テキスト記述：'
+     A            F1TEXT        50J  B  5 22
+     A  01                                  DSPATR(UL CS)
+     A N01                                  DSPATR(PR)
+     A*
+     A                                  7  5'使用目的　　：'
+     A            F1SYMK         1   B  7 22
+     A  01                                  DSPATR(UL CS)
+     A  12                                  DSPATR(RI PC)
+     A N01                                  DSPATR(PR)
+     A                                  7 25'1.本番用'
+     A                                  7 36'2.開発用'
+     A                                  7 47'3.テスト用'
+     A                                  7 60'4.移行用'
+     A                                  7 71'5.他'
+     A*
+     A                                  9  5'用　　途　　：'
+     A            F1YOT1        52J  B  9 22
+     A  01                                  DSPATR(UL CS)
+     A N01                                  DSPATR(PR)
+     A*
+     A            F1YOT2        52J  B 10 22
+     A  01                                  DSPATR(UL CS)
+     A N01                                  DSPATR(PR)
+     A*
+     A            F1YOT3        52J  B 11 22
+     A  01                                  DSPATR(UL CS)
+     A N01                                  DSPATR(PR)
+     A*
+     A            F1YOT4        50J  B 12 22
+     A  01                                  DSPATR(UL CS)
+     A N01                                  DSPATR(PR)
+     A*
+     A                                 13  5'備　　考　　：'
+     A            F1BIK1        52J  B 13 22
+     A  01                                  DSPATR(UL CS)
+     A N01                                  DSPATR(PR)
+     A*
+     A            F1BIK2        52J  B 14 22
+     A  01                                  DSPATR(UL CS)
+     A N01                                  DSPATR(PR)
+     A*
+     A            F1BIK3        52J  B 15 22
+     A  01                                  DSPATR(UL CS)
+     A N01                                  DSPATR(PR)
+     A*
+     A            F1BIK4        50J  B 16 22
+     A  01                                  DSPATR(UL CS)
+     A N01                                  DSPATR(PR)
+     A*
+     A                                 18  5'使用期限　　：'
+     A            F1SYYY         4Y 0B 18 22EDTCDE(3)
+     A  01                                  DSPATR(UL CS)
+     A  13                                  DSPATR(RI PC)
+     A N01                                  DSPATR(PR)
+     A                                 18 27'年'
+     A            F1SYMM         2Y 0B 18 32EDTCDE(3)
+     A  01                                  DSPATR(UL CS)
+     A  13                                  DSPATR(RI PC)
+     A N01                                  DSPATR(PR)
+     A                                 18 35'月'
+     A            F1SYDD         2Y 0B 18 40EDTCDE(3)
+     A  01                                  DSPATR(UL CS)
+     A  13                                  DSPATR(RI PC)
+     A N01                                  DSPATR(PR)
+     A                                 18 43'日'
+     A*
+     A                                 20  5'テープ保管　：+
+     A                                        日次　週次　月次　削除前'
+     A                                 21  6'(1.対象)'
+     A            F1TAPE         1   B 21 23
+     A  01                                  DSPATR(UL CS)
+     A  14                                  DSPATR(RI PC)
+     A N01                                  DSPATR(PR)
+     A            F2TAPE         1   B 21 29
+     A  01                                  DSPATR(UL CS)
+     A  15                                  DSPATR(RI PC)
+     A N01                                  DSPATR(PR)
+     A            F3TAPE         1   B 21 35
+     A  01                                  DSPATR(UL CS)
+     A  16                                  DSPATR(RI PC)
+     A N01                                  DSPATR(PR)
+     A            F4TAPE         1   B 21 41
+     A  01                                  DSPATR(UL CS)
+     A  17                                  DSPATR(RI PC)
+     A N01                                  DSPATR(PR)
+     A*                                21 47'保管テープ№：'
+     A*           F1TPNO        10   B 21 64
+     A* 01                                  DSPATR(UL CS)
+     A*N01                                  DSPATR(PR)
+     A*
+     A  02                             23  3'F1再入力'
+     A                                 23 16'F10取消し'
+     A*
+     A            F1MSG         78   O 24  2
+     A*
