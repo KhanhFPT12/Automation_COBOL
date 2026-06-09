@@ -1,0 +1,276 @@
+{
+  "info": {
+    "name": "ALSM API – Auth Module",
+    "description": "Automating Legacy System Modernization — Auth API collection.\n\nBase URL: {{baseUrl}}\n\nSetup:\n1. Set the `baseUrl` variable to `http://localhost:5000`\n2. After login, copy the token and set the `token` collection variable (or use the test script below that auto-sets it).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000", "type": "string" },
+    { "key": "token",   "value": "",                      "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api","health"] }
+      }
+    },
+    {
+      "name": "1. Register Individual",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Nguyen Van An\",\n  \"email\": \"nguyenvanan@example.com\",\n  \"password\": \"SecurePass123\",\n  \"phone\": \"0901234567\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/register/individual", "host": ["{{baseUrl}}"], "path": ["api","auth","register","individual"] }
+      },
+      "_comment_success": {
+        "status": 201,
+        "body": {
+          "success": true,
+          "message": "Registration successful! Please check your email to verify your account."
+        }
+      },
+      "_comment_errors": [
+        { "case": "Missing field",     "status": 400, "message": "All fields are required: fullName, email, password, phone." },
+        { "case": "Invalid email",     "status": 400, "message": "Please provide a valid email address." },
+        { "case": "Password too short","status": 400, "message": "Password must be at least 8 characters." },
+        { "case": "Duplicate email",   "status": 409, "message": "This email is already registered." }
+      ]
+    },
+    {
+      "name": "2. Register Enterprise",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"companyName\": \"FPT Software\",\n  \"businessEmail\": \"contact@fptsoftware.com\",\n  \"password\": \"EnterprisePass123\",\n  \"phone\": \"0281234567\",\n  \"representativeName\": \"Tran Thi Bich\",\n  \"representativePosition\": \"CTO\",\n  \"companySize\": \"500+\",\n  \"industry\": \"Banking & Finance\",\n  \"legacySystemType\": [\"COBOL\", \"BMS\", \"Mainframe\"],\n  \"targetTechStack\": [\"Java\", \"Spring Boot\", \"React\"]\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/register/enterprise", "host": ["{{baseUrl}}"], "path": ["api","auth","register","enterprise"] }
+      },
+      "_comment_notes": [
+        "legacySystemType and targetTechStack can be a string or an array",
+        "companySize enum: '1-10' | '11-50' | '51-200' | '201-500' | '500+'"
+      ],
+      "_comment_success": {
+        "status": 201,
+        "body": {
+          "success": true,
+          "message": "Enterprise registration successful! Please check your business email to verify your account."
+        }
+      }
+    },
+    {
+      "name": "3. Verify Email",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/verify-email/PASTE_RAW_TOKEN_FROM_EMAIL_HERE",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","auth","verify-email","PASTE_RAW_TOKEN_FROM_EMAIL_HERE"]
+        }
+      },
+      "_comment_notes": [
+        "Replace the last path segment with the raw token received in the verification email.",
+        "Token expires after 24 hours."
+      ],
+      "_comment_success": {
+        "status": 200,
+        "body": { "success": true, "message": "Email verified successfully! You can now log in." }
+      },
+      "_comment_errors": [
+        { "case": "Expired/invalid token", "status": 400, "message": "Verification link is invalid or has expired. Please request a new one." }
+      ]
+    },
+    {
+      "name": "4. Resend Verification Email",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"nguyenvanan@example.com\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/resend-verification-email", "host": ["{{baseUrl}}"], "path": ["api","auth","resend-verification-email"] }
+      },
+      "_comment_notes": [
+        "Rate limit: 5 requests per hour per IP.",
+        "Works for both individual email and businessEmail.",
+        "Returns generic message to prevent email enumeration."
+      ],
+      "_comment_success": {
+        "status": 200,
+        "body": { "success": true, "message": "Verification email sent. Please check your inbox." }
+      },
+      "_comment_errors": [
+        { "case": "Already verified", "status": 400, "message": "This email is already verified. You can log in." }
+      ]
+    },
+    {
+      "name": "5a. Login – Individual",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "  const body = pm.response.json();",
+              "  pm.collectionVariables.set('token', body.token);",
+              "  console.log('Token saved:', body.token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"nguyenvanan@example.com\",\n  \"password\": \"SecurePass123\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] }
+      },
+      "_comment_success": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "user": {
+            "_id": "6656abc...",
+            "fullName": "Nguyen Van An",
+            "email": "nguyenvanan@example.com",
+            "phone": "0901234567",
+            "accountType": "INDIVIDUAL",
+            "role": "USER",
+            "isEmailVerified": true,
+            "createdAt": "2026-06-09T00:00:00.000Z"
+          }
+        }
+      },
+      "_comment_errors": [
+        { "case": "Wrong credentials",   "status": 401, "message": "Invalid email or password." },
+        { "case": "Email not verified",  "status": 403, "message": "Please verify your email before logging in." }
+      ]
+    },
+    {
+      "name": "5b. Login – Enterprise",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "  const body = pm.response.json();",
+              "  pm.collectionVariables.set('token', body.token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"contact@fptsoftware.com\",\n  \"password\": \"EnterprisePass123\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] }
+      },
+      "_comment_notes": ["Use the businessEmail in the 'email' field — the API checks both fields."]
+    },
+    {
+      "name": "6. Forgot Password",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"nguyenvanan@example.com\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["api","auth","forgot-password"] }
+      },
+      "_comment_notes": [
+        "Rate limit: 5 requests per hour per IP.",
+        "Always returns 200 regardless of whether email exists (prevent enumeration).",
+        "Reset link expires after 15 minutes."
+      ],
+      "_comment_success": {
+        "status": 200,
+        "body": { "success": true, "message": "If that email is registered, a password reset link has been sent." }
+      }
+    },
+    {
+      "name": "7. Reset Password",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"password\": \"NewSecurePass456\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/reset-password/PASTE_RAW_TOKEN_FROM_EMAIL_HERE",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","auth","reset-password","PASTE_RAW_TOKEN_FROM_EMAIL_HERE"]
+        }
+      },
+      "_comment_notes": [
+        "Replace the last path segment with the raw token from the reset email.",
+        "Token expires 15 minutes after the forgot-password request."
+      ],
+      "_comment_success": {
+        "status": 200,
+        "body": { "success": true, "message": "Password reset successful! You can now log in with your new password." }
+      },
+      "_comment_errors": [
+        { "case": "Expired/invalid token", "status": 400, "message": "Password reset link is invalid or has expired." },
+        { "case": "Password too short",    "status": 400, "message": "Password must be at least 8 characters." }
+      ]
+    },
+    {
+      "name": "8. Get Me (Protected)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api","auth","me"] }
+      },
+      "_comment_notes": [
+        "Requires Bearer token in Authorization header.",
+        "Token is auto-saved by the Login request test script."
+      ],
+      "_comment_success": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "user": {
+            "_id": "6656abc...",
+            "fullName": "Nguyen Van An",
+            "email": "nguyenvanan@example.com",
+            "phone": "0901234567",
+            "accountType": "INDIVIDUAL",
+            "role": "USER",
+            "isEmailVerified": true,
+            "createdAt": "2026-06-09T00:00:00.000Z",
+            "updatedAt": "2026-06-09T00:00:00.000Z"
+          }
+        }
+      },
+      "_comment_errors": [
+        { "case": "No token",      "status": 401, "message": "Not authorized. No token provided." },
+        { "case": "Invalid token", "status": 401, "message": "Invalid token." },
+        { "case": "Expired token", "status": 401, "message": "Token expired. Please log in again." }
+      ]
+    }
+  ]
+}
