@@ -1,4 +1,4 @@
-export type ActivePage = 'home' | 'converter' | 'data-mapping' | 'auth-guide' | 'login' | 'register';
+export type ActivePage = 'home' | 'converter' | 'data-mapping' | 'auth-guide' | 'login' | 'register' | 'pricing' | 'payment';
 
 export interface UserSession {
   email: string | null;

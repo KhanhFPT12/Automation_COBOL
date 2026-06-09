@@ -8,6 +8,9 @@ import { AuthGuidePage } from "./page/AuthGuidePage";
 import { SignInPage } from "./page/SignInPage";
 import { CreateAccountPage } from "./page/CreateAccountPage";
 
+import { PricingPage } from "./page/PricingPage";
+import { PaymentPage } from "./page/PaymentPage";
+
 export default function App() {
   const { activePage } = useAppStore();
 
@@ -25,6 +28,10 @@ export default function App() {
         return <SignInPage />;
       case 'register':
         return <CreateAccountPage />;
+      case 'pricing':
+        return <PricingPage />;
+      case 'payment':
+        return <PaymentPage />;
       default:
         return <LandingPage />;
     }

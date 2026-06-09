@@ -18,9 +18,9 @@ export function Footer() {
         <div className="flex flex-col gap-1 items-center sm:items-start text-center sm:text-left">
           <div className="flex items-center gap-2">
             <img
-              src="/images/alsm-logo.png"
+              src="/images/alsm2-logo.png"
               alt="ALSM"
-              className="h-7 w-auto object-contain"
+              className="h-30 w-auto object-contain"
               style={{ mixBlendMode: 'multiply' }}
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />

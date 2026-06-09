@@ -17,9 +17,9 @@ export function Header() {
           id="logo-container"
         >
           <img
-            src="/images/alsm-logo.png"
+            src="/images/alsm2-logo.png"
             alt="ALSM - Automating Legacy System Modernization"
-            className="h-10 w-auto object-contain"
+            className="h-30 w-auto object-contain"
             style={{ mixBlendMode: 'multiply' }}
             onError={(e) => {
               const target = e.currentTarget;
@@ -50,6 +50,13 @@ export function Header() {
             className={`cursor-pointer transition-colors hover:text-sky-600 py-1.5 px-0.5 relative ${activePage === 'converter' ? 'text-sky-600 border-b-2 border-sky-600 font-semibold' : ''}`}
           >
             Solutions
+          </button>
+          <button 
+            id="nav-pricing"
+            onClick={() => setActivePage('pricing')}
+            className={`cursor-pointer transition-colors hover:text-sky-600 py-1.5 px-0.5 relative ${activePage === 'pricing' ? 'text-sky-600 border-b-2 border-sky-600 font-semibold' : ''}`}
+          >
+            Pricing
           </button>
           <button 
             id="nav-docs"
