@@ -1,75 +1,82 @@
-# React + TypeScript + Vite
+# ALSM – Automating Legacy System Modernization
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Project Structure
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+screen_web/
+├── frontend/          React + Vite + TypeScript + Tailwind CSS
+│   ├── src/
+│   ├── public/
+│   ├── index.html
+│   └── package.json
+│
+├── backend/           Node.js + Express + MongoDB
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   └── utils/
+│   ├── docs/          Postman collection
+│   └── package.json
+│
+├── package.json       Root scripts (run both together)
+└── .gitignore
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Quick Start
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. Install all dependencies
+```bash
+npm run install:all
 ```
+
+### 2. Configure environment
+```bash
+cp backend/.env.example backend/.env
+# Edit backend/.env with your MongoDB URI, JWT secret, email config
+```
+
+### 3. Run both frontend & backend simultaneously
+```bash
+# Install root devDependencies first (concurrently)
+npm install
+
+# Start both
+npm run dev
+```
+
+### Run individually
+```bash
+# Frontend only  →  http://localhost:5173
+npm run frontend
+
+# Backend only   →  http://localhost:5000
+npm run backend
+```
+
+## Tech Stack
+
+| Layer    | Technology                              |
+|----------|-----------------------------------------|
+| Frontend | React 18, Vite, TypeScript, Tailwind CSS, Zustand |
+| Backend  | Node.js, Express.js, MongoDB, Mongoose  |
+| Auth     | JWT, bcryptjs, Nodemailer               |
+
+## API Documentation
+
+Import `backend/docs/ALSM.postman_collection.json` into Postman.
+
+Base URL: `http://localhost:5000`
+
+| Method | Endpoint                              | Description              |
+|--------|---------------------------------------|--------------------------|
+| POST   | /api/auth/register/individual         | Register individual user |
+| POST   | /api/auth/register/enterprise         | Register enterprise      |
+| GET    | /api/auth/verify-email/:token         | Verify email             |
+| POST   | /api/auth/resend-verification-email   | Resend verification      |
+| POST   | /api/auth/login                       | Login                    |
+| POST   | /api/auth/forgot-password             | Request password reset   |
+| POST   | /api/auth/reset-password/:token       | Reset password           |
+| GET    | /api/auth/me                          | Get current user (auth)  |

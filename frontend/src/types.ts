@@ -4,6 +4,9 @@ export interface UserSession {
   email: string | null;
   name: string | null;
   isLoggedIn: boolean;
+  token: string | null;
+  accountType: 'INDIVIDUAL' | 'ENTERPRISE' | null;
+  role: 'USER' | 'ENTERPRISE_ADMIN' | null;
 }
 
 export interface CodeConversionState {

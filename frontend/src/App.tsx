@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useAppStore } from "./store";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -9,7 +10,11 @@ import { SignInPage } from "./page/SignInPage";
 import { CreateAccountPage } from "./page/CreateAccountPage";
 
 export default function App() {
-  const { activePage } = useAppStore();
+  const { activePage, initAuth } = useAppStore();
+
+  useEffect(() => {
+    initAuth();
+  }, []);
 
   const renderActiveView = () => {
     switch (activePage) {

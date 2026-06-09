@@ -1,13 +1,18 @@
 import type { ActivePage, CodeConversionState, UserSession } from './types';
 import { create } from "zustand";
+import { authApi } from './services/authApi';
 
 interface AppStore {
   activePage: ActivePage;
   setActivePage: (page: ActivePage) => void;
 
   session: UserSession;
-  login: (email: string, name: string) => void;
+  isAuthLoading: boolean;
+  authError: string | null;
+  loginUser: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  clearAuthError: () => void;
+  initAuth: () => Promise<void>;
 
   conversion: CodeConversionState;
   setSourceCode: (code: string) => void;
@@ -93,24 +98,76 @@ TAX      DC    PL3'125'         COMP-3 DECIMAL 1.25%`,
 
 const DEFAULT_SOURCE = SAMPLES.COBOL.customerRecord;
 
-export const useAppStore = create<AppStore>((set, get) => ({
+const EMPTY_SESSION: UserSession = {
+  email: null,
+  name: null,
+  isLoggedIn: false,
+  token: null,
+  accountType: null,
+  role: null,
+};
+
+export const useAppStore = create<AppStore>((set) => ({
   activePage: "home",
   setActivePage: (page) => set({ activePage: page }),
 
-  session: {
-    email: null,
-    name: null,
-    isLoggedIn: false,
+  session: EMPTY_SESSION,
+  isAuthLoading: false,
+  authError: null,
+
+  loginUser: async (email, password) => {
+    set({ isAuthLoading: true, authError: null });
+    try {
+      const data = await authApi.login(email, password);
+      const { token, user } = data;
+      localStorage.setItem('alsm_token', token);
+      set({
+        session: {
+          isLoggedIn: true,
+          token,
+          email: user.email || user.businessEmail || null,
+          name: user.fullName || user.companyName || null,
+          accountType: user.accountType,
+          role: user.role,
+        },
+        activePage: 'home',
+        isAuthLoading: false,
+        authError: null,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Login failed';
+      set({ authError: message, isAuthLoading: false });
+    }
   },
-  login: (email, name) =>
-    set({
-      session: { email, name, isLoggedIn: true },
-      activePage: "home",
-    }),
-  logout: () =>
-    set({
-      session: { email: null, name: null, isLoggedIn: false },
-    }),
+
+  logout: () => {
+    localStorage.removeItem('alsm_token');
+    set({ session: EMPTY_SESSION, activePage: 'home' });
+  },
+
+  clearAuthError: () => set({ authError: null }),
+
+  initAuth: async () => {
+    const token = localStorage.getItem('alsm_token');
+    if (!token) return;
+    try {
+      const data = await authApi.getMe();
+      const { user } = data;
+      set({
+        session: {
+          isLoggedIn: true,
+          token,
+          email: user.email || user.businessEmail || null,
+          name: user.fullName || user.companyName || null,
+          accountType: user.accountType,
+          role: user.role,
+        },
+      });
+    } catch {
+      localStorage.removeItem('alsm_token');
+      set({ session: EMPTY_SESSION });
+    }
+  },
 
   conversion: {
     sourceCode: DEFAULT_SOURCE,
