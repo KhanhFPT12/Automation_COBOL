@@ -1,0 +1,16 @@
+    A          R GETNAME
+     A                                  5  5'What is your name?'
+     A            NAME          25A  I  5 25
+     A                                      CHECK(LC)
+     A          R SHOWINFO                  CA03(03) CA05(05)
+     A                                  5  5'Hello '
+     A            NAME          25A  B  5 12
+     A                                      CHECK(LC)
+     A            CURTIME         T  O  9  2
+     A                                  9 15'Current time'
+     A                                      DSPATR(HI)
+     A            CONDITION     10A  B 10  2
+     A                                      CHECK(LC)
+     A                                 10 15'Current condition'
+     A                                 23  2'F3=Exit  F5=Refresh'
+     A                                      COLOR(BLU)
