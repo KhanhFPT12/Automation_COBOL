@@ -294,6 +294,25 @@ exports.login = async (req, res) => {
       });
     }
 
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'This account has been locked. Please contact an administrator.',
+      });
+    }
+
+    // Promote to ADMIN if this email was added to ADMIN_EMAILS after the
+    // account already existed (the pre-save hook only runs on save()).
+    const adminEmails = (process.env.ADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const candidateEmail = (user.email || user.businessEmail || '').toLowerCase();
+    if (user.role !== 'ADMIN' && adminEmails.includes(candidateEmail)) {
+      user.role = 'ADMIN';
+      await user.save({ validateBeforeSave: false });
+    }
+
     const token = generateToken(user._id);
 
     return res.status(200).json({

@@ -5,11 +5,16 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const converterRoutes = require('./routes/converterRoutes');
+const meetingRoutes = require('./routes/meetingRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const { startMeetingReminderJob } = require('./jobs/meetingReminder');
 
 const app = express();
 
 // ─── Connect Database ────────────────────────────────────────────
 connectDB();
+startMeetingReminderJob();
 
 // ─── Security Middleware ─────────────────────────────────────────
 app.use(helmet());
@@ -28,6 +33,9 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // ─── API Routes ──────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/bms-converter', converterRoutes);
+app.use('/api/meetings', meetingRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ─── Health Check ────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

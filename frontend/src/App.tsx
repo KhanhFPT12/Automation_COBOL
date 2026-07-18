@@ -9,6 +9,15 @@ import { AuthGuidePage } from "./page/AuthGuidePage";
 import { SignInPage } from "./page/SignInPage";
 import { CreateAccountPage } from "./page/CreateAccountPage";
 import { ProductExperiencePage } from "./page/ProductExperiencePage";
+import { BookMeetingPage } from "./page/BookMeetingPage";
+import { MyMeetingsPage } from "./page/MyMeetingsPage";
+import { AdminDashboardPage } from "./page/AdminDashboardPage";
+import { AdminUsersPage } from "./page/AdminUsersPage";
+import { AdminUserDetailPage } from "./page/AdminUserDetailPage";
+import { AdminMeetingsPage } from "./page/AdminMeetingsPage";
+import { AdminConversionsPage } from "./page/AdminConversionsPage";
+import { AdminReportsPage } from "./page/AdminReportsPage";
+import { AdminSettingsPage } from "./page/AdminSettingsPage";
 
 export default function App() {
   const { activePage, initAuth } = useAppStore();
@@ -33,6 +42,24 @@ export default function App() {
         return <SignInPage />;
       case 'register':
         return <CreateAccountPage />;
+      case 'book-meeting':
+        return <BookMeetingPage />;
+      case 'my-meetings':
+        return <MyMeetingsPage />;
+      case 'admin-dashboard':
+        return <AdminDashboardPage />;
+      case 'admin-users':
+        return <AdminUsersPage />;
+      case 'admin-user-detail':
+        return <AdminUserDetailPage />;
+      case 'admin-meetings':
+        return <AdminMeetingsPage />;
+      case 'admin-conversions':
+        return <AdminConversionsPage />;
+      case 'admin-reports':
+        return <AdminReportsPage />;
+      case 'admin-settings':
+        return <AdminSettingsPage />;
       default:
         return <LandingPage />;
     }

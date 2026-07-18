@@ -26,6 +26,7 @@
     "react-redux": "^9.3.0",
     "react-router-dom": "^7.18.1",
     "react-toastify": "^11.1.0",
+    "recharts": "^2.15.4",
     "redux-persist": "^6.0.0",
     "tippy.js": "^6.3.7",
     "zustand": "^5.0.14"

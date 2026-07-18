@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 export function FileConverter() {
-  const { setActivePage } = useAppStore();
+  const { setActivePage, session } = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -162,7 +162,7 @@ export function FileConverter() {
           <div className="mt-8 flex flex-wrap gap-4">
             <button
               id="playground-btn-book"
-              onClick={() => alert("Meeting booking window opened! Our modernization specialists will contact you at your registered email.")}
+              onClick={() => setActivePage(session.isLoggedIn ? "book-meeting" : "login")}
               className="cursor-pointer font-bold text-sm text-white bg-sky-600 hover:bg-sky-700 hover:shadow-lg transition px-6 py-3 rounded-xl shadow shadow-sky-600/10"
             >
               Book a meeting →

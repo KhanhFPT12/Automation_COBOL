@@ -6,8 +6,46 @@ const { promisify } = require('util');
 const { ZipArchive } = require('archiver');
 const unzipper = require('unzipper');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const ConversionLog = require('../models/ConversionLog');
 
 const execAsync = promisify(exec);
+
+// This endpoint is intentionally public (no `protect` middleware) so the
+// converter keeps working for anonymous visitors. We still want to
+// attribute a conversion to a user when they're logged in (for
+// convertCount / admin history), so this verifies the Bearer token if one
+// is present but never rejects the request when it's missing or invalid.
+async function getOptionalUser(req) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+    const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
+    return await User.findById(decoded.id);
+  } catch {
+    return null;
+  }
+}
+
+// Best-effort logging: a DB hiccup here must never break the actual
+// conversion the user is waiting on.
+async function logConversion({ user, fileType, screenCount, success, errorMessage }) {
+  try {
+    await ConversionLog.create({
+      user: user ? user._id : null,
+      fileType,
+      screenCount,
+      success,
+      errorMessage: errorMessage || '',
+    });
+    if (user && success) {
+      await User.updateOne({ _id: user._id }, { $inc: { convertCount: 1 } });
+    }
+  } catch (e) {
+    console.warn('Failed to write ConversionLog:', e.message);
+  }
+}
 
 // Override via env vars for machines/deployments where the layout differs;
 // default to this repo's own py/ and frontend/ folders so it works out of the box.
@@ -154,8 +192,16 @@ export default bmsRoutes;
 // Entry point for the generated project: land directly on the converted
 // screens (wrapped in the Sidebar/DefaultLayout) instead of the ALSM
 // marketing site that the template folder is cloned from.
+//
+// Only BMS screen routes are registered here. Everything else copied from
+// the template (the marketing pages, the DSPF demo screens, /convert,
+// /login, ...) has no matching <Route>, so a "*" fallback is required -
+// without it, any stray link or manual URL renders nothing (blank page).
 function generateMainEntry(screenNames) {
   const firstScreen = screenNames[0];
+  const fallbackElement = firstScreen
+    ? `<Navigate to="/${firstScreen}" replace />`
+    : '<DefaultLayout><p>No BMS screens were generated.</p></DefaultLayout>';
   return `import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -187,16 +233,35 @@ createRoot(document.getElementById('root')!).render(
                 />
               );
             })}
-            <Route
-              path="/"
-              element={${firstScreen ? `<Navigate to="/${firstScreen}" replace />` : '<DefaultLayout><p>No BMS screens were generated.</p></DefaultLayout>'}}
-            />
+            <Route path="/" element={${fallbackElement}} />
+            {/* Catch-all: any URL not among the converted BMS screens
+                (stray links, typos, leftover template pages) redirects here
+                instead of rendering a blank page. */}
+            <Route path="*" element={${fallbackElement}} />
           </Routes>
         </BrowserRouter>
       </PersistGate>
     </Provider>
   </StrictMode>
 );
+`;
+}
+
+// The full template's Sidebar lists links to the marketing site and the
+// DSPF demo screens (via sidebarMenuItems.tsx). None of those routes exist
+// in the cut-down router above, so those links would be dead ends (blank
+// page). Regenerate the menu to only list the screens actually converted.
+function generateSidebarMenuItems(screenNames) {
+  const items = screenNames
+    .map((name) => `  { text: '${name}', to: '/${name}', isPrivate: false },`)
+    .join('\n');
+  return `import { type SidebarItemProps } from './SidebarItem';
+
+const menuItems: SidebarItemProps[] = [
+${items}
+];
+
+export default menuItems;
 `;
 }
 
@@ -210,8 +275,10 @@ exports.convertBmsFiles = async (req, res) => {
   const projectDir = path.join(jobDir, 'project');       // Full React project
 
   const uploadedPaths = [];
+  let user = null;
 
   try {
+    user = await getOptionalUser(req);
     fs.mkdirSync(inputDir, { recursive: true });
     fs.mkdirSync(convertedDir, { recursive: true });
 
@@ -303,8 +370,24 @@ exports.convertBmsFiles = async (req, res) => {
       'utf8'
     );
 
+    // ── 7b. Regenerate the Sidebar menu so it only links to screens that
+    // actually exist in the router above (no dead links to /convert, the
+    // DSPF demo screens, etc.)
+    fs.writeFileSync(
+      path.join(projectDir, 'src', 'layouts', 'components', 'Sidebar', 'sidebarMenuItems.tsx'),
+      generateSidebarMenuItems(generatedScreens),
+      'utf8'
+    );
+
     // ── 8. Write README at project root ───────────────────────────────────
     fs.writeFileSync(path.join(projectDir, 'README.md'), README_CONTENT, 'utf8');
+
+    await logConversion({
+      user,
+      fileType: 'bms',
+      screenCount: generatedScreens.length,
+      success: true,
+    });
 
     // ── 9. Stream ZIP response ────────────────────────────────────────────
     res.setHeader('Content-Type', 'application/zip');
@@ -323,6 +406,13 @@ exports.convertBmsFiles = async (req, res) => {
 
   } catch (err) {
     console.error('BMS conversion error:', err);
+    await logConversion({
+      user,
+      fileType: 'bms',
+      screenCount: 0,
+      success: false,
+      errorMessage: err.message || 'Unknown error',
+    });
     if (!res.headersSent) {
       res.status(500).json({
         success: false,

@@ -1,27 +1,11 @@
+import { apiFetch as apiFetchAbsolute } from './apiClient';
+
 const BASE = '/api/auth';
 
-// ─── Generic fetch wrapper ────────────────────────────────────────
-async function apiFetch<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
-  const token = localStorage.getItem('alsm_token');
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-
-  const res = await fetch(`${BASE}${path}`, { ...options, headers });
-
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : {};
-
-  if (!res.ok) {
-    throw new Error(data.message || 'Request failed');
-  }
-  return data as T;
+// ─── Generic fetch wrapper (kept as a thin local alias so every call site
+// below is unchanged) ──────────────────────────────────────────────
+function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  return apiFetchAbsolute<T>(`${BASE}${path}`, options);
 }
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -33,7 +17,7 @@ export interface ApiUser {
   businessEmail?: string;
   phone: string;
   accountType: 'INDIVIDUAL' | 'ENTERPRISE';
-  role: 'USER' | 'ENTERPRISE_ADMIN';
+  role: 'USER' | 'ENTERPRISE_ADMIN' | 'ADMIN';
   isEmailVerified: boolean;
 }
 

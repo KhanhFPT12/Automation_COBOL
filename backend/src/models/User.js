@@ -59,12 +59,35 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['USER', 'ENTERPRISE_ADMIN'],
+      // ADMIN = ALSM platform staff (manages all users/meetings), distinct
+      // from ENTERPRISE_ADMIN which is just the representative of one
+      // customer's enterprise account.
+      enum: ['USER', 'ENTERPRISE_ADMIN', 'ADMIN'],
       required: [true, 'Role is required'],
     },
     isEmailVerified: {
       type: Boolean,
       default: false,
+    },
+
+    // ─── Account status (admin lock/unlock) ──────────────────────
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    // ─── Usage stats (surfaced in the Admin Dashboard) ───────────
+    convertCount: {
+      type: Number,
+      default: 0,
+    },
+    credits: {
+      type: Number,
+      default: null,
+    },
+    avatarUrl: {
+      type: String,
+      default: null,
     },
 
     // ─── Token fields (hidden from normal queries) ───────────────
@@ -77,10 +100,25 @@ const userSchema = new mongoose.Schema(
 );
 
 // ─── Enforce role based on accountType (extra security layer) ────
+// ADMIN is granted out-of-band (see promoteIfAdminEmail below) and must
+// never be clobbered back to USER/ENTERPRISE_ADMIN by this hook.
 userSchema.pre('save', function (next) {
-  if (this.isModified('accountType') || this.isNew) {
+  if (this.role !== 'ADMIN' && (this.isModified('accountType') || this.isNew)) {
     if (this.accountType === 'INDIVIDUAL') this.role = 'USER';
     if (this.accountType === 'ENTERPRISE') this.role = 'ENTERPRISE_ADMIN';
+  }
+  next();
+});
+
+// ─── Promote to platform ADMIN if the email is listed in ADMIN_EMAILS ────
+userSchema.pre('save', function (next) {
+  const adminEmails = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const candidateEmail = (this.email || this.businessEmail || '').toLowerCase();
+  if (candidateEmail && adminEmails.includes(candidateEmail)) {
+    this.role = 'ADMIN';
   }
   next();
 });

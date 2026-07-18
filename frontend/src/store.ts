@@ -1,6 +1,15 @@
-import type { ActivePage, CodeConversionState, UserSession } from './types';
+import type {
+  ActivePage,
+  AppNotification,
+  BookMeetingPayload,
+  CodeConversionState,
+  Meeting,
+  UserSession,
+} from './types';
 import { create } from "zustand";
 import { authApi } from './services/authApi';
+import { meetingApi } from './services/meetingApi';
+import { notificationApi } from './services/notificationApi';
 
 interface AppStore {
   activePage: ActivePage;
@@ -22,6 +31,28 @@ interface AppStore {
   ) => void;
   runConversion: () => Promise<void>;
   resetConversion: () => void;
+
+  // ─── Meetings (user-side) ──────────────────────────────────────
+  myMeetings: Meeting[];
+  isMeetingsLoading: boolean;
+  isBookingMeeting: boolean;
+  bookMeetingError: string | null;
+  bookMeetingSuccess: string | null;
+  fetchMyMeetings: () => Promise<void>;
+  bookMeeting: (payload: BookMeetingPayload) => Promise<boolean>;
+  cancelMeeting: (id: string) => Promise<void>;
+  clearBookMeetingStatus: () => void;
+
+  // ─── Notifications ──────────────────────────────────────────────
+  notifications: AppNotification[];
+  unreadNotificationCount: number;
+  fetchNotifications: () => Promise<void>;
+  markNotificationRead: (id: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
+
+  // ─── Admin: which user is open in Admin > User Management > Detail ────
+  adminSelectedUserId: string | null;
+  setAdminSelectedUserId: (id: string | null) => void;
 }
 
 export const SAMPLES = {
@@ -277,4 +308,93 @@ export const useAppStore = create<AppStore>((set, get) => ({
         progressStep: "",
       },
     })),
+
+  // ─── Meetings (user-side) ──────────────────────────────────────
+  myMeetings: [],
+  isMeetingsLoading: false,
+  isBookingMeeting: false,
+  bookMeetingError: null,
+  bookMeetingSuccess: null,
+
+  fetchMyMeetings: async () => {
+    set({ isMeetingsLoading: true });
+    try {
+      const { meetings } = await meetingApi.getMine();
+      set({ myMeetings: meetings, isMeetingsLoading: false });
+    } catch (err: unknown) {
+      console.error(err);
+      set({ isMeetingsLoading: false });
+    }
+  },
+
+  bookMeeting: async (payload) => {
+    set({ isBookingMeeting: true, bookMeetingError: null, bookMeetingSuccess: null });
+    try {
+      const data = await meetingApi.create(payload);
+      set((state) => ({
+        myMeetings: [data.meeting, ...state.myMeetings],
+        isBookingMeeting: false,
+        bookMeetingSuccess: data.message,
+      }));
+      return true;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to book meeting';
+      set({ isBookingMeeting: false, bookMeetingError: message });
+      return false;
+    }
+  },
+
+  cancelMeeting: async (id) => {
+    try {
+      const { meeting } = await meetingApi.cancel(id);
+      set((state) => ({
+        myMeetings: state.myMeetings.map((m) => (m._id === id ? meeting : m)),
+      }));
+    } catch (err: unknown) {
+      console.error(err);
+    }
+  },
+
+  clearBookMeetingStatus: () => set({ bookMeetingError: null, bookMeetingSuccess: null }),
+
+  // ─── Notifications ──────────────────────────────────────────────
+  notifications: [],
+  unreadNotificationCount: 0,
+
+  fetchNotifications: async () => {
+    try {
+      const { notifications, unreadCount } = await notificationApi.getMine();
+      set({ notifications, unreadNotificationCount: unreadCount });
+    } catch (err: unknown) {
+      console.error(err);
+    }
+  },
+
+  markNotificationRead: async (id) => {
+    try {
+      await notificationApi.markAsRead(id);
+      set((state) => ({
+        notifications: state.notifications.map((n) => (n._id === id ? { ...n, isRead: true } : n)),
+        unreadNotificationCount: Math.max(0, state.unreadNotificationCount - 1),
+      }));
+    } catch (err: unknown) {
+      console.error(err);
+    }
+  },
+
+  markAllNotificationsRead: async () => {
+    try {
+      await notificationApi.markAllAsRead();
+      set((state) => ({
+        notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
+        unreadNotificationCount: 0,
+      }));
+    } catch (err: unknown) {
+      console.error(err);
+    }
+  },
+
+  // ─── Admin: which user is open in Admin > User Management > Detail ────
+  adminSelectedUserId: null,
+  setAdminSelectedUserId: (id) => set({ adminSelectedUserId: id }),
 }));
