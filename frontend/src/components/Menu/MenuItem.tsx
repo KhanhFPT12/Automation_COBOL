@@ -1,9 +1,7 @@
-import { type ReactNode } from 'react';
 import { type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
 import styles from './Menu.module.css';
 import classNames from 'classnames/bind';
-import Button from '../Button';
 import { Link } from 'react-router-dom';
 
 export type MenuItemProps = {
@@ -17,7 +15,7 @@ export type MenuItemProps = {
 };
 
 const cx = classNames.bind(styles);
-export default function MenuItem({ text, to, icon, onClick }: MenuItemProps) {
+export default function MenuItem({ text, to, onClick }: MenuItemProps) {
   if (to) {
     return (
       <Link className={cx('menu-item')} to={to}>

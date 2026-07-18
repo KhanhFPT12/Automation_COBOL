@@ -1,69 +1,86 @@
-# Overview
+# Tổng quan
 
-This repository contains Python scripts for converting BMS and DSPF files to React and Java code.
+Kho mã nguồn này chứa các tập lệnh Python dùng để chuyển đổi các tệp BMS và DSPF thành mã React và Java.
 
-## Files
+## Các tệp
 
-- **bms2code.py:** Converts BMS files to React and Java code.
-- **bms2react.py:** Converts BMS files to React code only.
-- **dspf2code.py:** Converts DSPF files to React and Java code.
-- **dspf2react.py:** Converts DSPF files to React code only.
+* **bms2code.py:** Chuyển đổi các tệp BMS thành mã React và Java.
+* **bms2react.py:** Chuyển đổi các tệp BMS chỉ thành mã React.
+* **dspf2code.py:** Chuyển đổi các tệp DSPF thành mã React và Java.
+* **dspf2react.py:** Chuyển đổi các tệp DSPF chỉ thành mã React.
 
-# Usage
+# Hướng dẫn sử dụng
 
-## General Usage
+## Cách sử dụng chung
 
-1. Open a terminal window.
-2. Navigate to the directory containing the script you want to use.
-3. Run the script using the following command:
+1. Mở cửa sổ Terminal.
+2. Di chuyển đến thư mục chứa tập lệnh mà bạn muốn sử dụng.
+3. Chạy tập lệnh bằng lệnh sau:
 
-    ```bash
-    python <script_name>.py <arguments>
-    ```
+```bash
+python <script_name>.py <arguments>
+```
 
-    Replace `<script_name>` with the actual name of the script (e.g., `bms2react.py`) and provide the required arguments.
+Thay thế `<script_name>` bằng tên thực tế của tập lệnh (ví dụ: `bms2react.py`) và cung cấp các tham số cần thiết.
 
-## Specific Scripts
+## Các tập lệnh cụ thể
 
 ### bms2code.py
 
 ```bash
 python bms2code.py -bms <path_to_BMS_folder> -react <path_to_React_folder> -spring <path_to_Spring_folder> -package <Spring_package>
 ```
-- **path_to_BMS_folder** Path to the BMS folder. Converts BMS files to React and Java code.
-- **path_to_React_folder** Path to the React folder. Converts BMS files to React code only.
-- **path_to_Spring_folder** Path to the Spring folder (e.g., "C:/spring-project"). Converts DSPF files to React and Java code.
-- **Spring_package** Path to the Spring package (e.g., "fa.training"). Converts DSPF files to React and Java code.
+
+* **path_to_BMS_folder:** Đường dẫn đến thư mục BMS. Chuyển đổi các tệp BMS thành mã React và Java.
+* **path_to_React_folder:** Đường dẫn đến thư mục React. Dùng để lưu mã React được tạo.
+* **path_to_Spring_folder:** Đường dẫn đến dự án Spring (ví dụ: `C:/spring-project`). Dùng để tạo mã Java cho Spring.
+* **Spring_package:** Tên package của dự án Spring (ví dụ: `fa.training`). Dùng để tạo mã Java cho Spring.
 
 ### bms2react.py
 
 ```bash
-python bms2react.py -bms <path_to_BMS_folder> -react <path_to_React_folder> 
+python bms2react.py -bms <path_to_BMS_folder> -react <path_to_React_folder>
 ```
-- **path_to_BMS_folder** Path to the BMS folder. Converts BMS files to React code.
-- **path_to_React_folder** Path to the React folder. Converts BMS files to React code only.
+
+* **path_to_BMS_folder:** Đường dẫn đến thư mục BMS. Chuyển đổi các tệp BMS thành mã React.
+* **path_to_React_folder:** Đường dẫn đến thư mục React. Dùng để lưu mã React được tạo.
 
 ### dspf2code.py
 
 ```bash
 python dspf2code.py -dspf <path_to_DSPF_folder> -react <path_to_React_folder> -spring <path_to_Spring_folder> -package <Spring_package>
 ```
-- **path_to_DSPF_folder** Path to the DSPF folder. Converts DSPF files to React and Java code.
-- **path_to_React_folder** Path to the React folder. Converts DSPF files to React code only.
-- **path_to_Spring_folder** Path to the Spring folder (e.g., "C:/spring-project"). Converts DSPF files to React and Java code.
-- **Spring_package** Path to the Spring package (e.g., "fa.training"). Converts DSPF files to React and Java code.
 
+* **path_to_DSPF_folder:** Đường dẫn đến thư mục DSPF. Chuyển đổi các tệp DSPF thành mã React và Java.
+* **path_to_React_folder:** Đường dẫn đến thư mục React. Dùng để lưu mã React được tạo.
+* **path_to_Spring_folder:** Đường dẫn đến dự án Spring (ví dụ: `C:/spring-project`). Dùng để tạo mã Java cho Spring.
+* **Spring_package:** Tên package của dự án Spring (ví dụ: `fa.training`). Dùng để tạo mã Java cho Spring.
 
 ### dspf2react.py
 
 ```bash
-python dspf2react.py -bms <path_to_DSPF_folder> -react <path_to_React_folder> 
+python dspf2react.py -bms <path_to_DSPF_folder> -react <path_to_React_folder>
 ```
-- **path_to_DSPF_folder** Path to the DSPF folder. Converts DSPF files to React code.
-- **path_to_React_folder** Path to the React folder. Converts DSPF files to React code only.
+
+* **path_to_DSPF_folder:** Đường dẫn đến thư mục DSPF. Chuyển đổi các tệp DSPF thành mã React.
+* **path_to_React_folder:** Đường dẫn đến thư mục React. Dùng để lưu mã React được tạo.
+
 ---
-##### Notice:
-``` 
-**Revert to commit 4312e911 "generate function comment for python converter file" for react conversion without api call in frontend**
+
+##### Lưu ý:
+
 ```
-- Should replace ```if "name" in item and item["name"] and "type" in item and item["type"] in {'O', 'B'}``` to ```if "name" in item and item["name"] and "type" in item and item["type"] in {'I', 'B'}``` for correct output
+**Hoàn nguyên (revert) về commit 4312e911 "generate function comment for python converter file" để chuyển đổi React mà không gọi API ở phía frontend.**
+```
+
+* Để đầu ra chính xác, hãy thay thế:
+
+```python
+if "name" in item and item["name"] and "type" in item and item["type"] in {'O', 'B'}
+```
+
+bằng:
+
+```python
+if "name" in item and item["name"] and "type" in item and item["type"] in {'I', 'B'}
+```

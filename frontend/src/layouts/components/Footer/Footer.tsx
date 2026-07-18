@@ -2,7 +2,7 @@ import classNames from 'classnames/bind';
 
 import styles from './Footer.module.css';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../features/store';
+import { type RootState } from '../../../features/store';
 
 const cx = classNames.bind(styles);
 export default function Footer() {

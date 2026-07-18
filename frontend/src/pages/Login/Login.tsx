@@ -91,7 +91,7 @@ export default function Login() {
           type='text'
           name='username'
           id='username'
-          onChange={(x) => (formData.username = x.target.value)}
+          onChange={(x) => setFormData((state) => ({ ...state, username: x.target.value }))}
         />
       </GridItem>
 
@@ -103,7 +103,7 @@ export default function Login() {
           type='password'
           name='password'
           id='password'
-          onChange={(x) => (formData.password = x.target.value)}
+          onChange={(x) => setFormData((state) => ({ ...state, password: x.target.value }))}
         />
       </GridItem>
       <GridItem row={4} col={32}>

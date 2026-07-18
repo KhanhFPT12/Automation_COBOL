@@ -15,7 +15,6 @@ type SidebarProps = {
 const cx = classNames.bind(styles);
 export default function Sidebar({ classes }: SidebarProps) {
   const theme = useSelector((state: RootState) => state.theme);
-  const token = useSelector((state: RootState) => state.token);
   const [showMenu, setShowMenu] = useState(true);
 
   const handleToggleSidebar = () => {

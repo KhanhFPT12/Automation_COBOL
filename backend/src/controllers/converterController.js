@@ -9,10 +9,14 @@ const crypto = require('crypto');
 
 const execAsync = promisify(exec);
 
-const PYTHON_SCRIPT = path.join('C:', 'ALSM', 'CICS2React', 'py', 'convertTo_CICS_MainFrame', 'bms2react.py');
+// Override via env vars for machines/deployments where the layout differs;
+// default to this repo's own py/ and frontend/ folders so it works out of the box.
+const PYTHON_SCRIPT = process.env.PYTHON_BMS2REACT_SCRIPT
+  || path.resolve(__dirname, '..', '..', '..', 'py', 'convertTo_CICS_MainFrame', 'bms2react.py');
 
 // Source of the full CICS2React frontend template
-const FRONTEND_TEMPLATE = path.join('C:', 'ALSM', 'CICS2React', 'frontend');
+const FRONTEND_TEMPLATE = process.env.FRONTEND_TEMPLATE_DIR
+  || path.resolve(__dirname, '..', '..', '..', 'frontend');
 
 // Folders/files to skip when copying the template
 const COPY_EXCLUDE = new Set(['node_modules', 'dist', '.git', 'build', '.env', '.env.local']);
@@ -33,18 +37,14 @@ npm install
 npm run dev
 \`\`\`
 
-Sau đó mở trình duyệt tại: **http://localhost:5173**
+Sau đó mở trình duyệt tại: **http://localhost:5173** — trang chủ sẽ tự chuyển thẳng đến màn hình BMS đầu tiên đã convert.
 
 ---
 
 ## Điều hướng đến màn hình BMS
 
-Sau khi chạy, vào menu bên trái để chọn màn hình BMS cần xem.
-Hoặc truy cập trực tiếp qua URL, ví dụ:
-
-- \`http://localhost:5173/COSGN00\`
-- \`http://localhost:5173/COMEN01\`
-- \`http://localhost:5173/COACTUP\`
+Dùng menu bên trái (Sidebar) để chuyển qua các màn hình BMS khác đã được convert,
+hoặc truy cập trực tiếp qua URL theo tên màn hình, ví dụ \`http://localhost:5173/BNK1MAI\`.
 
 ---
 
@@ -151,6 +151,55 @@ export default bmsRoutes;
 `;
 }
 
+// Entry point for the generated project: land directly on the converted
+// screens (wrapped in the Sidebar/DefaultLayout) instead of the ALSM
+// marketing site that the template folder is cloned from.
+function generateMainEntry(screenNames) {
+  const firstScreen = screenNames[0];
+  return `import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from './features/store';
+import DefaultLayout from './layouts/DefaultLayout';
+import bmsRoutes from './pages/BMSPage/bmsRoutes';
+import './index.css';
+import './components/GlobalStyles/GlobalStyles.css';
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <BrowserRouter>
+          <Routes>
+            {bmsRoutes.map((route) => {
+              const Screen = route.component;
+              return (
+                <Route
+                  key={route.name}
+                  path={\`/\${route.name}\`}
+                  element={
+                    <DefaultLayout>
+                      <Screen />
+                    </DefaultLayout>
+                  }
+                />
+              );
+            })}
+            <Route
+              path="/"
+              element={${firstScreen ? `<Navigate to="/${firstScreen}" replace />` : '<DefaultLayout><p>No BMS screens were generated.</p></DefaultLayout>'}}
+            />
+          </Routes>
+        </BrowserRouter>
+      </PersistGate>
+    </Provider>
+  </StrictMode>
+);
+`;
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 exports.convertBmsFiles = async (req, res) => {
@@ -169,20 +218,22 @@ exports.convertBmsFiles = async (req, res) => {
     // ── 1. Save & extract uploaded files ─────────────────────────────────
     if (req.file) {
       uploadedPaths.push(req.file.path);
-      const ext = path.extname(req.file.originalname).toLowerCase();
+      const safeName = path.basename(req.file.originalname);
+      const ext = path.extname(safeName).toLowerCase();
       if (ext === '.zip') {
         await extractZip(req.file.path, inputDir);
       } else {
-        fs.copyFileSync(req.file.path, path.join(inputDir, req.file.originalname));
+        fs.copyFileSync(req.file.path, path.join(inputDir, safeName));
       }
     } else if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         uploadedPaths.push(file.path);
-        const ext = path.extname(file.originalname).toLowerCase();
+        const safeName = path.basename(file.originalname);
+        const ext = path.extname(safeName).toLowerCase();
         if (ext === '.zip') {
           await extractZip(file.path, inputDir);
         } else {
-          fs.copyFileSync(file.path, path.join(inputDir, file.originalname));
+          fs.copyFileSync(file.path, path.join(inputDir, safeName));
         }
       }
     } else {
@@ -245,10 +296,17 @@ exports.convertBmsFiles = async (req, res) => {
       'utf8'
     );
 
-    // ── 7. Write README at project root ───────────────────────────────────
+    // ── 7. Point the entry point at the converted screens, not the marketing site
+    fs.writeFileSync(
+      path.join(projectDir, 'src', 'main.tsx'),
+      generateMainEntry(generatedScreens),
+      'utf8'
+    );
+
+    // ── 8. Write README at project root ───────────────────────────────────
     fs.writeFileSync(path.join(projectDir, 'README.md'), README_CONTENT, 'utf8');
 
-    // ── 8. Stream ZIP response ────────────────────────────────────────────
+    // ── 9. Stream ZIP response ────────────────────────────────────────────
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', 'attachment; filename="bms-react-project.zip"');
 

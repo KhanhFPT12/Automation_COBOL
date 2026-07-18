@@ -3,10 +3,10 @@ import { useSelector } from 'react-redux';
 
 import { type RootState } from '../../features/store';
 
-export enum GridEnum {
-  COL_COUNT = 80,
-  ROW_COUNT = 24,
-}
+export const GridEnum = {
+  COL_COUNT: 80,
+  ROW_COUNT: 24,
+} as const;
 
 type GridItemProps = {
   row: number;

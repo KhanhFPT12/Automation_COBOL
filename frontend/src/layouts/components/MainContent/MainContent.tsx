@@ -3,7 +3,7 @@ import { type ReactNode } from 'react';
 
 import styles from './MainContent.module.css';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../features/store';
+import { type RootState } from '../../../features/store';
 import { GridMatrix } from '../../../components/GridSystem';
 
 type MainContentProps = {

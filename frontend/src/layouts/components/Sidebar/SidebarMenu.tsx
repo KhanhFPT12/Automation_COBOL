@@ -1,5 +1,5 @@
 import classNames from 'classnames/bind';
-import SidebarItem, { SidebarItemProps } from './SidebarItem';
+import SidebarItem, { type SidebarItemProps } from './SidebarItem';
 
 import styles from './Sidebar.module.css';
 

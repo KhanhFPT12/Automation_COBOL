@@ -5,7 +5,7 @@ import 'tippy.js/dist/tippy.css';
 import MenuItem, { type MenuItemProps } from './MenuItem';
 import MenuWrapper from './MenuWrapper';
 import styles from './Menu.module.css';
-import { ReactNode, useState } from 'react';
+import { useState } from 'react';
 import MenuHeader from './MenuHeader';
 import { useSelector } from 'react-redux';
 import { type RootState } from '../../features/store';

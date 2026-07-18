@@ -12,7 +12,7 @@ import MainContent from '../components/MainContent';
 import Button from '../../components/Button';
 import styles from './DefaultLayout.module.css';
 import Menu from '../../components/Menu/Menu';
-import { MenuItemProps } from '../../components/Menu/MenuItem';
+import { type MenuItemProps } from '../../components/Menu/MenuItem';
 import Toolbar from '../components/Toolbar';
 import { changeTheme, type Theme } from '../../features/themes/themesSlices';
 import 'react-toastify/dist/ReactToastify.css';

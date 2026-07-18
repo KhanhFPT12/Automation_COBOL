@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from 'react';
+import { type ChangeEvent, useEffect, useState } from 'react';
 import { GridItem } from '../../../components/GridSystem';
 import { toast } from 'react-toastify';
 import axios from 'axios';
@@ -93,7 +93,7 @@ export default function Create() {
       if (usernameParam && key === 'password') {
         continue;
       }
-      if (!currentUser[key]) {
+      if (!currentUser[key as keyof typeof currentUser]) {
         setErrorMessage((state) => ({
           ...state,
           [key]: key + ' is required',
@@ -119,9 +119,8 @@ export default function Create() {
     // handle submit ...
     // create case
     if (!usernameParam) {
-      let response;
       try {
-        response = await axios.post(
+        await axios.post(
           httpConfig.domain + httpConfig.resources.user,
           { ...currentUser },
           {
@@ -153,7 +152,7 @@ export default function Create() {
       // update case
     } else {
       try {
-        const response = await axios.put(
+        await axios.put(
           httpConfig.domain + httpConfig.resources.user,
           { ...currentUser },
           {

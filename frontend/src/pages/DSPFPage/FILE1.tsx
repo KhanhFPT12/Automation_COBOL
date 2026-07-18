@@ -120,7 +120,7 @@ f1msg: '',
     const handleSubmit = async (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
         for (const key in formData) {
-        if (!formData[key]) {
+        if (!formData[key as keyof typeof formData]) {
             return;
         }
         }

@@ -119,6 +119,8 @@ def extract_property(current_item):
             data["initial"] = re.sub(r"(\s*)(\*+)(\s*)", r"", get_value(search))
         elif start_with_uppercase_pattern.search(current_item):
             data["initial"] = re.sub(r"(\s*)(\*+)(\s*)", r" ", get_value(search))
+        else:
+            data["initial"] = get_value(search)
     if pattern_mapatts.search(current_item):
         search = pattern_mapatts.search(current_item).group(0)
         data["mapatts"] = get_value(search)
@@ -230,13 +232,13 @@ def convert_dfhmdf_input(define_data):
         else ""
     )
 
-    tsx_type = f'type=\'{"number" if "NUM" in define_data["attrb"] else "text"}\''
-    disabled = "disabled" if "PROT" in define_data["attrb"] else ""
+    tsx_type = f'type=\'{"number" if "NUM" in define_data.get("attrb", "") else "text"}\''
+    disabled = "disabled" if "PROT" in define_data.get("attrb", "") else ""
 
     if "name" in define_data:
         tsx_id = f'name=\'{define_data["name"]}\''.lower()
         tsx_name = f'id=\'{define_data["name"]}\''.lower()
-        if not disabled and "ASKIP" not in define_data["attrb"]:
+        if not disabled and "ASKIP" not in define_data.get("attrb", ""):
             on_change_function = "onChange={handleInputChange}"
             on_keydown_function = "onKeyDown={handleSubmit}"
     tag = f"<Input {max_length} {tsx_id} {tsx_name} {tsx_type} {color} {disabled} {on_change_function} {on_keydown_function}/>"
@@ -279,10 +281,11 @@ def convert_dfhmdf_label(define_data):
 
     tag = f"<label {color}>"
     end_tag = "</label>"
+    literal_content = f"{{{json.dumps(initial)}}}"
     react_code = f"""
 <GridItem col={{{col}}} row={{{row}}}>
     {tag}
-         {f"{{receivedData.{define_data.get('name').lower()} }}" if define_data.get("name") else initial} 
+         {f"{{receivedData.{define_data.get('name').lower()} }}" if define_data.get("name") else literal_content}
     {end_tag}
 </GridItem>
 {occurs}
@@ -394,16 +397,22 @@ def get_all_field_name(map_items):
             **item,
         }
         for item in map_items
-        if (("attrb" in item)
-        and "initial" not in item
+        if ("name" in item and item["name"])
         and (
-            item["attrb"]
-            and "PROT" not in item["attrb"]
-            and "ASKIP" not in item["attrb"]
+            (
+                ("attrb" in item)
+                and "initial" not in item
+                and (
+                    item["attrb"]
+                    and "PROT" not in item["attrb"]
+                    and "ASKIP" not in item["attrb"]
+                )
+            )
+            or (
+                ("attrb" in item and "UNPROT" in item["attrb"])
+                or ("attrb" in item and "IC" in item["attrb"])
+            )
         )
-        and ("name" in item and item["name"]))
-        or (("attrb" in item and "UNPROT" in item["attrb"]) or (
-        "attrb" in item and "IC" in item["attrb"]))
     ]
     return filtered_list
 
@@ -487,7 +496,7 @@ def extract_type_data(map_items, file_name):
     const handleSubmit = async (event: KeyboardEvent<HTMLInputElement>) => {{
     if (event.key === 'Enter') {{
         for (const key in formData) {{
-        if (!formData[key]) {{
+        if (!formData[key as keyof typeof formData]) {{
             return;
         }}
         }}

@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from 'react';
+import { type ChangeEvent, useEffect, useState } from 'react';
 import { GridItem } from '../../../components/GridSystem';
 import { toast } from 'react-toastify';
 import axios from 'axios';
@@ -68,7 +68,7 @@ export default function ChangePassword() {
   const handleSubmit = async () => {
     let hasError = false;
     for (const key in currentUser) {
-      if (!currentUser[key]) {
+      if (!currentUser[key as keyof typeof currentUser]) {
         setErrorMessage((state) => ({
           ...state,
           [key]: key + ' is required',

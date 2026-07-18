@@ -107,7 +107,7 @@ const EMPTY_SESSION: UserSession = {
   role: null,
 };
 
-export const useAppStore = create<AppStore>((set) => ({
+export const useAppStore = create<AppStore>((set, get) => ({
   activePage: "home",
   setActivePage: (page) => set({ activePage: page }),
 

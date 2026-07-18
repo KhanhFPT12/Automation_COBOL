@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux';
 import classNames from 'classnames/bind';
 
 import Button from '../../../components/Button';
-import { RootState } from '../../../features/store';
+import { type RootState } from '../../../features/store';
 import styles from './Toolbar.module.css';
 
 const cx = classNames.bind(styles);

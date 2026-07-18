@@ -5,6 +5,8 @@ package fa.training.model.bms;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import lombok.Data;
 import lombok.Builder;
 
@@ -25,6 +27,7 @@ public class Bnk1ccm {
 	private Integer dobmm;
 	private Integer dobyy;
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer screenIdField;
 
 }

@@ -5,6 +5,8 @@ package fa.training.model.dspf;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import lombok.Data;
 import lombok.Builder;
 
@@ -34,6 +36,7 @@ public class File1 {
 	private String f4tape;
 	private String f1tpno;
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer screenIdField;
 
 }

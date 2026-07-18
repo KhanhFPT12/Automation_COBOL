@@ -4,7 +4,7 @@ import { dateFormat, timeFormat } from '../../../utils/dateTimeFormat';
 import httpConfig from '../../../config/httpConfig';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../features/store';
+import { type RootState } from '../../../features/store';
 import { useParams } from 'react-router-dom';
 
 type UserDetailsParams = {
