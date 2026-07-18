@@ -68,7 +68,7 @@ nstmtyy: '',
 avbal: '',
 actbal: '',
 message: '',
-dummy: '',
+dummy: ' ',
 
     });
 
@@ -106,339 +106,339 @@ dummy: '',
     </Helmet>
     
 <GridItem col={1} row={1}>
-    <label style={{color:"blue"}}>
-         BNK1UA  
+    <label style={{color: "blue"}}>
+         {"BNK1UA "}
     </label>
 </GridItem>
 
     
 <GridItem col={17} row={1}>
-    <label style={{color:"red"}}>
-         {receivedData.company } 
+    <label style={{color: "red"}}>
+         {receivedData.company }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={3}>
-    <label style={{color:"turquoise"}}>
-         Please provide an ACCOUNT number. 
+    <label style={{color: "turquoise"}}>
+         {"Please provide an ACCOUNT number."}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={5}>
-    <label style={{color:"turquoise"}}>
-         ACCOUNT NUMBER 
+    <label style={{color: "turquoise"}}>
+         {"ACCOUNT NUMBER"}
     </label>
 </GridItem>
 
     
 <GridItem col={17} row={5}>
-    <Input maxLength={8} name='accno' id='accno' type='number' styles={{color:"green"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
+    <Input maxLength={8} name='accno' id='accno' type='number' styles={{color: "green", textDecoration: "underline"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
 </GridItem>
     
 <GridItem col={26} row={5}>
     <label >
-          
+         {""}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={7}>
-    <label style={{color:"neutral"}}>
-          Customer Number: 
+    <label style={{color: "inherit"}}>
+         {" Customer Number:"}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={7}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.custno } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.custno }
     </label>
 </GridItem>
 
     
 <GridItem col={32} row={7}>
     <label >
-          
+         {""}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={8}>
-    <label style={{color:"neutral"}}>
-          Sort Code      : 
+    <label style={{color: "inherit"}}>
+         {" Sort Code      :"}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={8}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.sortc } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.sortc }
     </label>
 </GridItem>
 
     
 <GridItem col={27} row={8}>
     <label >
-          
+         {""}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={9}>
-    <label style={{color:"neutral"}}>
-          Account Number : 
+    <label style={{color: "inherit"}}>
+         {" Account Number :"}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={9}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.accno2 } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.accno2 }
     </label>
 </GridItem>
 
     
 <GridItem col={32} row={9}>
     <label >
-          
+         {""}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={10}>
-    <label style={{color:"neutral"}}>
-          Account Type   : 
+    <label style={{color: "inherit"}}>
+         {" Account Type   :"}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={10}>
-    <Input maxLength={8} name='actype' id='actype' type='text' styles={{color:"green"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
+    <Input maxLength={8} name='actype' id='actype' type='text' styles={{color: "green", textDecoration: "underline"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
 </GridItem>
     
 <GridItem col={29} row={10}>
     <label >
-          
+         {""}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={11}>
-    <label style={{color:"neutral"}}>
-          Interest Rate  : 
+    <label style={{color: "inherit"}}>
+         {" Interest Rate  :"}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={11}>
-    <Input maxLength={7} name='intrt' id='intrt' type='text' styles={{color:"green"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
+    <Input maxLength={7} name='intrt' id='intrt' type='text' styles={{color: "green", textDecoration: "underline"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
 </GridItem>
     
 <GridItem col={28} row={11}>
     <label >
-          
+         {""}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={12}>
-    <label style={{color:"neutral"}}>
-          Account Opened : 
+    <label style={{color: "inherit"}}>
+         {" Account Opened :"}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={12}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.opendd } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.opendd }
     </label>
 </GridItem>
 
     
 <GridItem col={23} row={12}>
-    <label style={{color:"turquoise"}}>
-         / 
+    <label style={{color: "turquoise"}}>
+         {"/"}
     </label>
 </GridItem>
 
     
 <GridItem col={25} row={12}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.openmm } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.openmm }
     </label>
 </GridItem>
 
     
 <GridItem col={28} row={12}>
-    <label style={{color:"turquoise"}}>
-         / 
+    <label style={{color: "turquoise"}}>
+         {"/"}
     </label>
 </GridItem>
 
     
 <GridItem col={30} row={12}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.openyy } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.openyy }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={13}>
-    <label style={{color:"neutral"}}>
-          Overdraft limit: 
+    <label style={{color: "inherit"}}>
+         {" Overdraft limit:"}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={13}>
-    <Input maxLength={8} name='overdr' id='overdr' type='text' styles={{color:"green"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
+    <Input maxLength={8} name='overdr' id='overdr' type='text' styles={{color: "green", textDecoration: "underline"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
 </GridItem>
     
 <GridItem col={29} row={13}>
     <label >
-          
+         {""}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={14}>
-    <label style={{color:"neutral"}}>
-          Last statement : 
+    <label style={{color: "inherit"}}>
+         {" Last statement :"}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={14}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.lstmtdd } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.lstmtdd }
     </label>
 </GridItem>
 
     
 <GridItem col={23} row={14}>
-    <label style={{color:"turquoise"}}>
-         / 
+    <label style={{color: "turquoise"}}>
+         {"/"}
     </label>
 </GridItem>
 
     
 <GridItem col={25} row={14}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.lstmtmm } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.lstmtmm }
     </label>
 </GridItem>
 
     
 <GridItem col={28} row={14}>
-    <label style={{color:"turquoise"}}>
-         / 
+    <label style={{color: "turquoise"}}>
+         {"/"}
     </label>
 </GridItem>
 
     
 <GridItem col={30} row={14}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.lstmtyy } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.lstmtyy }
     </label>
 </GridItem>
 
     
 <GridItem col={35} row={14}>
     <label >
-          
+         {""}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={15}>
-    <label style={{color:"neutral"}}>
-          Next statement : 
+    <label style={{color: "inherit"}}>
+         {" Next statement :"}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={15}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.nstmtdd } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.nstmtdd }
     </label>
 </GridItem>
 
     
 <GridItem col={23} row={15}>
-    <label style={{color:"neutral"}}>
-         / 
+    <label style={{color: "inherit"}}>
+         {"/"}
     </label>
 </GridItem>
 
     
 <GridItem col={25} row={15}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.nstmtmm } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.nstmtmm }
     </label>
 </GridItem>
 
     
 <GridItem col={28} row={15}>
-    <label style={{color:"neutral"}}>
-         / 
+    <label style={{color: "inherit"}}>
+         {"/"}
     </label>
 </GridItem>
 
     
 <GridItem col={30} row={15}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.nstmtyy } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.nstmtyy }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={16}>
-    <label style={{color:"neutral"}}>
-          Available Bal  : 
+    <label style={{color: "inherit"}}>
+         {" Available Bal  :"}
     </label>
 </GridItem>
 
     
 <GridItem col={19} row={16}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.avbal } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.avbal }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={17}>
-    <label style={{color:"neutral"}}>
-          Actual Balance : 
+    <label style={{color: "inherit"}}>
+         {" Actual Balance :"}
     </label>
 </GridItem>
 
     
 <GridItem col={19} row={17}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.actbal } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.actbal }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={23}>
-    <label style={{color:"yellow"}}>
-         {receivedData.message } 
+    <label style={{color: "yellow", fontWeight: "bold"}}>
+         {receivedData.message }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={24}>
-    <label style={{color:"blue"}}>
-         F3=Exit   F12=Cancel 
+    <label style={{color: "blue"}}>
+         {"F3=Exit   F12=Cancel"}
     </label>
 </GridItem>
 
     
 <GridItem col={79} row={24}>
-    <label >
-         {receivedData.dummy } 
+    <label style={{visibility: "hidden"}}>
+         {receivedData.dummy }
     </label>
 </GridItem>
 

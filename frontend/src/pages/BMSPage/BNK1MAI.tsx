@@ -72,110 +72,110 @@ dummy: ' ',
     </Helmet>
     
 <GridItem col={1} row={1}>
-    <label style={{color:"blue"}}>
-         BNK1MA  
+    <label style={{color: "blue"}}>
+         {"BNK1MA "}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={1}>
-    <label style={{color:"red"}}>
-         {receivedData.company } 
+    <label style={{color: "red"}}>
+         {receivedData.company }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={3}>
-    <label style={{color:"turquoise"}}>
-         Select an option. Then press Enter. 
+    <label style={{color: "turquoise"}}>
+         {"Select an option. Then press Enter."}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={5}>
-    <label style={{color:"turquoise"}}>
-         Action . . . . 
+    <label style={{color: "turquoise"}}>
+         {"Action . . . ."}
     </label>
 </GridItem>
 
     
 <GridItem col={16} row={5}>
-    <Input maxLength={1} name='action' id='action' type='number' styles={{color:"green"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
+    <Input maxLength={1} name='action' id='action' type='number' styles={{color: "green", textDecoration: "underline"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
 </GridItem>
     
 <GridItem col={18} row={5}>
-    <label style={{color:"neutral"}}>
-         1.  Display/Delete/Update CUSTOMER information 
+    <label style={{color: "inherit"}}>
+         {"1.  Display/Delete/Update CUSTOMER information"}
     </label>
 </GridItem>
 
     
 <GridItem col={18} row={6}>
-    <label style={{color:"neutral"}}>
-         2.  Display/Delete ACCOUNT information 
+    <label style={{color: "inherit"}}>
+         {"2.  Display/Delete ACCOUNT information"}
     </label>
 </GridItem>
 
     
 <GridItem col={18} row={7}>
-    <label style={{color:"neutral"}}>
-         3.  Create CUSTOMER 
+    <label style={{color: "inherit"}}>
+         {"3.  Create CUSTOMER"}
     </label>
 </GridItem>
 
     
 <GridItem col={18} row={8}>
-    <label style={{color:"neutral"}}>
-         4.  Create ACCOUNT 
+    <label style={{color: "inherit"}}>
+         {"4.  Create ACCOUNT"}
     </label>
 </GridItem>
 
     
 <GridItem col={18} row={9}>
-    <label style={{color:"neutral"}}>
-         5.  Update ACCOUNT 
+    <label style={{color: "inherit"}}>
+         {"5.  Update ACCOUNT"}
     </label>
 </GridItem>
 
     
 <GridItem col={18} row={10}>
-    <label style={{color:"neutral"}}>
-         6.  Credit/Debit funds to an ACCOUNT 
+    <label style={{color: "inherit"}}>
+         {"6.  Credit/Debit funds to an ACCOUNT"}
     </label>
 </GridItem>
 
     
 <GridItem col={18} row={11}>
-    <label style={{color:"neutral"}}>
-         7.  Transfer funds 
+    <label style={{color: "inherit"}}>
+         {"7.  Transfer funds"}
     </label>
 </GridItem>
 
     
 <GridItem col={18} row={13}>
-    <label style={{color:"neutral"}}>
-         A.  Look up Accounts with Customer Number 
+    <label style={{color: "inherit"}}>
+         {"A.  Look up Accounts with Customer Number"}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={23}>
-    <label style={{color:"yellow"}}>
-         {receivedData.message } 
+    <label style={{color: "yellow", fontWeight: "bold"}}>
+         {receivedData.message }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={24}>
-    <label style={{color:"blue"}}>
-         F3=Exit   F12=Cancel 
+    <label style={{color: "blue"}}>
+         {"F3=Exit   F12=Cancel"}
     </label>
 </GridItem>
 
     
 <GridItem col={79} row={24}>
-    <label >
-         {receivedData.dummy } 
+    <label style={{visibility: "hidden"}}>
+         {receivedData.dummy }
     </label>
 </GridItem>
 

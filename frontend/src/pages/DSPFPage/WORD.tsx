@@ -72,12 +72,6 @@ id_cli: '',
         <title>WORD</title>
     </Helmet>
      
-        <GridItem col={151738} row={20070809}>
-            <label >
-                03 EXIT
-            </label>
-        </GridItem>
-            
         <GridItem col={2} row={22}>
             <label >
                 _______________________________________________________________________________

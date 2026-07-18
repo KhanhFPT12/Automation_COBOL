@@ -72,61 +72,61 @@ dummy: ' ',
     </Helmet>
     
 <GridItem col={1} row={1}>
-    <label style={{color:"blue"}}>
-         BNK1ACC 
+    <label style={{color: "blue"}}>
+         {"BNK1ACC"}
     </label>
 </GridItem>
 
     
 <GridItem col={14} row={1}>
-    <label style={{color:"red"}}>
-         {receivedData.company } 
+    <label style={{color: "red"}}>
+         {receivedData.company }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={3}>
-    <label style={{color:"turquoise"}}>
-         Provide a Customer number. Then press Enter. 
+    <label style={{color: "turquoise"}}>
+         {"Provide a Customer number. Then press Enter."}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={5}>
-    <label style={{color:"turquoise"}}>
-         CUSTOMER NUMBER 
+    <label style={{color: "turquoise"}}>
+         {"CUSTOMER NUMBER"}
     </label>
 </GridItem>
 
     
 <GridItem col={17} row={5}>
-    <Input maxLength={10} name='custno' id='custno' type='number' styles={{color:"green"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
+    <Input maxLength={10} name='custno' id='custno' type='number' styles={{color: "green", textDecoration: "underline"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
 </GridItem>
     
 <GridItem col={28} row={5}>
     <label >
-          
+         {""}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={8}>
-    <label style={{color:"neutral"}}>
-         SORT CODE   ACCOUNT NUMBER   ACCOUNT TYPE 
+    <label style={{color: "inherit"}}>
+         {"SORT CODE   ACCOUNT NUMBER   ACCOUNT TYPE"}
     </label>
 </GridItem>
 
     
 <GridItem col={43} row={8}>
-    <label style={{color:"neutral"}}>
-            AVAIL BALANCE   ACTUAL BALANCE 
+    <label style={{color: "inherit"}}>
+         {"   AVAIL BALANCE   ACTUAL BALANCE"}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={9}>
-    <label style={{color:"neutral"}}>
-         {receivedData.account } 
+    <label style={{color: "inherit"}}>
+         {receivedData.account }
     </label>
 </GridItem>
 
@@ -172,22 +172,22 @@ dummy: ' ',
 
     
 <GridItem col={1} row={23}>
-    <label style={{color:"yellow"}}>
-         {receivedData.message } 
+    <label style={{color: "yellow", fontWeight: "bold"}}>
+         {receivedData.message }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={24}>
-    <label style={{color:"blue"}}>
-         F3=Exit   F12=Cancel 
+    <label style={{color: "blue"}}>
+         {"F3=Exit   F12=Cancel"}
     </label>
 </GridItem>
 
     
 <GridItem col={79} row={24}>
-    <label >
-         {receivedData.dummy } 
+    <label style={{visibility: "hidden"}}>
+         {receivedData.dummy }
     </label>
 </GridItem>
 

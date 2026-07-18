@@ -30,7 +30,6 @@ f1tape: string,
 f2tape: string,
 f3tape: string,
 f4tape: string,
-f1tpno: string,
 
     }
 
@@ -54,7 +53,6 @@ f1tape: string,
 f2tape: string,
 f3tape: string,
 f4tape: string,
-f1tpno: string,
 f1msg: string,
 
     }
@@ -79,7 +77,6 @@ f1tape: '',
 f2tape: '',
 f3tape: '',
 f4tape: '',
-f1tpno: '',
 
     });
     const [receivedData, setReceivedData] = useState<formOutput>(
@@ -103,7 +100,6 @@ f1tape: '',
 f2tape: '',
 f3tape: '',
 f4tape: '',
-f1tpno: '',
 f1msg: '',
 
     });
@@ -354,16 +350,6 @@ f1msg: '',
             
         <GridItem col={41} row={21}>
             <Input maxLength={1} id='f4tape' name='f4tape' value={formData.f4tape } onChange={handleInputChange} onKeyDown={handleSubmit}/>
-        </GridItem>
-            
-        <GridItem col={47} row={21}>
-            <label >
-                保管テープ№：
-            </label>
-        </GridItem>
-            
-        <GridItem col={64} row={21}>
-            <Input maxLength={10} id='f1tpno' name='f1tpno' value={formData.f1tpno } onChange={handleInputChange} onKeyDown={handleSubmit}/>
         </GridItem>
             
         <GridItem col={3} row={23}>

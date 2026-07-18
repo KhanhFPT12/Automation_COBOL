@@ -272,6 +272,13 @@ input[type="number"]::-webkit-outer-spin-button {
   border-bottom: 1px dashed var(--mainframe-white-foreground);
 }
 
+/* BMS HILIGHT=BLINK fields */
+@keyframes bms-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 /* Grid system */
 .grid-item {
   /* display: grid; */

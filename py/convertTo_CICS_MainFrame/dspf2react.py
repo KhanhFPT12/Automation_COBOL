@@ -152,6 +152,98 @@ def extract_property(current_item):
     return data
 
 
+# A DDS comment line: an "A" specification line whose sequence-number/name
+# columns start with "*". These carry no field/record data and must never be
+# parsed as one (a prior bug let timestamp comments like
+# "A*%%TS SD 20070809 151738 ..." be mistaken for a field at row 20070809).
+COMMENT_LINE = re.compile(r"^\s*A\*")
+
+# A record-format header line, e.g. "A          R GETNAME" or "A R LIST SFL".
+RECORD_HEADER = re.compile(r"^\s*A\s+R\s+(\w+)(.*)$")
+
+
+def extract_map_items_from_lines(lines):
+    """
+    Extracts a list of DSPF item properties from an in-memory list of lines
+    belonging to a single record format.
+
+    Args:
+    - lines (list of str): Lines to parse (comment lines already excluded).
+
+    Returns:
+    - list: List of dictionaries containing DSPF item properties.
+    """
+    map_items = []
+    current_item = ""
+    new_item = ""
+    pattern = re.compile(r"A\*{0,1}\s+.{2,}\s{1}\d+\s+\d+.*")
+    for line in lines:
+        result = pattern.search(line)
+        if result:
+            new_item += line
+        else:
+            current_item += line
+        if new_item:
+            data = extract_property(current_item)
+            map_items.append(data)
+            current_item = new_item
+            new_item = ""
+    data = extract_property(current_item)
+    map_items.append(data)
+    return map_items
+
+
+def split_by_record(file_path):
+    """
+    Splits a DSPF file into blocks per record format (DDS "R" specification).
+
+    Multiple record formats in one physical file usually mean multiple,
+    sequentially-displayed screens (e.g. a name prompt, then a result panel).
+    The exception is the subfile pattern (a record flagged SFL/SFLCTL): those
+    records are always displayed together as one interactive screen, so they
+    are kept merged instead of being split apart.
+
+    Args:
+    - file_path (str): Path to the DSPF file.
+
+    Returns:
+    - list: List of (record_name, lines) tuples. record_name is None when
+      the file has no (or only one) record format.
+    """
+    with codecs.open(file_path, "r", encoding="utf-8") as file:
+        raw_lines = file.readlines()
+
+    blocks = []
+    current_name = None
+    current_lines = []
+    has_subfile = False
+    for line in raw_lines:
+        if COMMENT_LINE.match(line):
+            continue
+        header = RECORD_HEADER.match(line)
+        if header:
+            if "SFL" in header.group(2):
+                has_subfile = True
+            if current_name is not None or current_lines:
+                blocks.append((current_name, current_lines))
+            current_name = header.group(1)
+            current_lines = []
+        else:
+            current_lines.append(line)
+    blocks.append((current_name, current_lines))
+
+    if has_subfile:
+        merged_lines = []
+        for _, lines in blocks:
+            merged_lines.extend(lines)
+        return [(None, merged_lines)]
+
+    real_blocks = [(name, lines) for name, lines in blocks if name is not None]
+    if not real_blocks:
+        return [(None, blocks[0][1] if blocks else [])]
+    return real_blocks
+
+
 def extract_map_items(file_path):
     """
     Reads a DSPF file and extracts a list of DSPF item properties.
@@ -162,28 +254,9 @@ def extract_map_items(file_path):
     Returns:
     - list: List of dictionaries containing DSPF item properties.
     """
-    map_items = []
-    # codecs.open("myfile.txt","r",encoding='utf-8')
     with codecs.open(file_path, "r", encoding="utf-8") as file:
-        current_item = ""
-        new_item = ""
-        # while True:
-        for index, line in enumerate(file):
-            pattern = re.compile(r"A\*{0,1}\s+.{2,}\s{1}\d+\s+\d+.*")
-            result = pattern.search(line)
-            if result:
-                new_item += line
-            else:
-                current_item += line
-            if new_item:
-                data = extract_property(current_item)
-                map_items.append(data)
-                current_item = new_item
-                new_item = ""
-        data = extract_property(current_item)
-        map_items.append(data)
-        file.close()
-    return map_items
+        raw_lines = [line for line in file if not COMMENT_LINE.match(line)]
+    return extract_map_items_from_lines(raw_lines)
 
 
 def convert_dspf_item(define_data):
@@ -338,15 +411,28 @@ def extract_type_data(map_items, file_name):
     for item in output_fields:
         react_type_output_initial += f"{item['name'].lower()}: { repr(item.get('initial')) if item.get('initial') else repr('')},\n"
 
+    # A screen with no output fields (e.g. a pure input/prompt panel) has
+    # nothing to store the response in, so receivedData/setReceivedData must
+    # be omitted entirely -- declaring them unused would fail the strict
+    # noUnusedLocals build check.
+    received_data_state = (
+        f"""
+    const [receivedData, setReceivedData] = useState<formOutput>(
+     {{
+        {react_type_output_initial}
+    }});"""
+        if output_fields
+        else ""
+    )
+    set_received_data_call = (
+        "\n        setReceivedData(_state => response.data);" if output_fields else ""
+    )
+
     handle_data = f"""{""}
     const [formData, setFormData] = useState<formInput>(
     {{
         {react_type_input_initial}
-    }});
-    const [receivedData, setReceivedData] = useState<formOutput>(
-     {{
-        {react_type_output_initial}
-    }});
+    }});{received_data_state}
 
     const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {{
     setFormData((state) => {{
@@ -365,12 +451,11 @@ def extract_type_data(map_items, file_name):
         }}
         }}
 
-        const response = await axios.post(
+        {"const response = " if output_fields else ""}await axios.post(
         httpConfig.domain + '/{file_name.capitalize()}',
         formData
         );
-
-        setReceivedData(_state => response.data);
+{set_received_data_call}
     }}
     }};
     """
@@ -381,14 +466,22 @@ def extract_type_data(map_items, file_name):
     react_type_output = ""
     for item in output_fields:
         react_type_output += f"{item['name'].lower()}: string,\n"
+    # formOutput is only referenced (via useState<formOutput>) when there is
+    # at least one output field; an unused type declaration otherwise fails
+    # the strict noUnusedLocals build check.
+    form_output_type = (
+        f"""
+    type formOutput = {{
+        {react_type_output}
+    }}"""
+        if output_fields
+        else ""
+    )
     react_code = f"""
     type formInput = {{
         {react_type_input}
     }}
-
-    type formOutput = {{
-        {react_type_output}
-    }}
+{form_output_type}
     """
     return react_code + handle_data
 
@@ -449,39 +542,42 @@ export default function {component_name}() {{
     return react_component
 
 
-def parse_dspf_2_tsx(dspf_file, tsx_file):
+def parse_dspf_2_tsx(dspf_file, tsx_directory):
     """
-    Parses a DSPF file and generates a corresponding React component file.
+    Parses a DSPF file and generates one React component per logical screen
+    (record format) it contains.
 
     Args:
     - dspf_file (str): Path to the DSPF file.
-    - tsx_file (str): Path to the output React component file.
+    - tsx_directory (str): Directory the generated .tsx file(s) are written to.
 
     Returns:
-    - dict: Information about the generated React component.
+    - list: Information (dict with "name") about each generated React component.
     """
-    desired_object = {}
+    results = []
     try:
-        map_items = extract_map_items(dspf_file)
-        react_items = convert_react_items(map_items)
-        desired_object = {
-            "name": dspf_file.replace(os.path.abspath(os.path.dirname(dspf_file)), "")
-            .replace(".dspf", "")
-            .replace("/", "")
-            .replace("\\", "")
-        }
-        rsx_file_content = combine_rsx_code(
-            react_items,
-            desired_object["name"],
-            extract_type_data(map_items, desired_object["name"]),
-        )
-        with codecs.open(f"{tsx_file}", "w", encoding="utf-8") as file:
-            file.write(f"{rsx_file_content}")
-        file.close()
+        base_name = os.path.splitext(os.path.basename(dspf_file))[0]
+        blocks = split_by_record(dspf_file)
+        multi = len(blocks) > 1
+        for record_name, lines in blocks:
+            component_name = (
+                f"{base_name}_{record_name}" if multi and record_name else base_name
+            )
+            map_items = extract_map_items_from_lines(lines)
+            react_items = convert_react_items(map_items)
+            rsx_file_content = combine_rsx_code(
+                react_items,
+                component_name,
+                extract_type_data(map_items, component_name),
+            )
+            tsx_file = os.path.join(tsx_directory, f"{component_name}.tsx")
+            with codecs.open(tsx_file, "w", encoding="utf-8") as file:
+                file.write(f"{rsx_file_content}")
+            results.append({"name": component_name})
     except Exception as exception:
         print(exception)
-        return None
-    return desired_object
+        return []
+    return results
 
 
 def process_file_dspf(dspf_file, dspf_directory, react_directory):
@@ -494,16 +590,15 @@ def process_file_dspf(dspf_file, dspf_directory, react_directory):
     - react_directory (str): Path to the React folder.
 
     Returns:
-    - dict: Information about the generated React component.
+    - list: Information about the generated React component(s).
     """
     react_path = dspf_file.replace(f"{dspf_directory}", f"{react_directory}")
-    tsx_file = os.path.splitext(react_path)[0] + ".tsx"
-    tsx_directory = os.path.dirname(tsx_file)
+    tsx_directory = os.path.dirname(react_path)
     os.makedirs(tsx_directory, exist_ok=True)
-    tsx = parse_dspf_2_tsx(dspf_file, tsx_file)
-    if not tsx:
+    results = parse_dspf_2_tsx(dspf_file, tsx_directory)
+    if not results:
         print(f"\033[91m{dspf_file}\033[0m")
-    return tsx
+    return results
 
 
 def export_react_router(dfhmsd, tsx_directory):
@@ -593,7 +688,7 @@ def list_file_in_input_source(dspf_directory, react_directory):
             if file.endswith(".dspf"):
                 dspf_files.append(os.path.join(root, file))
     for dspf_file in dspf_files:
-        dfhmsd_list.append(
+        dfhmsd_list.extend(
             process_file_dspf(dspf_file, dspf_directory, react_directory)
         )
 

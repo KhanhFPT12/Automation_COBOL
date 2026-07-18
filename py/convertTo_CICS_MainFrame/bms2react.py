@@ -64,6 +64,7 @@ def extract_property(current_item):
     pattern_title = re.compile(r"TITLE \'.*\'", re.DOTALL)
     pattern_title = re.compile(r"TITLE \'(.+?)\'")
     pattern_color = re.compile(r"COLOR\s*=\s*([A-Za-z0-9]+)")
+    pattern_hilight = re.compile(r"HILIGHT\s*=\s*([A-Z]+)")
     pattern_occurs = re.compile(r"OCCURS\s*=\s*([0-9]+)")
     pattern_mapatts = re.compile(r"MAPATTS\s*=\s*(?:\(([A-Z,]+)\)|([A-Z]+))")
     pattern_attrb = re.compile(r"ATTRB\s*=\s*(?:\(([A-Z,]+)\)|([A-Z]+))")
@@ -135,6 +136,9 @@ def extract_property(current_item):
     if pattern_color.search(current_item):
         search = pattern_color.search(current_item).group(0)
         data["color"] = get_value(search)
+    if pattern_hilight.search(current_item):
+        search = pattern_hilight.search(current_item).group(0)
+        data["hilight"] = get_value(search)
     if pattern_occurs.search(current_item):
         search = pattern_occurs.search(current_item).group(0)
         data["occurs"] = get_value(search)
@@ -209,6 +213,75 @@ def convert_dfhmdi(define_data):
     return react_code
 
 
+# BMS 3270 COLOR values that are not valid CSS color keywords map to
+# "inherit" so the field falls back to the current theme's foreground color
+# instead of emitting an invalid style (e.g. color:"neutral").
+CSS_COLOR_MAP = {
+    "NEUTRAL": "inherit",
+    "DEFAULT": "inherit",
+}
+
+
+def resolve_color(color_name):
+    """
+    Maps a BMS COLOR value to a valid CSS color.
+
+    Parameters:
+    - color_name (str): The BMS COLOR value (e.g. "GREEN", "NEUTRAL").
+
+    Returns:
+    - str: A valid CSS color value.
+    """
+    return CSS_COLOR_MAP.get(color_name.upper(), color_name.lower())
+
+
+def build_style(define_data):
+    """
+    Builds a CSS style dict from a map item's COLOR/HILIGHT/ATTRB attributes.
+
+    Parameters:
+    - define_data (dict): Dictionary containing extracted map item properties.
+
+    Returns:
+    - dict: CSS property/value pairs (React inline-style compatible keys).
+    """
+    style = {}
+    if "color" in define_data:
+        style["color"] = resolve_color(define_data["color"])
+    hilight = define_data.get("hilight", "")
+    if hilight == "UNDERLINE":
+        style["textDecoration"] = "underline"
+    elif hilight == "BLINK":
+        style["animation"] = "bms-blink 1s step-start infinite"
+    elif hilight == "REVERSE":
+        style["filter"] = "invert(1)"
+    attrb = define_data.get("attrb", "")
+    if "BRT" in attrb:
+        style["fontWeight"] = "bold"
+    if "DRK" in attrb:
+        # DRK = non-display field (e.g. a cursor-position placeholder like
+        # DUMMY); keep it in the DOM/grid so layout and tab order are
+        # unaffected, but hide it from view like the real 3270 terminal does.
+        style["visibility"] = "hidden"
+    return style
+
+
+def style_dict_to_jsx_object(style):
+    """
+    Serializes a style dict into a JS object literal string.
+
+    Parameters:
+    - style (dict): CSS property/value pairs.
+
+    Returns:
+    - str: JS object literal (e.g. '{color: "green", fontWeight: "bold"}'), or "" if empty.
+    """
+    if not style:
+        return ""
+    entries = ", ".join(f"{key}: {json.dumps(value)}" for key, value in style.items())
+    return "{" + entries + "}"
+
+
 def convert_dfhmdf_input(define_data):
     """
     Converts DFHMDF define data to React code.
@@ -226,11 +299,8 @@ def convert_dfhmdf_input(define_data):
     tsx_name = ""
     on_change_function = ""
     on_keydown_function = ""
-    color = (
-        f'styles={{{{color:"{define_data["color"].lower()}"}}}}'
-        if "color" in define_data
-        else ""
-    )
+    style_str = style_dict_to_jsx_object(build_style(define_data))
+    color = "styles={" + style_str + "}" if style_str else ""
 
     tsx_type = f'type=\'{"number" if "NUM" in define_data.get("attrb", "") else "text"}\''
     disabled = "disabled" if "PROT" in define_data.get("attrb", "") else ""
@@ -264,11 +334,8 @@ def convert_dfhmdf_label(define_data):
     col = int(define_data["pos"][1])
     row = int(define_data["pos"][0])
     initial = define_data["initial"] if "initial" in define_data else ""
-    color = (
-        f'style={{{{color:"{define_data["color"].lower()}"}}}}'
-        if "color" in define_data
-        else ""
-    )
+    style_str = style_dict_to_jsx_object(build_style(define_data))
+    color = "style={" + style_str + "}" if style_str else ""
     occurs = ""
     current_row = row
     for index in range(int(define_data.get("occurs", 0))):
@@ -474,15 +541,27 @@ def extract_type_data(map_items, file_name):
     for item in output_fields:
         react_type_output_initial += f"{item['name'].lower()}: { repr(item.get('initial')) if item.get('initial') else repr('')},\n"
 
+    # A screen with no output fields has nothing to store the response in,
+    # so receivedData/setReceivedData must be omitted entirely -- declaring
+    # them unused would fail the strict noUnusedLocals build check.
+    received_data_state = (
+        f"""
+    const [receivedData, setReceivedData] = useState<formOutput>(
+     {{
+        {react_type_output_initial}
+    }});"""
+        if output_fields
+        else ""
+    )
+    set_received_data_call = (
+        "\n        setReceivedData(_state => response.data);" if output_fields else ""
+    )
+
     handle_data = f"""{""}
     const [formData, setFormData] = useState<formInput>(
     {{
         {react_type_input_initial}
-    }});
-    const [receivedData, setReceivedData] = useState<formOutput>(
-     {{
-        {react_type_output_initial}
-    }});
+    }});{received_data_state}
 
     const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {{
     setFormData((state) => {{
@@ -501,12 +580,11 @@ def extract_type_data(map_items, file_name):
         }}
         }}
 
-        const response = await axios.post(
+        {"const response = " if output_fields else ""}await axios.post(
         httpConfig.domain + '/{file_name.capitalize()}',
         formData
         );
-
-        setReceivedData(_state => response.data);
+{set_received_data_call}
     }}
     }};
     """
@@ -517,14 +595,22 @@ def extract_type_data(map_items, file_name):
     react_type_output = ""
     for item in output_fields:
         react_type_output += f"{item['name'].lower()}: string,\n"
+    # formOutput is only referenced (via useState<formOutput>) when there is
+    # at least one output field; an unused type declaration otherwise fails
+    # the strict noUnusedLocals build check.
+    form_output_type = (
+        f"""
+    type formOutput = {{
+        {react_type_output}
+    }}"""
+        if output_fields
+        else ""
+    )
     react_code = f"""
     type formInput = {{
         {react_type_input}
     }}
-
-    type formOutput = {{
-        {react_type_output}
-    }}
+{form_output_type}
     """
     return react_code + handle_data
 
@@ -552,12 +638,7 @@ def parse_bms_2_tsx(bms_file, tsx_file):
         #     ),
         #     {"name": "DefaultComponent"},
         # )
-        desired_object = {
-            "name": bms_file.replace(os.path.abspath(os.path.dirname(bms_file)), "")
-            .replace(".bms", "")
-            .replace("/", "")
-            .replace("\\", "")
-        }
+        desired_object = {"name": os.path.splitext(os.path.basename(bms_file))[0]}
         rsx_file_content = combine_rsx_code(
             react_items,
             desired_object["name"],

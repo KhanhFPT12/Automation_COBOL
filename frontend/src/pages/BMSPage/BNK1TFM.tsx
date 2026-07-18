@@ -54,7 +54,7 @@ tactbal: '',
 favbal: '',
 tavbal: '',
 message: '',
-dummy: '',
+dummy: ' ',
 
     });
 
@@ -92,202 +92,202 @@ dummy: '',
     </Helmet>
     
 <GridItem col={1} row={1}>
-    <label style={{color:"blue"}}>
-         BNK1TF  
+    <label style={{color: "blue"}}>
+         {"BNK1TF "}
     </label>
 </GridItem>
 
     
 <GridItem col={17} row={1}>
-    <label style={{color:"red"}}>
-         {receivedData.company } 
+    <label style={{color: "red"}}>
+         {receivedData.company }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={3}>
-    <label style={{color:"turquoise"}}>
-         Provide a FROM account, a TO account and an Amount and press Enter. 
+    <label style={{color: "turquoise"}}>
+         {"Provide a FROM account, a TO account and an Amount and press Enter."}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={8}>
-    <label style={{color:"turquoise"}}>
-         FROM Account Number: 
+    <label style={{color: "turquoise"}}>
+         {"FROM Account Number:"}
     </label>
 </GridItem>
 
     
 <GridItem col={23} row={8}>
-    <Input maxLength={8} name='faccno' id='faccno' type='number' styles={{color:"green"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
+    <Input maxLength={8} name='faccno' id='faccno' type='number' styles={{color: "green", textDecoration: "underline"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
 </GridItem>
     
 <GridItem col={32} row={8}>
-    <label style={{color:"turquoise"}}>
-         TO Account Number: 
+    <label style={{color: "turquoise"}}>
+         {"TO Account Number:"}
     </label>
 </GridItem>
 
     
 <GridItem col={52} row={8}>
-    <Input maxLength={8} name='taccno' id='taccno' type='number' styles={{color:"green"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
+    <Input maxLength={8} name='taccno' id='taccno' type='number' styles={{color: "green", textDecoration: "underline"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
 </GridItem>
     
 <GridItem col={61} row={8}>
     <label >
-          
+         {""}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={9}>
-    <label style={{color:"turquoise"}}>
-         AMOUNT: 
+    <label style={{color: "turquoise"}}>
+         {"AMOUNT:"}
     </label>
 </GridItem>
 
     
 <GridItem col={23} row={9}>
-    <Input maxLength={13} name='amt' id='amt' type='text' styles={{color:"green"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
+    <Input maxLength={13} name='amt' id='amt' type='text' styles={{color: "green", textDecoration: "underline"}}  onChange={handleInputChange} onKeyDown={handleSubmit}/>
 </GridItem>
     
 <GridItem col={37} row={9}>
     <label >
-          
+         {""}
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={11}>
-    <label style={{color:"turquoise"}}>
-         FROM Account   : 
+    <label style={{color: "turquoise"}}>
+         {"FROM Account   :"}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={11}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.faccno2 } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.faccno2 }
     </label>
 </GridItem>
 
     
 <GridItem col={35} row={11}>
-    <label style={{color:"turquoise"}}>
-         TO Account     : 
+    <label style={{color: "turquoise"}}>
+         {"TO Account     :"}
     </label>
 </GridItem>
 
     
 <GridItem col={55} row={11}>
-    <label style={{color:"turquoise"}}>
-         {receivedData.taccno2 } 
+    <label style={{color: "turquoise"}}>
+         {receivedData.taccno2 }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={12}>
-    <label style={{color:"turquoise"}}>
-         Sort Code      : 
+    <label style={{color: "turquoise"}}>
+         {"Sort Code      :"}
     </label>
 </GridItem>
 
     
 <GridItem col={20} row={12}>
-    <label style={{color:"neutral"}}>
-         {receivedData.fsortc } 
+    <label style={{color: "inherit"}}>
+         {receivedData.fsortc }
     </label>
 </GridItem>
 
     
 <GridItem col={35} row={12}>
-    <label style={{color:"turquoise"}}>
-         Sort Code      : 
+    <label style={{color: "turquoise"}}>
+         {"Sort Code      :"}
     </label>
 </GridItem>
 
     
 <GridItem col={55} row={12}>
-    <label style={{color:"neutral"}}>
-         {receivedData.tsortc } 
+    <label style={{color: "inherit"}}>
+         {receivedData.tsortc }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={13}>
-    <label style={{color:"turquoise"}}>
-         Actual Balance : 
+    <label style={{color: "turquoise"}}>
+         {"Actual Balance :"}
     </label>
 </GridItem>
 
     
 <GridItem col={19} row={13}>
-    <label style={{color:"neutral"}}>
-         {receivedData.factbal } 
+    <label style={{color: "inherit"}}>
+         {receivedData.factbal }
     </label>
 </GridItem>
 
     
 <GridItem col={35} row={13}>
-    <label style={{color:"turquoise"}}>
-          
+    <label style={{color: "turquoise"}}>
+         {"Actual Balance :"}
     </label>
 </GridItem>
 
     
 <GridItem col={54} row={13}>
-    <label style={{color:"neutral"}}>
-         {receivedData.tactbal } 
+    <label style={{color: "inherit"}}>
+         {receivedData.tactbal }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={14}>
-    <label style={{color:"turquoise"}}>
-         Avail Balance  : 
+    <label style={{color: "turquoise"}}>
+         {"Avail Balance  :"}
     </label>
 </GridItem>
 
     
 <GridItem col={19} row={14}>
-    <label style={{color:"neutral"}}>
-         {receivedData.favbal } 
+    <label style={{color: "inherit"}}>
+         {receivedData.favbal }
     </label>
 </GridItem>
 
     
 <GridItem col={35} row={14}>
-    <label style={{color:"turquoise"}}>
-          
+    <label style={{color: "turquoise"}}>
+         {"Avail Balance  :"}
     </label>
 </GridItem>
 
     
 <GridItem col={54} row={14}>
-    <label style={{color:"neutral"}}>
-         {receivedData.tavbal } 
+    <label style={{color: "inherit"}}>
+         {receivedData.tavbal }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={23}>
-    <label style={{color:"yellow"}}>
-         {receivedData.message } 
+    <label style={{color: "yellow", fontWeight: "bold"}}>
+         {receivedData.message }
     </label>
 </GridItem>
 
     
 <GridItem col={1} row={24}>
-    <label style={{color:"blue"}}>
-         F3=Exit   F12=Cancel 
+    <label style={{color: "blue"}}>
+         {"F3=Exit   F12=Cancel"}
     </label>
 </GridItem>
 
     
 <GridItem col={79} row={24}>
-    <label >
-         {receivedData.dummy } 
+    <label style={{visibility: "hidden"}}>
+         {receivedData.dummy }
     </label>
 </GridItem>
 
