@@ -52,7 +52,7 @@ exports.getStats = async (req, res) => {
       meetingsPerDay,
       conversionsPerDay,
     ] = await Promise.all([
-      User.countDocuments({}),
+      User.countDocuments({ role: { $ne: 'ADMIN' } }),
       Meeting.countDocuments({}),
       Meeting.countDocuments({ status: 'Pending' }),
       Meeting.countDocuments({ status: 'Approved' }),
@@ -95,7 +95,7 @@ exports.getStats = async (req, res) => {
 exports.getRecentActivity = async (req, res) => {
   try {
     const [recentUsers, recentMeetings, recentConversions] = await Promise.all([
-      User.find({}).sort({ createdAt: -1 }).limit(10).select('fullName email companyName businessEmail createdAt'),
+      User.find({ role: { $ne: 'ADMIN' } }).sort({ createdAt: -1 }).limit(10).select('fullName email companyName businessEmail createdAt'),
       Meeting.find({}).sort({ updatedAt: -1 }).limit(10).select('fullName topic status updatedAt'),
       ConversionLog.find({}).sort({ createdAt: -1 }).limit(10).populate('user', 'fullName email'),
     ]);

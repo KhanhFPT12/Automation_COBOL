@@ -161,7 +161,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
           accountType: user.accountType,
           role: user.role,
         },
-        activePage: 'home',
+        // Admins land straight in the Admin Dashboard - they never see the
+        // public site (see App.tsx's admin-only render branch).
+        activePage: user.role === 'ADMIN' ? 'admin-dashboard' : 'home',
         isAuthLoading: false,
         authError: null,
       });

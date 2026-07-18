@@ -20,11 +20,25 @@ import { AdminReportsPage } from "./page/AdminReportsPage";
 import { AdminSettingsPage } from "./page/AdminSettingsPage";
 
 export default function App() {
-  const { activePage, initAuth } = useAppStore();
+  const { activePage, initAuth, session, setActivePage } = useAppStore();
 
   useEffect(() => {
     initAuth();
   }, []);
+
+  const isAdmin = session.role === 'ADMIN';
+  const isAdminPage = activePage.startsWith('admin-');
+
+  // Admins never see the public site (Home, Solutions, Book a Meeting, ...).
+  // Whenever an admin session lands on a non-admin page - right after
+  // login, after initAuth restores the session on refresh, or if a stray
+  // link/back-button navigation gets them off the admin pages - bounce
+  // them straight back to the Admin Dashboard.
+  useEffect(() => {
+    if (isAdmin && !isAdminPage) {
+      setActivePage('admin-dashboard');
+    }
+  }, [isAdmin, isAdminPage, setActivePage]);
 
   const renderActiveView = () => {
     switch (activePage) {
@@ -64,6 +78,18 @@ export default function App() {
         return <LandingPage />;
     }
   };
+
+  if (isAdmin) {
+    // Completely separate shell: no public Header/Footer. While the
+    // redirect effect above is settling (isAdminPage still false right
+    // after login), render nothing rather than flashing a user-facing page.
+    if (!isAdminPage) return null;
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900" id="admin-root-shell">
+        {renderActiveView()}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900" id="app-root-shell">

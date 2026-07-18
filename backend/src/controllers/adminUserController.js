@@ -13,6 +13,11 @@ const EDITABLE_FIELDS = [
   'credits',
 ];
 
+// ALSM platform admins are staff, not customers - they're excluded from
+// every "users" view/count/count (User Management list, dashboard totals,
+// activity feed) and cannot be locked/unlocked/deleted through this API.
+const NOT_ADMIN = { role: { $ne: 'ADMIN' } };
+
 // ────────────────────────────────────────────────────────────────
 // @desc    List users - search by name/email/company + pagination
 // @route   GET /api/admin/users
@@ -21,7 +26,7 @@ const EDITABLE_FIELDS = [
 exports.listUsers = async (req, res) => {
   try {
     const { search, page = 1, limit = 20 } = req.query;
-    const filter = {};
+    const filter = { ...NOT_ADMIN };
     if (search) {
       const re = new RegExp(search, 'i');
       filter.$or = [
@@ -61,7 +66,7 @@ exports.listUsers = async (req, res) => {
 // ────────────────────────────────────────────────────────────────
 exports.getUserDetail = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findOne({ _id: req.params.id, ...NOT_ADMIN });
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
@@ -100,7 +105,7 @@ exports.updateUser = async (req, res) => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     }
 
-    const user = await User.findByIdAndUpdate(req.params.id, updates, {
+    const user = await User.findOneAndUpdate({ _id: req.params.id, ...NOT_ADMIN }, updates, {
       new: true,
       runValidators: true,
     });
@@ -125,7 +130,7 @@ exports.lockUser = async (req, res) => {
     if (String(req.params.id) === String(req.user._id)) {
       return res.status(400).json({ success: false, message: 'You cannot lock your own account.' });
     }
-    const user = await User.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+    const user = await User.findOneAndUpdate({ _id: req.params.id, ...NOT_ADMIN }, { isActive: false }, { new: true });
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
@@ -143,7 +148,7 @@ exports.lockUser = async (req, res) => {
 // ────────────────────────────────────────────────────────────────
 exports.unlockUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { isActive: true }, { new: true });
+    const user = await User.findOneAndUpdate({ _id: req.params.id, ...NOT_ADMIN }, { isActive: true }, { new: true });
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
@@ -164,7 +169,7 @@ exports.deleteUser = async (req, res) => {
     if (String(req.params.id) === String(req.user._id)) {
       return res.status(400).json({ success: false, message: 'You cannot delete your own account.' });
     }
-    const user = await User.findByIdAndDelete(req.params.id);
+    const user = await User.findOneAndDelete({ _id: req.params.id, ...NOT_ADMIN });
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
