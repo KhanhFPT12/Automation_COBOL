@@ -47,27 +47,27 @@ export function DocSidebar() {
         </p>
         <ul className="space-y-1 text-sm">
           <li>
-            <button 
-              onClick={() => alert("Architecture Overview documentation is loaded. Core VM compiled target is Java SE Virtual Machine compatible.")}
-              className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition"
+            <button
+              onClick={() => setActivePage('architecture-overview')}
+              className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition ${activePage === 'architecture-overview' ? 'bg-sky-50 text-sky-600 border border-sky-100/50' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
             >
               <Layers className="h-4 w-4" />
               Architecture Overview
             </button>
           </li>
           <li>
-            <button 
-              onClick={() => alert("Modernization flow models map direct procedures sequentially. Download logic map components in workspace settings.")}
-              className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition"
+            <button
+              onClick={() => setActivePage('modernization-flows')}
+              className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition ${activePage === 'modernization-flows' ? 'bg-sky-50 text-sky-600 border border-sky-100/50' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
             >
               <GitBranch className="h-4 w-4" />
               Modernization Flows
             </button>
           </li>
           <li>
-            <button 
-              onClick={() => alert("AI Prompt Engineering guides prompt parameters mapping on our server-side LLMs.")}
-              className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition"
+            <button
+              onClick={() => setActivePage('ai-prompt-engineering')}
+              className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition ${activePage === 'ai-prompt-engineering' ? 'bg-sky-50 text-sky-600 border border-sky-100/50' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
             >
               <Terminal className="h-4 w-4" />
               AI Prompt Engineering

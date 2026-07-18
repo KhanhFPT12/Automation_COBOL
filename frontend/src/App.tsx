@@ -6,6 +6,9 @@ import { LandingPage } from "./page/LandingPage";
 import { ConverterPage } from "./page/ConverterPage";
 import { DataMappingPage } from "./page/DataMappingPage";
 import { AuthGuidePage } from "./page/AuthGuidePage";
+import { ArchitectureOverviewPage } from "./page/ArchitectureOverviewPage";
+import { ModernizationFlowsPage } from "./page/ModernizationFlowsPage";
+import { AiPromptEngineeringPage } from "./page/AiPromptEngineeringPage";
 import { SignInPage } from "./page/SignInPage";
 import { CreateAccountPage } from "./page/CreateAccountPage";
 import { ProductExperiencePage } from "./page/ProductExperiencePage";
@@ -50,6 +53,12 @@ export default function App() {
         return <DataMappingPage />;
       case 'auth-guide':
         return <AuthGuidePage />;
+      case 'architecture-overview':
+        return <ArchitectureOverviewPage />;
+      case 'modernization-flows':
+        return <ModernizationFlowsPage />;
+      case 'ai-prompt-engineering':
+        return <AiPromptEngineeringPage />;
       case 'product-experience':
         return <ProductExperiencePage />;
       case 'login':
