@@ -1,6 +1,7 @@
 const Meeting = require('../models/Meeting');
 const googleMeetService = require('../services/googleMeetService');
 const { notifyMeetingEvent } = require('../utils/notify');
+const { sendEmail, buildMeetingApprovedEmail, buildMeetingRejectedEmail } = require('../utils/sendEmail');
 
 function buildLocalDateTimeString(preferredDate, preferredTime) {
   const d = new Date(preferredDate);
@@ -115,9 +116,31 @@ exports.approveMeeting = async (req, res) => {
     meeting.status = 'Approved';
     meeting.googleEventId = eventId;
     meeting.meetingLink = meetLink;
+    meeting.approvedBy = req.user._id;
+    meeting.approvedAt = new Date();
+    if (req.body.adminNotes !== undefined) {
+      meeting.adminNotes = req.body.adminNotes;
+    }
     await meeting.save();
 
     await notifyMeetingEvent('meeting_approved', meeting);
+
+    try {
+      await sendEmail({
+        to: meeting.email,
+        subject: 'ALSM – Your Meeting Has Been Approved',
+        html: buildMeetingApprovedEmail({
+          userName: meeting.fullName,
+          topic: meeting.topic,
+          date: new Date(meeting.preferredDate).toLocaleDateString(),
+          time: meeting.preferredTime,
+          meetLink: meeting.meetingLink,
+          adminNotes: meeting.adminNotes || '',
+        }),
+      });
+    } catch (emailErr) {
+      console.error('Approval email failed (meeting still approved):', emailErr.message);
+    }
 
     return res.status(200).json({ success: true, message: 'Meeting approved.', meeting });
   } catch (err) {
@@ -155,6 +178,20 @@ exports.rejectMeeting = async (req, res) => {
     await meeting.save();
 
     await notifyMeetingEvent('meeting_rejected', meeting);
+
+    try {
+      await sendEmail({
+        to: meeting.email,
+        subject: 'ALSM – Your Meeting Request Has Been Declined',
+        html: buildMeetingRejectedEmail({
+          userName: meeting.fullName,
+          topic: meeting.topic,
+          reason: meeting.rejectionReason,
+        }),
+      });
+    } catch (emailErr) {
+      console.error('Rejection email failed (meeting still rejected):', emailErr.message);
+    }
 
     return res.status(200).json({ success: true, message: 'Meeting rejected.', meeting });
   } catch (err) {

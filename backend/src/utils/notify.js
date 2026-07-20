@@ -13,9 +13,17 @@ const TEMPLATES = {
     title: 'Meeting cancelled',
     message: `Your meeting "${meeting.topic}" has been cancelled.`,
   }),
-  meeting_reminder: (meeting) => ({
-    title: 'Meeting starting soon',
-    message: `Your meeting "${meeting.topic}" is starting soon.`,
+  meeting_reminder_15: (meeting) => ({
+    title: 'Meeting starting in 15 minutes',
+    message: `Your meeting "${meeting.topic}" is starting in 15 minutes.`,
+  }),
+  meeting_reminder_10: (meeting) => ({
+    title: 'Meeting starting in 10 minutes',
+    message: `Your meeting "${meeting.topic}" is starting in 10 minutes.`,
+  }),
+  meeting_reminder_5: (meeting) => ({
+    title: 'Meeting starting in 5 minutes',
+    message: `Your meeting "${meeting.topic}" is starting in 5 minutes!`,
   }),
   meeting_completed: (meeting) => ({
     title: 'Meeting completed',

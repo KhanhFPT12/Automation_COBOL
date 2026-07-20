@@ -2,7 +2,10 @@ const { google } = require('googleapis');
 const crypto = require('crypto');
 const GoogleIntegration = require('../models/GoogleIntegration');
 
-const SCOPES = ['https://www.googleapis.com/auth/calendar.events'];
+const SCOPES = [
+  'https://www.googleapis.com/auth/calendar.events',
+  'https://www.googleapis.com/auth/userinfo.email',
+];
 
 function assertConfigured() {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {

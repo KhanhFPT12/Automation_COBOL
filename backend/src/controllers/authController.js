@@ -78,16 +78,20 @@ exports.registerIndividual = async (req, res) => {
     });
 
     // ── Send verification email
+    let emailSent = true;
     try {
       await issueAndSendVerificationEmail(user);
     } catch (emailErr) {
+      emailSent = false;
       console.error('Verification email failed:', emailErr.message);
-      // Account is created; user can resend via the resend endpoint
     }
 
     return res.status(201).json({
       success: true,
-      message: 'Registration successful! Please check your email to verify your account.',
+      emailSent,
+      message: emailSent
+        ? 'Registration successful! Please check your email to verify your account.'
+        : 'Registration successful! However, the verification email could not be sent. Please use "Resend Verification" on the login page.',
     });
   } catch (err) {
     console.error('registerIndividual error:', err.message);
@@ -167,15 +171,20 @@ exports.registerEnterprise = async (req, res) => {
     });
 
     // ── Send verification email
+    let emailSent = true;
     try {
       await issueAndSendVerificationEmail(user);
     } catch (emailErr) {
+      emailSent = false;
       console.error('Verification email failed:', emailErr.message);
     }
 
     return res.status(201).json({
       success: true,
-      message: 'Enterprise registration successful! Please check your business email to verify your account.',
+      emailSent,
+      message: emailSent
+        ? 'Enterprise registration successful! Please check your business email to verify your account.'
+        : 'Enterprise registration successful! However, the verification email could not be sent. Please use "Resend Verification" on the login page.',
     });
   } catch (err) {
     console.error('registerEnterprise error:', err.message);

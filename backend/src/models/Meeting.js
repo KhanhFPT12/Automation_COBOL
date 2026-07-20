@@ -38,7 +38,18 @@ const meetingSchema = new mongoose.Schema(
     meetingLink: { type: String, default: '' },
     googleEventId: { type: String, default: '' },
 
-    reminderSent: { type: Boolean, default: false },
+    // ─── Approval metadata (optional) ────────────────────────────────
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    approvedAt: { type: Date, default: null },
+    adminNotes: { type: String, trim: true, default: '' },
+
+    reminder15Sent: { type: Boolean, default: false },
+    reminder10Sent: { type: Boolean, default: false },
+    reminder5Sent: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

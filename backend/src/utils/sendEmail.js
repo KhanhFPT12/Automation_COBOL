@@ -101,4 +101,59 @@ const buildResetPasswordEmail = (resetURL) =>
     </div>
   `);
 
-module.exports = { sendEmail, buildVerificationEmail, buildResetPasswordEmail };
+/**
+ * Build an approved-meeting notification email.
+ * @param {object} options
+ * @param {string} options.userName      - Recipient's display name
+ * @param {string} options.topic         - Meeting topic / title
+ * @param {string} options.date          - Formatted date string
+ * @param {string} options.time          - "HH:mm" preferred time
+ * @param {string} options.meetLink      - Google Meet URL
+ * @param {string} [options.adminNotes]  - Optional notes from the admin
+ * @returns {string} HTML string
+ */
+const buildMeetingApprovedEmail = ({ userName, topic, date, time, meetLink, adminNotes }) =>
+  baseTemplate(`
+    <p>Hi <strong>${userName}</strong>,</p>
+    <p>Great news! Your meeting request has been <strong style="color:#059669;">approved</strong>.</p>
+    <table style="width:100%; border-collapse:collapse; margin:16px 0;">
+      <tr>
+        <td style="padding:8px 12px; background:#f0f9ff; font-weight:600; color:#0369a1; width:120px;">Topic</td>
+        <td style="padding:8px 12px; background:#f0f9ff; color:#334155;">${topic}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; font-weight:600; color:#0369a1;">Date</td>
+        <td style="padding:8px 12px; color:#334155;">${date}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; background:#f0f9ff; font-weight:600; color:#0369a1;">Time</td>
+        <td style="padding:8px 12px; background:#f0f9ff; color:#334155;">${time}</td>
+      </tr>
+    </table>${meetLink ? `
+    <a href="${meetLink}" class="btn">Join Google Meet</a>` : ''}${adminNotes ? `
+    <div class="note">
+      📝 <strong>Notes from admin:</strong><br/>${adminNotes}
+    </div>` : ''}
+    <p style="margin-top:24px; font-size:13px; color:#64748b;">You can also view your meeting details in <strong>My Meetings</strong> on the ALSM platform.</p>
+  `);
+
+/**
+ * Build a rejected-meeting notification email.
+ * @param {object} options
+ * @param {string} options.userName - Recipient's display name
+ * @param {string} options.topic    - Meeting topic / title
+ * @param {string} options.reason   - Rejection reason provided by admin
+ * @returns {string} HTML string
+ */
+const buildMeetingRejectedEmail = ({ userName, topic, reason }) =>
+  baseTemplate(`
+    <p>Hi <strong>${userName}</strong>,</p>
+    <p>Unfortunately, your meeting request <strong>"${topic}"</strong> has been <strong style="color:#dc2626;">declined</strong>.</p>
+    <div class="note">
+      <strong>Reason:</strong><br/>${reason || 'No reason provided.'}
+    </div>
+    <p style="margin-top:20px;">We understand this may be disappointing. You're welcome to submit a new meeting request with updated details at any time.</p>
+    <p style="font-size:13px; color:#64748b;">If you have any questions, feel free to reach out to our support team.</p>
+  `);
+
+module.exports = { sendEmail, buildVerificationEmail, buildResetPasswordEmail, buildMeetingApprovedEmail, buildMeetingRejectedEmail };

@@ -48,11 +48,15 @@ export function CreateAccount() {
   const toggleTech = (val: string) =>
     setEntTechStack(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);
 
+  const [emailSent, setEmailSent] = useState(true);
+  const [isResending, setIsResending] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
     try {
+      let result: { success: boolean; message: string; emailSent?: boolean };
       if (activeTab === 'individual') {
         const payload: RegisterIndividualPayload = {
           fullName: indFullName,
@@ -60,7 +64,7 @@ export function CreateAccount() {
           phone: indPhone,
           password: indPassword,
         };
-        await authApi.registerIndividual(payload);
+        result = await authApi.registerIndividual(payload);
         setRegisteredEmail(indEmail);
       } else {
         const payload: RegisterEnterprisePayload = {
@@ -75,14 +79,28 @@ export function CreateAccount() {
           legacySystemType: entLegacySystems.length ? entLegacySystems : undefined,
           targetTechStack: entTechStack.length ? entTechStack : undefined,
         };
-        await authApi.registerEnterprise(payload);
+        result = await authApi.registerEnterprise(payload);
         setRegisteredEmail(entBusinessEmail);
       }
+      setEmailSent(result.emailSent !== false);
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!registeredEmail || isResending) return;
+    setIsResending(true);
+    try {
+      await authApi.resendVerification(registeredEmail);
+      setEmailSent(true);
+    } catch {
+      // silently fail — the user can try again
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -95,16 +113,46 @@ export function CreateAccount() {
           transition={{ duration: 0.4 }}
           className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-xl p-10 text-center"
         >
-          <CheckCircle2 className="h-14 w-14 text-emerald-500 mx-auto mb-4" />
-          <h2 className="font-display text-2xl font-extrabold text-slate-900 mb-2">Check your email</h2>
-          <p className="text-xs text-slate-500 mb-1">A verification link has been sent to</p>
-          <p className="text-sm font-bold text-slate-800 mb-5">{registeredEmail}</p>
-          <p className="text-xs text-slate-400 mb-8">
-            Click the link in the email to activate your account. Check your spam folder if you don't see it.
-          </p>
+          {emailSent ? (
+            <>
+              <CheckCircle2 className="h-14 w-14 text-emerald-500 mx-auto mb-4" />
+              <h2 className="font-display text-2xl font-extrabold text-slate-900 mb-2">Check your email</h2>
+              <p className="text-xs text-slate-500 mb-1">A verification link has been sent to</p>
+              <p className="text-sm font-bold text-slate-800 mb-5">{registeredEmail}</p>
+              <p className="text-xs text-slate-400 mb-8">
+                Click the link in the email to activate your account. Check your spam folder if you don't see it.
+              </p>
+            </>
+          ) : (
+            <>
+              <Mail className="h-14 w-14 text-amber-500 mx-auto mb-4" />
+              <h2 className="font-display text-2xl font-extrabold text-slate-900 mb-2">Account Created</h2>
+              <p className="text-xs text-slate-500 mb-5">
+                Your account was created successfully, but we couldn't send the verification email to <strong>{registeredEmail}</strong>.
+              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-left">
+                <p className="text-xs text-amber-800 font-semibold mb-1">⚠️ Verification email not sent</p>
+                <p className="text-xs text-amber-700">
+                  Please click the button below to resend, or use "Resend Verification" on the Sign In page later.
+                </p>
+              </div>
+              <button
+                onClick={handleResendVerification}
+                disabled={isResending}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-600 active:scale-95 disabled:opacity-60 mb-3 cursor-pointer"
+              >
+                {isResending ? (
+                  <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Mail className="h-4 w-4" />
+                )}
+                {isResending ? 'Sending...' : 'Resend Verification Email'}
+              </button>
+            </>
+          )}
           <button
             onClick={() => setActivePage('login')}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 active:scale-95"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 active:scale-95 cursor-pointer"
           >
             Go to Sign In
           </button>
