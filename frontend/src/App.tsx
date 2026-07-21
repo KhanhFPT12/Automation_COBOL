@@ -13,6 +13,7 @@ import { SignInPage } from "./page/SignInPage";
 import { CreateAccountPage } from "./page/CreateAccountPage";
 import { ProductExperiencePage } from "./page/ProductExperiencePage";
 import { PricingPage } from "./page/PricingPage";
+import { BillingPage } from "./page/BillingPage";
 import { BookMeetingPage } from "./page/BookMeetingPage";
 import { MyMeetingsPage } from "./page/MyMeetingsPage";
 import { AdminDashboardPage } from "./page/AdminDashboardPage";
@@ -64,6 +65,8 @@ export default function App() {
         return <ProductExperiencePage />;
       case 'pricing':
         return <PricingPage />;
+      case 'billing':
+        return session.isLoggedIn ? <BillingPage /> : <SignInPage />;
       case 'login':
         return <SignInPage />;
       case 'register':

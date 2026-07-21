@@ -76,6 +76,15 @@ export function Header() {
           </button>
           {session.isLoggedIn && (
             <button
+              id="nav-billing"
+              onClick={() => setActivePage('billing')}
+              className={`cursor-pointer transition-colors hover:text-sky-600 py-1.5 px-0.5 relative ${activePage === 'billing' ? 'text-sky-600 border-b-2 border-sky-600 font-semibold' : ''}`}
+            >
+              Billing
+            </button>
+          )}
+          {session.isLoggedIn && (
+            <button
               id="nav-my-meetings"
               onClick={() => setActivePage('my-meetings')}
               className={`cursor-pointer transition-colors hover:text-sky-600 py-1.5 px-0.5 relative ${activePage === 'my-meetings' || activePage === 'book-meeting' ? 'text-sky-600 border-b-2 border-sky-600 font-semibold' : ''}`}
@@ -183,6 +192,15 @@ export function Header() {
             >
               Pricing
             </button>
+            {session.isLoggedIn && (
+              <button
+                id="mobile-nav-billing"
+                onClick={() => { setActivePage('billing'); setMobileMenuOpen(false); }}
+                className={`text-left text-sm py-2 px-3 rounded-lg hover:bg-slate-50 ${activePage === 'billing' ? 'bg-sky-50 text-sky-600 font-bold' : 'text-slate-600'}`}
+              >
+                Billing
+              </button>
+            )}
             {session.isLoggedIn && (
               <button
                 id="mobile-nav-my-meetings"

@@ -48,6 +48,49 @@ interface TrialResponse {
   data: TrialSubscription;
 }
 
+export interface BillingSubscription {
+  id: string;
+  status: "active";
+  currentPeriodEnd: string;
+}
+
+export interface BillingData {
+  subscription: BillingSubscription;
+  currentPlan: PricingPlan;
+  availableUpgrades: PricingPlan[];
+}
+
+export interface UpgradePreview {
+  currentPlan: PricingPlan;
+  targetPlan: PricingPlan;
+  charge: {
+    amountDue: number;
+    currency: string;
+    periodStart: string;
+    periodEnd: string;
+  };
+}
+
+interface BillingResponse {
+  success: boolean;
+  data: BillingData;
+}
+
+interface UpgradePreviewResponse {
+  success: boolean;
+  data: UpgradePreview;
+}
+
+interface UpgradeResponse {
+  success: boolean;
+  message: string;
+  data: {
+    subscription: BillingSubscription;
+    plan: PricingPlan;
+    charge: UpgradePreview["charge"];
+  };
+}
+
 const CACHE_KEY = "alsm_pricing_plans";
 
 function readCachedPlans(): PricingPlan[] {
@@ -83,5 +126,16 @@ export const pricingApi = {
     apiFetch<TrialResponse>("/api/pricing/trial", {
       method: "POST",
       body: JSON.stringify({ planId }),
+    }),
+  getBilling: () => apiFetch<BillingResponse>("/api/pricing/billing"),
+  previewUpgrade: (planId: string) =>
+    apiFetch<UpgradePreviewResponse>("/api/pricing/upgrade/preview", {
+      method: "POST",
+      body: JSON.stringify({ planId }),
+    }),
+  confirmUpgrade: (planId: string) =>
+    apiFetch<UpgradeResponse>("/api/pricing/upgrade/confirm", {
+      method: "POST",
+      body: JSON.stringify({ planId, paymentConfirmed: true }),
     }),
 };

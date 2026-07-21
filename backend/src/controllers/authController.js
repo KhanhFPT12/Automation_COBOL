@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 const { sendEmail, buildVerificationEmail, buildResetPasswordEmail } = require('../utils/sendEmail');
+const { ensureStarterSubscription } = require('../services/subscriptionService');
 
 // ─── Helpers ─────────────────────────────────────────────────────
 
@@ -76,6 +77,8 @@ exports.registerIndividual = async (req, res) => {
       accountType: 'INDIVIDUAL',
       role: 'USER',      // also enforced by model hook
     });
+
+    await ensureStarterSubscription(user._id);
 
     // ── Send verification email
     let emailSent = true;
@@ -169,6 +172,8 @@ exports.registerEnterprise = async (req, res) => {
       accountType: 'ENTERPRISE',
       role: 'ENTERPRISE_ADMIN',
     });
+
+    await ensureStarterSubscription(user._id);
 
     // ── Send verification email
     let emailSent = true;
