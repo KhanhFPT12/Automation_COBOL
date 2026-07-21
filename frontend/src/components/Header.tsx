@@ -67,6 +67,13 @@ export function Header() {
           >
             Documentation
           </button>
+          <button
+            id="nav-pricing"
+            onClick={() => setActivePage('pricing')}
+            className={`cursor-pointer transition-colors hover:text-sky-600 py-1.5 px-0.5 relative ${activePage === 'pricing' ? 'text-sky-600 border-b-2 border-sky-600 font-semibold' : ''}`}
+          >
+            Pricing
+          </button>
           {session.isLoggedIn && (
             <button
               id="nav-my-meetings"
@@ -168,6 +175,13 @@ export function Header() {
               className={`text-left text-sm py-2 px-3 rounded-lg hover:bg-slate-50 ${activePage === 'data-mapping' || activePage === 'auth-guide' ? 'bg-sky-50 text-sky-600 font-bold' : 'text-slate-600'}`}
             >
               Documentation
+            </button>
+            <button
+              id="mobile-nav-pricing"
+              onClick={() => { setActivePage('pricing'); setMobileMenuOpen(false); }}
+              className={`text-left text-sm py-2 px-3 rounded-lg hover:bg-slate-50 ${activePage === 'pricing' ? 'bg-sky-50 text-sky-600 font-bold' : 'text-slate-600'}`}
+            >
+              Pricing
             </button>
             {session.isLoggedIn && (
               <button

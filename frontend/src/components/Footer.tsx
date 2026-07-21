@@ -34,6 +34,13 @@ export function Footer() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs font-semibold text-slate-600">
+          <button
+            onClick={(e) => handleLinkClick(e, 'pricing')}
+            className="hover:text-sky-600 transition cursor-pointer"
+            id="footer-pricing"
+          >
+            Pricing
+          </button>
           <button 
             onClick={(e) => handleLinkClick(e, 'data-mapping')}
             className="hover:text-sky-600 transition cursor-pointer"

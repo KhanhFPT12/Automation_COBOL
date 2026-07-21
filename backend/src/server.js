@@ -8,6 +8,7 @@ const converterRoutes = require('./routes/converterRoutes');
 const meetingRoutes = require('./routes/meetingRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const pricingRoutes = require('./routes/pricingRoutes');
 const { startMeetingReminderJob } = require('./jobs/meetingReminder');
 
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/bms-converter', converterRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/pricing', pricingRoutes);
 
 // ─── Health Check ────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

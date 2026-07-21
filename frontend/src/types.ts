@@ -9,6 +9,7 @@ export type ActivePage =
   | 'login'
   | 'register'
   | 'product-experience'
+  | 'pricing'
   | 'book-meeting'
   | 'my-meetings'
   | 'admin-dashboard'

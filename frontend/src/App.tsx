@@ -12,6 +12,7 @@ import { AiPromptEngineeringPage } from "./page/AiPromptEngineeringPage";
 import { SignInPage } from "./page/SignInPage";
 import { CreateAccountPage } from "./page/CreateAccountPage";
 import { ProductExperiencePage } from "./page/ProductExperiencePage";
+import { PricingPage } from "./page/PricingPage";
 import { BookMeetingPage } from "./page/BookMeetingPage";
 import { MyMeetingsPage } from "./page/MyMeetingsPage";
 import { AdminDashboardPage } from "./page/AdminDashboardPage";
@@ -61,6 +62,8 @@ export default function App() {
         return <AiPromptEngineeringPage />;
       case 'product-experience':
         return <ProductExperiencePage />;
+      case 'pricing':
+        return <PricingPage />;
       case 'login':
         return <SignInPage />;
       case 'register':
