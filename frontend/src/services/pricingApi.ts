@@ -26,6 +26,28 @@ interface PricingResponse {
   data: PricingPlan[];
 }
 
+export interface TrialSubscription {
+  id: string;
+  planId: string;
+  planName: string;
+  status: "trialing";
+  trialStart: string;
+  trialEnd: string;
+  currentPeriodEnd: string;
+  usage: {
+    projects_used: number;
+    screens_converted_this_month: number;
+    storage_used_mb: number;
+    last_calculated_at: string;
+  };
+}
+
+interface TrialResponse {
+  success: boolean;
+  message: string;
+  data: TrialSubscription;
+}
+
 const CACHE_KEY = "alsm_pricing_plans";
 
 function readCachedPlans(): PricingPlan[] {
@@ -57,4 +79,9 @@ export const pricingApi = {
       throw error;
     }
   },
+  startTrial: (planId: string) =>
+    apiFetch<TrialResponse>("/api/pricing/trial", {
+      method: "POST",
+      body: JSON.stringify({ planId }),
+    }),
 };

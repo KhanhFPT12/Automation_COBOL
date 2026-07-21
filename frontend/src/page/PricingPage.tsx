@@ -10,6 +10,24 @@ export function PricingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [fromCache, setFromCache] = useState(false);
+  const [trialPlanId, setTrialPlanId] = useState<string | null>(null);
+  const [trialError, setTrialError] = useState("");
+  const [trialSuccess, setTrialSuccess] = useState("");
+
+  const startTrial = async (plan: PricingPlan) => {
+    setTrialPlanId(plan.id);
+    setTrialError("");
+    setTrialSuccess("");
+    try {
+      const result = await pricingApi.startTrial(plan.id);
+      const trialEnd = new Date(result.data.trialEnd).toLocaleDateString();
+      setTrialSuccess(`${result.message} Trial ends on ${trialEnd}.`);
+    } catch (err) {
+      setTrialError(err instanceof Error ? err.message : "Unable to start free trial.");
+    } finally {
+      setTrialPlanId(null);
+    }
+  };
 
   const loadPlans = async () => {
     setLoading(true);
@@ -73,6 +91,17 @@ export function PricingPage() {
           <p className="mx-auto mt-6 max-w-3xl rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-800">
             Live pricing is unavailable. Showing the most recently saved
             pricing.
+          </p>
+        )}
+
+        {trialSuccess && (
+          <p role="status" className="mx-auto mt-6 max-w-3xl rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-800">
+            {trialSuccess}
+          </p>
+        )}
+        {trialError && (
+          <p role="alert" className="mx-auto mt-6 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-center text-sm font-medium text-rose-700">
+            {trialError}
           </p>
         )}
 
@@ -169,6 +198,17 @@ export function PricingPage() {
                     </li>
                   ))}
                 </ul>
+                {plan.name === "Professional" && (
+                  <button
+                    type="button"
+                    disabled={trialPlanId !== null || Boolean(trialSuccess)}
+                    onClick={() => void startTrial(plan)}
+                    className="mt-7 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  >
+                    {trialPlanId === plan.id && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {trialPlanId === plan.id ? "Starting trial…" : "Start free 14-day trial"}
+                  </button>
+                )}
               </article>
             ))}
           </div>
