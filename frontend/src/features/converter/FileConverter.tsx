@@ -1,6 +1,8 @@
 import React, { useRef, useState } from "react";
 import { useAppStore } from "../../store";
 import { useCodeConverter } from "../../hook/useCodeConverter";
+import { ConversionErrorLog } from "../../components/ConversionErrorDetails";
+import { GENERIC_CONVERSION_ERROR, getConversionError, type ConversionErrorDetails } from "../../utils/conversionError";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Play,
@@ -43,12 +45,14 @@ export function FileConverter() {
   const [activeToolTab, setActiveToolTab] = useState<"code" | "bms">("code");
 
   // ── BMS Converter state
-  type BmsStatus = "idle" | "uploading" | "success" | "error";
+  type BmsStatus = "idle" | "uploading" | "success" | "failed";
   const [bmsStatus, setBmsStatus] = useState<BmsStatus>("idle");
   const [bmsDragOver, setBmsDragOver] = useState(false);
   const [bmsSelectedFile, setBmsSelectedFile] = useState<File | null>(null);
   const [bmsSelectedBmsFiles, setBmsSelectedBmsFiles] = useState<File[]>([]);
   const [bmsErrorMsg, setBmsErrorMsg] = useState("");
+  const [bmsErrorDetails, setBmsErrorDetails] = useState<ConversionErrorDetails | null>(null);
+  const [bmsShowError, setBmsShowError] = useState(false);
   const [bmsDownloadUrl, setBmsDownloadUrl] = useState("");
   const bmsInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,6 +63,8 @@ export function FileConverter() {
     setBmsSelectedFile(null);
     setBmsSelectedBmsFiles([]);
     setBmsErrorMsg("");
+    setBmsErrorDetails(null);
+    setBmsShowError(false);
     if (bmsDownloadUrl) URL.revokeObjectURL(bmsDownloadUrl);
     setBmsDownloadUrl("");
     if (bmsInputRef.current) bmsInputRef.current.value = "";
@@ -83,6 +89,8 @@ export function FileConverter() {
     if (!bmsIsReady) return;
     setBmsStatus("uploading");
     setBmsErrorMsg("");
+    setBmsErrorDetails(null);
+    setBmsShowError(false);
     try {
       const formData = new FormData();
       if (bmsSelectedFile) {
@@ -96,15 +104,19 @@ export function FileConverter() {
       });
       if (!resp.ok) {
         const json = await resp.json().catch(() => ({}));
-        throw new Error(json.message || `Server error (${resp.status})`);
+        const details = getConversionError(json, resp.status);
+        setBmsErrorDetails(details);
+        throw new Error(details.message);
       }
       const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
       setBmsDownloadUrl(url);
       setBmsStatus("success");
     } catch (err: unknown) {
-      setBmsErrorMsg(err instanceof Error ? err.message : "Unknown error");
-      setBmsStatus("error");
+      const message = err instanceof Error ? err.message : GENERIC_CONVERSION_ERROR.message;
+      setBmsErrorMsg(message);
+      setBmsErrorDetails((current) => current || { ...GENERIC_CONVERSION_ERROR, message });
+      setBmsStatus("failed");
     }
   };
 
@@ -522,16 +534,18 @@ export function FileConverter() {
                     </motion.div>
                   )}
 
-                  {bmsStatus === "error" && (
+                  {bmsStatus === "failed" && (
                     <motion.div key="error" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="bg-white border border-rose-200 rounded-2xl shadow-lg p-10 text-center">
                       <div className="h-16 w-16 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-5">
                         <AlertCircle className="h-9 w-9 text-rose-500" />
                       </div>
                       <h2 className="text-xl font-bold text-slate-900 mb-2">An Error Occurred</h2>
-                      <p className="text-rose-600 text-sm bg-rose-50 border border-rose-100 rounded-lg px-4 py-3 mb-8 font-mono">{bmsErrorMsg}</p>
-                      <button onClick={bmsReset} className="flex items-center justify-center gap-2 mx-auto border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-6 py-3 rounded-xl transition">
-                        <RefreshCw className="h-4 w-4" /> Try Again
-                      </button>
+                      <p className="text-rose-600 text-sm bg-rose-50 border border-rose-100 rounded-lg px-4 py-3 mb-4 font-mono">{bmsErrorMsg}</p>
+                      {bmsErrorDetails && <ConversionErrorLog error={bmsErrorDetails} expanded={bmsShowError} onToggle={() => setBmsShowError((show) => !show)} />}
+                      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button onClick={bmsHandleConvert} className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-xl transition"><RefreshCw className="h-4 w-4" /> Retry</button>
+                        <button onClick={bmsReset} className="flex items-center justify-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-6 py-3 rounded-xl transition">Chọn file khác</button>
+                      </div>
                     </motion.div>
                   )}
 

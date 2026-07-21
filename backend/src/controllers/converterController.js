@@ -47,6 +47,20 @@ async function logConversion({ user, fileType, screenCount, success, errorMessag
   }
 }
 
+function buildConversionError(code, message, rawDetails = '') {
+  const details = String(rawDetails || message || '');
+  const lineMatch = details.match(/(?:line|dòng)\s*[:#]?\s*(\d+)/i);
+  let suggestion = 'Kiểm tra định dạng và nội dung file BMS, sửa lỗi rồi thử lại.';
+  if (/timed?\s*out|timeout/i.test(details)) suggestion = 'Giảm kích thước bộ file hoặc chia nhỏ file ZIP rồi thử lại.';
+  else if (/python.*(?:not recognized|not found)|ENOENT/i.test(details)) suggestion = 'Kiểm tra Python đã được cài đặt và lệnh python có trong PATH của backend.';
+  else if (/zip|archive|invalid signature/i.test(details)) suggestion = 'Kiểm tra file ZIP không bị hỏng và bên trong có ít nhất một file .bms.';
+  return { code, message: message || 'Không thể hoàn tất quá trình chuyển đổi.', line: lineMatch ? `Line ${lineMatch[1]}` : 'Không xác định', suggestion };
+}
+
+function sendConversionError(res, status, code, message, rawDetails) {
+  return res.status(status).json({ success: false, message, error: buildConversionError(code, message, rawDetails) });
+}
+
 // Override via env vars for machines/deployments where the layout differs;
 // default to this repo's own py/ and frontend/ folders so it works out of the box.
 const PYTHON_SCRIPT = process.env.PYTHON_BMS2REACT_SCRIPT
@@ -304,16 +318,13 @@ exports.convertBmsFiles = async (req, res) => {
         }
       }
     } else {
-      return res.status(400).json({ success: false, message: 'Không có file nào được tải lên.' });
+      return sendConversionError(res, 400, 'BMS_FILE_REQUIRED', 'Không có file nào được tải lên.');
     }
 
     // ── 2. Locate BMS files ───────────────────────────────────────────────
     const bmsDir = findBmsDirectory(inputDir);
     if (!bmsDir) {
-      return res.status(400).json({
-        success: false,
-        message: 'Không tìm thấy file .bms nào. Hãy đảm bảo file ZIP chứa các file .bms.',
-      });
+      return sendConversionError(res, 400, 'BMS_FILE_NOT_FOUND', 'Không tìm thấy file .bms nào. Hãy đảm bảo file ZIP chứa các file .bms.');
     }
 
     // ── 3. Run Python conversion ──────────────────────────────────────────
@@ -329,10 +340,7 @@ exports.convertBmsFiles = async (req, res) => {
       .map((f) => path.basename(f, '.tsx'));
 
     if (generatedScreens.length === 0) {
-      return res.status(500).json({
-        success: false,
-        message: 'Quá trình chuyển đổi không sinh ra file nào. Kiểm tra lại định dạng file BMS.',
-      });
+      return sendConversionError(res, 500, 'BMS_OUTPUT_EMPTY', 'Quá trình chuyển đổi không sinh ra file nào. Kiểm tra lại định dạng file BMS.', stderr || stdout);
     }
 
     // ── 4. Copy full CICS2React frontend template ─────────────────────────
@@ -414,10 +422,8 @@ exports.convertBmsFiles = async (req, res) => {
       errorMessage: err.message || 'Unknown error',
     });
     if (!res.headersSent) {
-      res.status(500).json({
-        success: false,
-        message: 'Lỗi chuyển đổi: ' + (err.message || 'Unknown error'),
-      });
+      const rawDetails = [err.stderr, err.stdout, err.stack].filter(Boolean).join('\n');
+      sendConversionError(res, 500, err.killed ? 'BMS_CONVERSION_TIMEOUT' : 'BMS_CONVERSION_FAILED', 'Lỗi chuyển đổi: ' + (err.message || 'Unknown error'), rawDetails);
     }
   } finally {
     try { fs.rmSync(jobDir, { recursive: true, force: true }); } catch {}

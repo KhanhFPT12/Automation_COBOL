@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { ConversionErrorLog } from "../components/ConversionErrorDetails";
+import { GENERIC_CONVERSION_ERROR, getConversionError, type ConversionErrorDetails } from "../utils/conversionError";
 import {
   Upload,
   FileArchive,
@@ -13,7 +15,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-type ConvertStatus = "idle" | "uploading" | "success" | "error";
+type ConvertStatus = "idle" | "uploading" | "success" | "failed";
 
 export function ProductExperiencePage() {
   const [status, setStatus] = useState<ConvertStatus>("idle");
@@ -21,6 +23,8 @@ export function ProductExperiencePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedBmsFiles, setSelectedBmsFiles] = useState<File[]>([]);
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [errorDetails, setErrorDetails] = useState<ConversionErrorDetails | null>(null);
+  const [showError, setShowError] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -31,6 +35,8 @@ export function ProductExperiencePage() {
     setSelectedFile(null);
     setSelectedBmsFiles([]);
     setErrorMsg("");
+    setErrorDetails(null);
+    setShowError(false);
     if (downloadUrl) URL.revokeObjectURL(downloadUrl);
     setDownloadUrl("");
     if (inputRef.current) inputRef.current.value = "";
@@ -66,6 +72,8 @@ export function ProductExperiencePage() {
     if (!isReady) return;
     setStatus("uploading");
     setErrorMsg("");
+    setErrorDetails(null);
+    setShowError(false);
 
     try {
       const formData = new FormData();
@@ -82,7 +90,9 @@ export function ProductExperiencePage() {
 
       if (!resp.ok) {
         const json = await resp.json().catch(() => ({}));
-        throw new Error(json.message || `Server error (${resp.status})`);
+        const details = getConversionError(json, resp.status);
+        setErrorDetails(details);
+        throw new Error(details.message);
       }
 
       const blob = await resp.blob();
@@ -90,9 +100,10 @@ export function ProductExperiencePage() {
       setDownloadUrl(url);
       setStatus("success");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
+      const msg = err instanceof Error ? err.message : GENERIC_CONVERSION_ERROR.message;
       setErrorMsg(msg);
-      setStatus("error");
+      setErrorDetails((current) => current || { ...GENERIC_CONVERSION_ERROR, message: msg });
+      setStatus("failed");
     }
   };
 
@@ -209,9 +220,9 @@ export function ProductExperiencePage() {
               </motion.div>
             )}
 
-            {status === "error" && (
+            {status === "failed" && (
               <motion.div
-                key="error"
+                key="failed"
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
@@ -221,16 +232,14 @@ export function ProductExperiencePage() {
                   <AlertCircle className="h-9 w-9 text-rose-500" />
                 </div>
                 <h2 className="text-xl font-bold text-slate-900 mb-2">An Error Occurred</h2>
-                <p className="text-rose-600 text-sm bg-rose-50 border border-rose-100 rounded-lg px-4 py-3 mb-8 font-mono">
+                <p className="text-rose-600 text-sm bg-rose-50 border border-rose-100 rounded-lg px-4 py-3 mb-4 font-mono">
                   {errorMsg}
                 </p>
-                <button
-                  onClick={reset}
-                  className="flex items-center justify-center gap-2 mx-auto border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-6 py-3 rounded-xl transition"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  Try Again
-                </button>
+                {errorDetails && <ConversionErrorLog error={errorDetails} expanded={showError} onToggle={() => setShowError((show) => !show)} />}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button onClick={handleConvert} className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-xl transition"><RefreshCw className="h-4 w-4" /> Retry</button>
+                  <button onClick={reset} className="flex items-center justify-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-6 py-3 rounded-xl transition">Chọn file khác</button>
+                </div>
               </motion.div>
             )}
 
