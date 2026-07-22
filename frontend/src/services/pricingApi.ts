@@ -57,6 +57,8 @@ export interface BillingSubscription {
   id: string;
   status: "trialing" | "active";
   currentPeriodEnd: string;
+  cancelAtPeriodEnd: boolean;
+  cancellationReason: string | null;
 }
 
 export interface BillingData {
@@ -94,6 +96,12 @@ interface UpgradeResponse {
     plan: PricingPlan;
     charge: UpgradePreview["charge"];
   };
+}
+
+interface CancelSubscriptionResponse {
+  success: boolean;
+  message: string;
+  data: { subscription: BillingSubscription };
 }
 
 const CACHE_KEY = "alsm_pricing_plans";
@@ -135,6 +143,11 @@ export const pricingApi = {
   getTrialEligibility: () =>
     apiFetch<TrialEligibilityResponse>("/api/pricing/trial/eligibility"),
   getBilling: () => apiFetch<BillingResponse>("/api/pricing/billing"),
+  cancelSubscription: (reason?: string) =>
+    apiFetch<CancelSubscriptionResponse>("/api/pricing/subscription/cancel", {
+      method: "PATCH",
+      body: JSON.stringify({ reason: reason || undefined }),
+    }),
   previewUpgrade: (planId: string) =>
     apiFetch<UpgradePreviewResponse>("/api/pricing/upgrade/preview", {
       method: "POST",

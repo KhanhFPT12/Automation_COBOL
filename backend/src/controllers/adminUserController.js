@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Meeting = require('../models/Meeting');
 const ConversionLog = require('../models/ConversionLog');
+const Subscription = require('../models/Subscription');
 
 const EDITABLE_FIELDS = [
   'fullName',
@@ -71,9 +72,10 @@ exports.getUserDetail = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
 
-    const [conversionHistory, meetingHistory] = await Promise.all([
+    const [conversionHistory, meetingHistory, subscription] = await Promise.all([
       ConversionLog.find({ user: user._id }).sort({ createdAt: -1 }).limit(50),
       Meeting.find({ user: user._id }).sort({ createdAt: -1 }),
+      Subscription.findOne({ user_id: user._id }).sort({ created_at: -1 }),
     ]);
 
     // No payment/billing system exists yet - always return an empty list so
@@ -86,9 +88,59 @@ exports.getUserDetail = async (req, res) => {
       conversionHistory,
       meetingHistory,
       paymentHistory,
+      subscription: subscription ? {
+        id: subscription._id,
+        planName: subscription.plan_name,
+        status: subscription.status,
+        currentPeriodEnd: subscription.current_period_end,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        cancellationReason: subscription.cancellation_reason,
+      } : null,
     });
   } catch (err) {
     console.error('getUserDetail error:', err.message);
+    return res.status(500).json({ success: false, message: 'Server error. Please try again.' });
+  }
+};
+
+exports.reactivateSubscription = async (req, res) => {
+  try {
+    const subscription = await Subscription.findOneAndUpdate(
+      {
+        user_id: req.params.id,
+        status: 'active',
+        cancel_at_period_end: true,
+        current_period_end: { $gt: new Date() },
+      },
+      {
+        $set: {
+          cancel_at_period_end: false,
+          cancellation_reason: null,
+          cancellation_requested_at: null,
+        },
+      },
+      { new: true }
+    );
+    if (!subscription) {
+      return res.status(409).json({
+        success: false,
+        message: 'This subscription cannot be reactivated after its current period ends.',
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Subscription renewal reactivated.',
+      subscription: {
+        id: subscription._id,
+        planName: subscription.plan_name,
+        status: subscription.status,
+        currentPeriodEnd: subscription.current_period_end,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        cancellationReason: subscription.cancellation_reason,
+      },
+    });
+  } catch (err) {
+    console.error('reactivateSubscription error:', err.message);
     return res.status(500).json({ success: false, message: 'Server error. Please try again.' });
   }
 };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Loader2, Save, UserCircle2 } from "lucide-react";
-import { adminApi } from "../../services/adminApi";
+import { adminApi, type AdminSubscription } from "../../services/adminApi";
 import { useAppStore } from "../../store";
 import type { AdminUser, ConversionLogEntry, Meeting } from "../../types";
 
@@ -16,6 +16,9 @@ export function UserDetailPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({ fullName: "", companyName: "", phone: "", credits: "" });
+  const [subscription, setSubscription] = useState<AdminSubscription | null>(null);
+  const [reactivating, setReactivating] = useState(false);
+  const [subscriptionMessage, setSubscriptionMessage] = useState("");
 
   useEffect(() => {
     if (!adminSelectedUserId) {
@@ -29,6 +32,7 @@ export function UserDetailPage() {
         setUser(data.user);
         setConversionHistory(data.conversionHistory);
         setMeetingHistory(data.meetingHistory);
+        setSubscription(data.subscription);
         setForm({
           fullName: data.user.fullName || "",
           companyName: data.user.companyName || "",
@@ -59,6 +63,21 @@ export function UserDetailPage() {
       alert(err instanceof Error ? err.message : "Failed to save.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const reactivateSubscription = async () => {
+    if (!user) return;
+    setReactivating(true);
+    setSubscriptionMessage("");
+    try {
+      const response = await adminApi.reactivateSubscription(user._id);
+      setSubscription(response.subscription);
+      setSubscriptionMessage(response.message);
+    } catch (err) {
+      setSubscriptionMessage(err instanceof Error ? err.message : "Failed to reactivate subscription.");
+    } finally {
+      setReactivating(false);
     }
   };
 
@@ -121,6 +140,30 @@ export function UserDetailPage() {
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Save Changes
         </button>
+      </div>
+
+      {/* Conversion history */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h3 className="text-sm font-bold text-slate-800 mb-4">Subscription</h3>
+        {!subscription ? (
+          <p className="text-sm text-slate-400">No subscription found.</p>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="text-sm text-slate-600">
+              <p><span className="font-semibold text-slate-800">{subscription.planName}</span> · <span className="capitalize">{subscription.status}</span></p>
+              <p className="mt-1">Current period ends {new Date(subscription.currentPeriodEnd).toLocaleDateString()}</p>
+              {subscription.cancelAtPeriodEnd && <p className="mt-1 font-semibold text-amber-700">Cancellation scheduled at period end</p>}
+              {subscription.cancellationReason && <p className="mt-1 text-slate-500">Reason: {subscription.cancellationReason}</p>}
+              {subscriptionMessage && <p role="status" className="mt-2 text-sky-700">{subscriptionMessage}</p>}
+            </div>
+            {subscription.status === "active" && subscription.cancelAtPeriodEnd && new Date(subscription.currentPeriodEnd) > new Date() && (
+              <button type="button" disabled={reactivating} onClick={() => void reactivateSubscription()} className="flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:bg-slate-300">
+                {reactivating && <Loader2 className="h-4 w-4 animate-spin" />}
+                {reactivating ? "Reactivating…" : "Reactivate renewal"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Conversion history */}

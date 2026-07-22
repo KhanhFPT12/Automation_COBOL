@@ -34,6 +34,8 @@ const subscriptionSchema = new mongoose.Schema(
     current_period_start: { type: Date, required: true },
     current_period_end: { type: Date, required: true },
     cancel_at_period_end: { type: Boolean, required: true, default: false },
+    cancellation_reason: { type: String, default: null, trim: true, maxlength: 500 },
+    cancellation_requested_at: { type: Date, default: null },
     usage: { type: usageSchema, required: true, default: () => ({}) },
     payment_provider: { type: String, required: true, default: 'none', trim: true },
     provider_subscription_id: { type: String, default: null, trim: true },

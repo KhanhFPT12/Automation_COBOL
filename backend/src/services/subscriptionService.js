@@ -3,6 +3,16 @@ const Subscription = require('../models/Subscription');
 
 const DEFAULT_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
 
+const cancelExpiredSubscriptions = () =>
+  Subscription.updateMany(
+    {
+      status: 'active',
+      cancel_at_period_end: true,
+      current_period_end: { $lte: new Date() },
+    },
+    { $set: { status: 'canceled' } }
+  );
+
 const ensureStarterSubscription = async (userId) => {
   const existingSubscription = await Subscription.findOne({ user_id: userId });
   if (existingSubscription) return existingSubscription;
@@ -28,4 +38,4 @@ const ensureStarterSubscription = async (userId) => {
   });
 };
 
-module.exports = { ensureStarterSubscription };
+module.exports = { ensureStarterSubscription, cancelExpiredSubscriptions };

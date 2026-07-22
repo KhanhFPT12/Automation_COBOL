@@ -11,12 +11,14 @@ const adminRoutes = require('./routes/adminRoutes');
 const pricingRoutes = require('./routes/pricingRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
 const { startMeetingReminderJob } = require('./jobs/meetingReminder');
+const { startSubscriptionExpirationJob } = require('./jobs/subscriptionExpiration');
 
 const app = express();
 
 // ─── Connect Database ────────────────────────────────────────────
 connectDB();
 startMeetingReminderJob();
+startSubscriptionExpirationJob();
 
 // ─── Security Middleware ─────────────────────────────────────────
 app.use(helmet());

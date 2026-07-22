@@ -1,7 +1,7 @@
 const Plan = require('../models/Plan');
 const Subscription = require('../models/Subscription');
 const Invoice = require('../models/Invoice');
-const { ensureStarterSubscription } = require('../services/subscriptionService');
+const { ensureStarterSubscription, cancelExpiredSubscriptions } = require('../services/subscriptionService');
 const { generateInvoicePdf } = require('../services/invoicePdfService');
 
 const TRIAL_DURATION_MS = 14 * 24 * 60 * 60 * 1000;
@@ -91,6 +91,7 @@ exports.getPlans = async (_req, res, next) => {
 
 exports.getBilling = async (req, res, next) => {
   try {
+    await cancelExpiredSubscriptions();
     let subscription = await Subscription.findOne({
       user_id: req.user._id,
       status: { $in: ['trialing', 'active'] },
@@ -127,9 +128,61 @@ exports.getBilling = async (req, res, next) => {
           id: subscription._id,
           status: subscription.status,
           currentPeriodEnd: subscription.current_period_end,
+          cancelAtPeriodEnd: subscription.cancel_at_period_end,
+          cancellationReason: subscription.cancellation_reason,
         },
         currentPlan: serializePlan(currentPlan),
         availableUpgrades: upgrades.map(serializePlan),
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.cancelSubscription = async (req, res, next) => {
+  try {
+    await cancelExpiredSubscriptions();
+    const reason = String(req.body.reason || '').trim();
+    if (reason.length > 500) {
+      return res.status(400).json({ success: false, message: 'Cancellation reason cannot exceed 500 characters.' });
+    }
+
+    const subscription = await Subscription.findOneAndUpdate(
+      {
+        user_id: req.user._id,
+        status: 'active',
+        current_period_end: { $gt: new Date() },
+        cancel_at_period_end: false,
+      },
+      {
+        $set: {
+          cancel_at_period_end: true,
+          cancellation_reason: reason || null,
+          cancellation_requested_at: new Date(),
+        },
+      },
+      { new: true }
+    );
+
+    if (!subscription) {
+      return res.status(409).json({
+        success: false,
+        message: 'Only an active, renewing subscription can be canceled.',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Your subscription will end on ${subscription.current_period_end.toLocaleDateString('en-US')}.`,
+      data: {
+        subscription: {
+          id: subscription._id,
+          status: subscription.status,
+          currentPeriodEnd: subscription.current_period_end,
+          cancelAtPeriodEnd: subscription.cancel_at_period_end,
+          cancellationReason: subscription.cancellation_reason,
+        },
       },
     });
   } catch (error) {

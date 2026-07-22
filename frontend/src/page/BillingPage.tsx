@@ -40,6 +40,9 @@ export function BillingPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceDetail | null>(null);
   const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [canceling, setCanceling] = useState(false);
 
   const loadBilling = async () => {
     setLoading(true);
@@ -167,6 +170,22 @@ export function BillingPage() {
     }
   };
 
+  const confirmCancellation = async () => {
+    setCanceling(true);
+    setError("");
+    try {
+      const response = await pricingApi.cancelSubscription(cancelReason.trim());
+      setSuccess(response.message);
+      setBilling((current) => current ? { ...current, subscription: response.data.subscription } : current);
+      setCancelDialogOpen(false);
+      setCancelReason("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to cancel your subscription.");
+    } finally {
+      setCanceling(false);
+    }
+  };
+
   return (
     <div className="min-h-[70vh] bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
@@ -198,8 +217,13 @@ export function BillingPage() {
                   <p className="text-sm font-medium text-slate-500">Current plan</p>
                   <h2 className="mt-1 text-2xl font-bold text-slate-900">{billing.currentPlan.name}</h2>
                   <p className="mt-1 text-sm text-slate-500">
-                    {billing.subscription.status === "trialing" ? "Trial" : "Active"} · {billing.subscription.status === "trialing" ? "Ends" : "Renews"} {new Date(billing.subscription.currentPeriodEnd).toLocaleDateString()}
+                    {billing.subscription.status === "trialing" ? "Trial" : "Active"} · {billing.subscription.status === "trialing" || billing.subscription.cancelAtPeriodEnd ? "Ends" : "Renews"} {new Date(billing.subscription.currentPeriodEnd).toLocaleDateString()}
                   </p>
+                  {billing.subscription.cancelAtPeriodEnd && (
+                    <p className="mt-2 text-sm font-semibold text-amber-700">
+                      Cancellation scheduled. Your access remains active through this date.
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-extrabold text-slate-900">
@@ -208,6 +232,17 @@ export function BillingPage() {
                   <p className="text-sm text-slate-500">per month</p>
                 </div>
               </div>
+              {billing.subscription.status === "active" && !billing.subscription.cancelAtPeriodEnd && (
+                <div className="mt-6 border-t border-slate-100 pt-5">
+                  <button
+                    type="button"
+                    onClick={() => { setSuccess(""); setCancelDialogOpen(true); }}
+                    className="text-sm font-semibold text-rose-600 hover:text-rose-700"
+                  >
+                    Cancel plan
+                  </button>
+                </div>
+              )}
             </section>
 
             <h2 className="mt-10 text-xl font-bold text-slate-900">Available upgrades</h2>
@@ -357,6 +392,41 @@ export function BillingPage() {
               <button type="button" disabled={confirming} onClick={() => void confirmUpgrade()} className="flex items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:bg-slate-300">
                 {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                 {confirming ? "Processing…" : "Confirm payment"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cancelDialogOpen && billing && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="cancel-subscription-title">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-rose-600">Cancel plan</p>
+                <h2 id="cancel-subscription-title" className="mt-1 text-2xl font-bold text-slate-900">Confirm cancellation</h2>
+              </div>
+              <button type="button" disabled={canceling} onClick={() => setCancelDialogOpen(false)} aria-label="Close" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mt-4 text-sm text-slate-600">
+              Your plan will not renew, but you will keep access until {formatDate(billing.subscription.currentPeriodEnd)}.
+            </p>
+            <label htmlFor="cancel-reason" className="mt-5 block text-sm font-semibold text-slate-700">Reason (optional)</label>
+            <select id="cancel-reason" value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30">
+              <option value="">Prefer not to say</option>
+              <option value="Too expensive">Too expensive</option>
+              <option value="Missing features">Missing features</option>
+              <option value="Not using it enough">Not using it enough</option>
+              <option value="Switching to another service">Switching to another service</option>
+              <option value="Other">Other</option>
+            </select>
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button type="button" disabled={canceling} onClick={() => setCancelDialogOpen(false)} className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">Keep plan</button>
+              <button type="button" disabled={canceling} onClick={() => void confirmCancellation()} className="flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-rose-700 disabled:bg-slate-300">
+                {canceling && <Loader2 className="h-4 w-4 animate-spin" />}
+                {canceling ? "Canceling…" : "Confirm cancellation"}
               </button>
             </div>
           </div>

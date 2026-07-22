@@ -9,6 +9,15 @@ import type {
   Pagination,
 } from '../types';
 
+export interface AdminSubscription {
+  id: string;
+  planName: string;
+  status: 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired';
+  currentPeriodEnd: string;
+  cancelAtPeriodEnd: boolean;
+  cancellationReason: string | null;
+}
+
 const BASE = '/api/admin';
 
 function qs(params: Record<string, string | number | undefined>) {
@@ -46,6 +55,7 @@ export const adminApi = {
       conversionHistory: ConversionLogEntry[];
       meetingHistory: Meeting[];
       paymentHistory: unknown[];
+      subscription: AdminSubscription | null;
     }>(`${BASE}/users/${id}`),
 
   updateUser: (id: string, updates: Partial<AdminUser>) =>
@@ -68,6 +78,12 @@ export const adminApi = {
     apiFetch<{ success: boolean; message: string }>(`${BASE}/users/${id}`, {
       method: 'DELETE',
     }),
+
+  reactivateSubscription: (id: string) =>
+    apiFetch<{ success: boolean; message: string; subscription: AdminSubscription }>(
+      `${BASE}/users/${id}/subscription/reactivate`,
+      { method: 'PATCH' }
+    ),
 
   // ─── Meeting management ────────────────────────────────────────
   listMeetings: (params: { status?: string; search?: string; page?: number; limit?: number } = {}) =>

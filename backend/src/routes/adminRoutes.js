@@ -27,6 +27,7 @@ router.get('/users/:id', adminUserController.getUserDetail);
 router.patch('/users/:id', adminUserController.updateUser);
 router.patch('/users/:id/lock', adminUserController.lockUser);
 router.patch('/users/:id/unlock', adminUserController.unlockUser);
+router.patch('/users/:id/subscription/reactivate', adminUserController.reactivateSubscription);
 router.delete('/users/:id', adminUserController.deleteUser);
 
 // ─── Meeting management ────────────────────────────────────────
