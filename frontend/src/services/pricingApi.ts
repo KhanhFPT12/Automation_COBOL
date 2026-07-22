@@ -48,9 +48,14 @@ interface TrialResponse {
   data: TrialSubscription;
 }
 
+interface TrialEligibilityResponse {
+  success: boolean;
+  data: { eligible: boolean };
+}
+
 export interface BillingSubscription {
   id: string;
-  status: "active";
+  status: "trialing" | "active";
   currentPeriodEnd: string;
 }
 
@@ -127,6 +132,8 @@ export const pricingApi = {
       method: "POST",
       body: JSON.stringify({ planId }),
     }),
+  getTrialEligibility: () =>
+    apiFetch<TrialEligibilityResponse>("/api/pricing/trial/eligibility"),
   getBilling: () => apiFetch<BillingResponse>("/api/pricing/billing"),
   previewUpgrade: (planId: string) =>
     apiFetch<UpgradePreviewResponse>("/api/pricing/upgrade/preview", {

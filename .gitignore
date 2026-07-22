@@ -28,3 +28,6 @@ Thumbs.db
 
 # Vite / Build cache
 frontend/.vite/
+
+# Runtime-generated invoice PDFs
+backend/storage/invoices/

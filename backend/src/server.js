@@ -9,6 +9,7 @@ const meetingRoutes = require('./routes/meetingRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const pricingRoutes = require('./routes/pricingRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
 const { startMeetingReminderJob } = require('./jobs/meetingReminder');
 
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/meetings', meetingRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/pricing', pricingRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // ─── Health Check ────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Check, Database, FolderKanban, Loader2, Monitor } from "lucide-react";
 import { pricingApi, type PricingPlan } from "../services/pricingApi";
+import { useAppStore } from "../store";
 
 const formatLimit = (value: number | null) =>
   value === null ? "Unlimited" : value.toLocaleString();
 
 export function PricingPage() {
+  const isLoggedIn = useAppStore((state) => state.session.isLoggedIn);
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -13,6 +15,7 @@ export function PricingPage() {
   const [trialPlanId, setTrialPlanId] = useState<string | null>(null);
   const [trialError, setTrialError] = useState("");
   const [trialSuccess, setTrialSuccess] = useState("");
+  const [trialEligible, setTrialEligible] = useState<boolean | null>(null);
 
   const startTrial = async (plan: PricingPlan) => {
     setTrialPlanId(plan.id);
@@ -22,6 +25,7 @@ export function PricingPage() {
       const result = await pricingApi.startTrial(plan.id);
       const trialEnd = new Date(result.data.trialEnd).toLocaleDateString();
       setTrialSuccess(`${result.message} Trial ends on ${trialEnd}.`);
+      setTrialEligible(false);
     } catch (err) {
       setTrialError(err instanceof Error ? err.message : "Unable to start free trial.");
     } finally {
@@ -71,6 +75,26 @@ export function PricingPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+
+    let cancelled = false;
+    void pricingApi
+      .getTrialEligibility()
+      .then((result) => {
+        if (!cancelled) setTrialEligible(result.data.eligible);
+      })
+      .catch(() => {
+        if (!cancelled) setTrialEligible(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn]);
 
   return (
     <div className="min-h-[70vh] bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
@@ -201,12 +225,18 @@ export function PricingPage() {
                 {plan.name === "Professional" && (
                   <button
                     type="button"
-                    disabled={trialPlanId !== null || Boolean(trialSuccess)}
+                    disabled={trialPlanId !== null || (isLoggedIn && trialEligible !== true) || Boolean(trialSuccess)}
                     onClick={() => void startTrial(plan)}
                     className="mt-7 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     {trialPlanId === plan.id && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {trialPlanId === plan.id ? "Starting trial…" : "Start free 14-day trial"}
+                    {trialPlanId === plan.id
+                      ? "Starting trial…"
+                      : isLoggedIn && trialEligible === null
+                        ? "Checking trial availability…"
+                      : trialEligible === false
+                        ? "Free trial already used"
+                        : "Start free 14-day trial"}
                   </button>
                 )}
               </article>

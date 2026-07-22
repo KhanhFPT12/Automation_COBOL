@@ -1,6 +1,8 @@
 const Plan = require('../models/Plan');
 const Subscription = require('../models/Subscription');
+const Invoice = require('../models/Invoice');
 const { ensureStarterSubscription } = require('../services/subscriptionService');
+const { generateInvoicePdf } = require('../services/invoicePdfService');
 
 const TRIAL_DURATION_MS = 14 * 24 * 60 * 60 * 1000;
 const UPGRADE_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
@@ -28,7 +30,11 @@ const serializePlan = (plan) => ({
 });
 
 const findUpgrade = async (userId, planSlug) => {
-  const subscription = await Subscription.findOne({ user_id: userId, status: 'active' });
+  const subscription = await Subscription.findOne({
+    user_id: userId,
+    status: { $in: ['trialing', 'active'] },
+    current_period_end: { $gt: new Date() },
+  });
   if (!subscription) {
     const error = new Error('An active subscription is required to upgrade.');
     error.status = 409;
@@ -63,6 +69,12 @@ const calculateUpgradeCharge = (targetPlan) => {
   };
 };
 
+const createInvoiceNumber = (userId) => {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const accountSuffix = userId.toString().slice(-6).toUpperCase();
+  return `INV-${timestamp}-${accountSuffix}`;
+};
+
 exports.getPlans = async (_req, res, next) => {
   try {
     const plans = await Plan.find({ is_active: true })
@@ -79,10 +91,18 @@ exports.getPlans = async (_req, res, next) => {
 
 exports.getBilling = async (req, res, next) => {
   try {
-    let subscription = await Subscription.findOne({ user_id: req.user._id, status: 'active' });
+    let subscription = await Subscription.findOne({
+      user_id: req.user._id,
+      status: { $in: ['trialing', 'active'] },
+      current_period_end: { $gt: new Date() },
+    });
     if (!subscription) {
       await ensureStarterSubscription(req.user._id);
-      subscription = await Subscription.findOne({ user_id: req.user._id, status: 'active' });
+      subscription = await Subscription.findOne({
+        user_id: req.user._id,
+        status: { $in: ['trialing', 'active'] },
+        current_period_end: { $gt: new Date() },
+      });
     }
     if (!subscription) {
       return res.status(409).json({
@@ -154,11 +174,12 @@ exports.confirmUpgrade = async (req, res, next) => {
     }
 
     const updatedSubscription = await Subscription.findOneAndUpdate(
-      { _id: subscription._id, status: 'active', plan_id: currentPlan._id },
+      { _id: subscription._id, status: subscription.status, plan_id: currentPlan._id },
       {
         $set: {
           plan_id: targetPlan._id,
           plan_name: targetPlan.name,
+          status: 'active',
           current_period_start: charge.periodStart,
           current_period_end: charge.periodEnd,
         },
@@ -172,6 +193,43 @@ exports.confirmUpgrade = async (req, res, next) => {
       });
     }
 
+    const paidAt = new Date();
+    const invoice = await Invoice.create({
+      organization_id: req.user._id,
+      // Temporary tenant identifier until the Organization domain is introduced.
+      organization_uuid: req.user._id.toString(),
+      subscription_id: updatedSubscription._id,
+      invoice_number: createInvoiceNumber(req.user._id),
+      amount: charge.amountDue,
+      currency: charge.currency,
+      tax_rate: 0,
+      tax_amount: 0,
+      total: charge.amountDue,
+      status: 'paid',
+      line_items: [
+        {
+          description: `${targetPlan.name} plan subscription`,
+          quantity: 1,
+          unit_price: charge.amountDue,
+          amount: charge.amountDue,
+          period_start: charge.periodStart,
+          period_end: charge.periodEnd,
+        },
+      ],
+      invoice_date: paidAt,
+      due_date: paidAt,
+      paid_at: paidAt,
+      pdf_url: null,
+    });
+
+    try {
+      await generateInvoicePdf(invoice);
+      invoice.pdf_url = `/api/invoices/${invoice._id}/pdf`;
+      await invoice.save();
+    } catch (pdfError) {
+      console.error(`Unable to generate PDF for invoice ${invoice.invoice_number}:`, pdfError);
+    }
+
     return res.status(200).json({
       success: true,
       message: `Your subscription has been upgraded to ${targetPlan.name}.`,
@@ -183,7 +241,29 @@ exports.confirmUpgrade = async (req, res, next) => {
         },
         plan: serializePlan(targetPlan),
         charge,
+        invoice: {
+          id: invoice._id,
+          invoiceNumber: invoice.invoice_number,
+          status: invoice.status,
+          pdfStatus: invoice.pdf_url ? 'ready' : 'processing',
+        },
       },
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.getTrialEligibility = async (req, res, next) => {
+  try {
+    const hasUsedTrial = await Subscription.exists({
+      user_id: req.user._id,
+      trial_start: { $ne: null },
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: { eligible: !hasUsedTrial },
     });
   } catch (error) {
     return next(error);
