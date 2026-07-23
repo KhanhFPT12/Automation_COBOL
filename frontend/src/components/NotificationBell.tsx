@@ -11,7 +11,7 @@ const TYPE_DOT: Record<string, string> = {
 };
 
 export function NotificationBell() {
-  const { notifications, unreadNotificationCount, markNotificationRead, markAllNotificationsRead } = useAppStore();
+  const { notifications, unreadNotificationCount, markNotificationRead, markAllNotificationsRead, setActivePage } = useAppStore();
   const [open, setOpen] = useState(false);
 
   return (
@@ -51,7 +51,7 @@ export function NotificationBell() {
                 notifications.map((n) => (
                   <button
                     key={n._id}
-                    onClick={() => !n.isRead && markNotificationRead(n._id)}
+                    onClick={() => { if (!n.isRead) markNotificationRead(n._id); if (n.meeting) { sessionStorage.setItem("alsm_view_meeting_id", n.meeting); setActivePage("meeting-detail"); } setOpen(false); }}
                     className={`w-full text-left px-4 py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition ${!n.isRead ? "bg-sky-50/50" : ""}`}
                   >
                     <div className="flex items-start gap-2">

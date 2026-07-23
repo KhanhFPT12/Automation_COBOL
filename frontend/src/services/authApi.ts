@@ -2,23 +2,21 @@ import { apiFetch as apiFetchAbsolute } from './apiClient';
 
 const BASE = '/api/auth';
 
-// ─── Generic fetch wrapper (kept as a thin local alias so every call site
-// below is unchanged) ──────────────────────────────────────────────
 function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   return apiFetchAbsolute<T>(`${BASE}${path}`, options);
 }
 
-// ─── Types ────────────────────────────────────────────────────────
 export interface ApiUser {
   _id: string;
   fullName?: string;
   email?: string;
   companyName?: string;
   businessEmail?: string;
-  phone: string;
+  phone?: string;
   accountType: 'INDIVIDUAL' | 'ENTERPRISE';
   role: 'USER' | 'ENTERPRISE_ADMIN' | 'ADMIN';
   isEmailVerified: boolean;
+  avatarUrl?: string;
 }
 
 export interface LoginResponse {
@@ -47,12 +45,17 @@ export interface RegisterEnterprisePayload {
   targetTechStack?: string[];
 }
 
-// ─── Auth API calls ───────────────────────────────────────────────
 export const authApi = {
   login: (email: string, password: string) =>
     apiFetch<LoginResponse>('/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
+    }),
+
+  googleLogin: (credential: string) =>
+    apiFetch<LoginResponse>('/google', {
+      method: 'POST',
+      body: JSON.stringify({ credential }),
     }),
 
   registerIndividual: (payload: RegisterIndividualPayload) =>

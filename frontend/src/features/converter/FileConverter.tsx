@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAppStore } from "../../store";
 import { useCodeConverter } from "../../hook/useCodeConverter";
 import { motion, AnimatePresence } from "motion/react";
@@ -398,10 +398,8 @@ export function FileConverter() {
                     <div className="flex-1 p-4 flex flex-col font-mono text-xs overflow-hidden relative min-h-[300px]">
                       <AnimatePresence mode="wait">
                         {state.isConverting ? (
-                          <motion.div key="converting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-white/95 z-10 flex flex-col items-center justify-center p-8 text-center">
-                            <Cpu className="h-8 w-8 text-sky-500 animate-spin mb-4" />
-                            <p className="font-semibold text-slate-800 text-xs mb-1">Synthesizing Target AST Structure...</p>
-                            <p className="text-[11px] text-slate-500 h-4 font-mono font-medium animate-pulse">{state.progressStep}</p>
+                          <motion.div key="converting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900 z-10 flex flex-col p-4 overflow-hidden">
+                            <div className="flex items-center gap-2 mb-3 w-full"><div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-red-500/80" /><div className="w-3 h-3 rounded-full bg-amber-500/80" /><div className="w-3 h-3 rounded-full bg-emerald-500/80" /></div><span className="text-[10px] text-slate-500 font-mono ml-2">alsm-converter ~ bash</span></div><div className="w-full font-mono text-xs text-emerald-400 leading-relaxed overflow-hidden h-48"><TerminalScroll sourceCode={state.sourceCode} /></div>
                           </motion.div>
                         ) : state.convertedCode ? (
                           <motion.div key="converted-output" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full grow">
@@ -536,13 +534,15 @@ export function FileConverter() {
                   )}
 
                   {bmsStatus === "uploading" && (
-                    <motion.div key="uploading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-white border border-slate-200 rounded-2xl shadow-lg p-10 text-center">
-                      <Loader2 className="h-12 w-12 text-sky-500 animate-spin mx-auto mb-5" />
-                      <h2 className="text-xl font-semibold text-slate-800 mb-2">Converting…</h2>
-                      <p className="text-slate-400 text-sm">
-                        CICS2React is analyzing BMS screens and generating React components.<br />
-                        Please wait a moment.
-                      </p>
+                    <motion.div key="uploading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-slate-900 rounded-2xl shadow-lg p-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-red-500/80" /><div className="w-3 h-3 rounded-full bg-amber-500/80" /><div className="w-3 h-3 rounded-full bg-emerald-500/80" /></div>
+                        <span className="text-[10px] text-slate-500 font-mono ml-2">cics2react — converting BMS...</span>
+                      </div>
+                      <div className="font-mono text-xs text-emerald-400 leading-relaxed h-48 overflow-hidden">
+                        <TerminalScroll sourceCode={'IDENTIFICATION DIVISION.\nPROGRAM-ID. SCREEN1.\nDATA DIVISION.\nWORKING-STORAGE SECTION.\n01  WS-MAP-AREA.\n    05  WS-TRANS-ID  PIC X(4).\n    05  WS-CUST-NAME PIC X(30).\n    05  WS-CUST-ID   PIC 9(8).\n    05  WS-AMOUNT    PIC S9(9)V99.\nPROCEDURE DIVISION.\n    EXEC CICS SEND MAP("MAP1")\n    EXEC CICS RECEIVE MAP("MAP1")\n    EXEC CICS RETURN\n    END-EXEC.'} />
+                      </div>
+                      <p className="text-slate-400 text-xs mt-3 text-center">CICS2React is analyzing BMS screens and generating React components...</p>
                     </motion.div>
                   )}
 
@@ -618,5 +618,24 @@ export function FileConverter() {
         </AnimatePresence>
       </section>
     </div>
+  );
+}
+
+function TerminalScroll({ sourceCode }: { sourceCode: string }) {
+  const lines = sourceCode.split('\n').filter(Boolean);
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setCount(c => (c >= lines.length - 1 ? 0 : c + 1)), 100);
+    return () => clearInterval(t);
+  }, [lines.length]);
+  return (
+    <>
+      {lines.slice(0, count + 1).map((l, i) => (
+        <motion.div key={i} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.08 }} className="whitespace-pre">
+          <span className="text-slate-600 mr-2">{String(i + 1).padStart(3, ' ')}</span><span>{l}</span>
+        </motion.div>
+      ))}
+      <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.5 }} className="inline-block w-2 h-4 bg-emerald-400" />
+    </>
   );
 }

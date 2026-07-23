@@ -21,16 +21,29 @@ import { AdminMeetingsPage } from "./page/AdminMeetingsPage";
 import { AdminConversionsPage } from "./page/AdminConversionsPage";
 import { AdminReportsPage } from "./page/AdminReportsPage";
 import { AdminSettingsPage } from "./page/AdminSettingsPage";
+import { MeetingDetailPage } from "./page/MeetingDetailPage";
 
 export default function App() {
   const { activePage, initAuth, session, setActivePage } = useAppStore();
 
+  // Scroll to top whenever page changes
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activePage]);
+
+  useEffect(() => {
+    const ghMatch = window.location.pathname === '/auth/github/success';
+    if (ghMatch) {
+      const token = new URLSearchParams(window.location.search).get('token');
+      if (token) { localStorage.setItem('alsm_token', token); window.history.replaceState({}, '', '/'); initAuth(); return; }
+    }
+    const ghErr = new URLSearchParams(window.location.search).get('auth_error');
+    if (ghErr) { window.history.replaceState({}, '', '/'); setActivePage('login'); useAppStore.getState().setAuthError('GitHub login failed. Please try again.'); return; }
     initAuth();
   }, []);
 
   const isAdmin = session.role === 'ADMIN';
-  const isAdminPage = activePage.startsWith('admin-');
+  const isAdminPage = activePage.startsWith('admin-') || activePage === 'meeting-detail';
 
   // Admins never see the public site (Home, Solutions, Book a Meeting, ...).
   // Whenever an admin session lands on a non-admin page - right after
@@ -83,6 +96,8 @@ export default function App() {
         return <AdminReportsPage />;
       case 'admin-settings':
         return <AdminSettingsPage />;
+      case 'meeting-detail':
+        return <MeetingDetailPage />;
       default:
         return <LandingPage />;
     }
