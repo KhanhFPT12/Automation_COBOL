@@ -466,6 +466,26 @@ exports.getMe = async (req, res) => {
 const { OAuth2Client } = require('google-auth-library');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword)
+      return res.status(400).json({ success: false, message: 'Please provide current and new password.' });
+    if (newPassword.length < 8)
+      return res.status(400).json({ success: false, message: 'New password must be at least 8 characters.' });
+    const user = await User.findById(req.user._id).select('+password');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    if (!user.password || !(await user.comparePassword(currentPassword)))
+      return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+    user.password = newPassword;
+    await user.save();
+    return res.status(200).json({ success: true, message: 'Password changed successfully.' });
+  } catch (err) {
+    console.error('changePassword error:', err.message);
+    return res.status(500).json({ success: false, message: 'Server error. Please try again.' });
+  }
+};
+
 exports.googleLogin = async (req, res) => {
   try {
     const { credential } = req.body;

@@ -18,7 +18,10 @@ export type ActivePage =
   | 'admin-conversions'
   | 'admin-reports'
   | 'admin-settings'
-  | 'meeting-detail';
+  | 'meeting-detail'
+  | 'change-password'
+  | 'profile'
+  | 'admin-chat';
 
 export interface UserSession {
   email: string | null;

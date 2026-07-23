@@ -2,9 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const converterRoutes = require('./routes/converterRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 const meetingRoutes = require('./routes/meetingRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -27,7 +30,7 @@ app.use(
 );
 
 // ─── Body Parser ─────────────────────────────────────────────────
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // ─── API Routes ──────────────────────────────────────────────────
@@ -35,6 +38,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/bms-converter', converterRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 
 // ─── Health Check ────────────────────────────────────────────────

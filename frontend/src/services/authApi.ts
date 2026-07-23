@@ -82,5 +82,7 @@ export const authApi = {
       body: JSON.stringify({ email }),
     }),
 
+  changePassword: (currentPassword, newPassword) => apiFetch('/change-password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) }),
+  resetPassword: (token, password) => apiFetch('/reset-password/' + token, { method: 'POST', body: JSON.stringify({ password }) }),
   getMe: () => apiFetch<{ success: boolean; user: ApiUser }>('/me'),
 };

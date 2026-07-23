@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAppStore } from "../../store";
 import { motion, AnimatePresence } from "motion/react";
-import { Mail, Lock, LogIn, ArrowLeft, Send } from "lucide-react";
+import { Mail, Lock, LogIn, ArrowLeft, Send, Eye, EyeOff } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import { authApi } from "../../services/authApi";
 
@@ -11,6 +11,7 @@ export function SignIn() {
   const { loginUser, loginWithGoogle, isAuthLoading, authError, clearAuthError, setActivePage, setAuthError } = useAppStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [forgotMode, setForgotMode] = useState(false);
   const [fpEmail, setFpEmail] = useState("");
@@ -119,7 +120,7 @@ export function SignIn() {
                         value={fpEmail}
                         onChange={(e) => setFpEmail(e.target.value)}
                         required
-                        className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 hover:bg-slate-100/50 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500 font-sans"
+                        className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 hover:bg-slate-100/50 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500 font-sans"
                       />
                     </div>
                   </div>
@@ -218,13 +219,14 @@ export function SignIn() {
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                     <input
                       id="login-password-input"
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={password}
                       required
                       onChange={(e) => handlePasswordChange(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 hover:bg-slate-100/50 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500 font-sans"
+                      className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 hover:bg-slate-100/50 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500 font-sans"
                     />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer" tabIndex={-1}>{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
                   </div>
                 </div>
 
