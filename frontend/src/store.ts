@@ -19,6 +19,10 @@ interface AppStore {
   isAuthLoading: boolean;
   authError: string | null;
   loginUser: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
+  setAuthError: (message: string) => void;
+  loginWithGoogle: (credential: string) => Promise<void>;
+  setAuthError: (message: string) => void;
   logout: () => void;
   clearAuthError: () => void;
   initAuth: () => Promise<void>;
@@ -52,6 +56,9 @@ interface AppStore {
 
   // ─── Admin: which user is open in Admin > User Management > Detail ────
   adminSelectedUserId: string | null;
+  selectedMeeting: Meeting | null;
+  fetchMeetingById: (id: string) => Promise<void>;
+  clearSelectedMeeting: () => void;
   setAdminSelectedUserId: (id: string | null) => void;
 }
 
@@ -172,6 +179,33 @@ export const useAppStore = create<AppStore>((set, get) => ({
       set({ authError: message, isAuthLoading: false });
     }
   },
+
+  loginWithGoogle: async (credential) => {
+    set({ isAuthLoading: true, authError: null });
+    try {
+      const data = await authApi.googleLogin(credential);
+      const { token, user } = data;
+      localStorage.setItem('alsm_token', token);
+      set({
+        session: {
+          isLoggedIn: true,
+          token,
+          email: user.email || user.businessEmail || null,
+          name: user.fullName || user.companyName || null,
+          accountType: user.accountType,
+          role: user.role,
+        },
+        activePage: user.role === 'ADMIN' ? 'admin-dashboard' : 'home',
+        isAuthLoading: false,
+        authError: null,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Google login failed';
+      set({ authError: message, isAuthLoading: false });
+    }
+  },
+
+  setAuthError: (message) => set({ authError: message }),
 
   logout: () => {
     localStorage.removeItem('alsm_token');
@@ -398,5 +432,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   // ─── Admin: which user is open in Admin > User Management > Detail ────
   adminSelectedUserId: null,
+  selectedMeeting: null,
+  fetchMeetingById: async (id) => {
+    try {
+      const data = await meetingApi.getById(id);
+      set({ selectedMeeting: data.meeting });
+    } catch { /* ignore */ }
+  },
+  clearSelectedMeeting: () => set({ selectedMeeting: null }),
+
   setAdminSelectedUserId: (id) => set({ adminSelectedUserId: id }),
 }));

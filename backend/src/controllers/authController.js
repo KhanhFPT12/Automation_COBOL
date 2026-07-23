@@ -462,3 +462,99 @@ exports.getMe = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error. Please try again.' });
   }
 };
+
+// ────────────────────────────────────────────────────────────────
+// @desc    Google OAuth Login (Sign In With Google)
+// @route   POST /api/auth/google
+// @access  Public
+// ────────────────────────────────────────────────────────────────
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+exports.googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) return res.status(400).json({ success: false, message: 'Google credential is required.' });
+    if (!process.env.GOOGLE_CLIENT_ID) return res.status(500).json({ success: false, message: 'Google login is not configured.' });
+
+    const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: process.env.GOOGLE_CLIENT_ID });
+    const payload = ticket.getPayload();
+    const googleId = payload.sub;
+    const email = payload.email?.toLowerCase();
+    const fullName = payload.name || email;
+    if (!email) return res.status(400).json({ success: false, message: 'Google account does not provide an email.' });
+
+    let user = await User.findOne({ $or: [{ googleId }, { email }, { businessEmail: email }] });
+    if (!user) {
+      user = await User.create({ googleId, fullName, email, accountType: 'INDIVIDUAL', role: 'USER', isEmailVerified: true });
+    } else {
+      if (!user.googleId) user.googleId = googleId;
+      user.isEmailVerified = true;
+      await user.save({ validateBeforeSave: false });
+    }
+
+    const token = generateToken(user._id);
+    return res.status(200).json({ success: true, token, user });
+  } catch (err) {
+    console.error('googleLogin error:', err.message);
+    return res.status(401).json({ success: false, message: 'Google login failed.' });
+  }
+};
+
+// ────────────────────────────────────────────────────────────────
+// @desc    GitHub OAuth Redirect
+// @route   GET /api/auth/github
+// @access  Public
+// ────────────────────────────────────────────────────────────────
+exports.githubLogin = (req, res) => {
+  const params = new URLSearchParams({ client_id: process.env.GITHUB_CLIENT_ID, redirect_uri: process.env.GITHUB_CALLBACK_URL, scope: 'read:user user:email' });
+  res.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`);
+};
+
+// ────────────────────────────────────────────────────────────────
+// @desc    GitHub OAuth Callback
+// @route   GET /api/auth/github/callback
+// @access  Public
+// ────────────────────────────────────────────────────────────────
+exports.githubCallback = async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) return res.redirect(`${process.env.CLIENT_URL}/?auth_error=github_missing_code`);
+
+    const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: process.env.GITHUB_CLIENT_ID, client_secret: process.env.GITHUB_CLIENT_SECRET, code, redirect_uri: process.env.GITHUB_CALLBACK_URL }),
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) return res.redirect(`${process.env.CLIENT_URL}/?auth_error=github_token_failed`);
+
+    const userRes = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${tokenData.access_token}`, Accept: 'application/vnd.github+json' } });
+    const githubUser = await userRes.json();
+
+    const emailsRes = await fetch('https://api.github.com/user/emails', { headers: { Authorization: `Bearer ${tokenData.access_token}`, Accept: 'application/vnd.github+json' } });
+    const emails = await emailsRes.json();
+    const primaryEmailObj = Array.isArray(emails) ? emails.find(e => e.primary && e.verified) || emails.find(e => e.verified) : null;
+    const email = primaryEmailObj?.email?.toLowerCase();
+    if (!email) return res.redirect(`${process.env.CLIENT_URL}/?auth_error=github_email_missing`);
+
+    const githubId = String(githubUser.id);
+    const fullName = githubUser.name || githubUser.login || email;
+    const avatarUrl = githubUser.avatar_url;
+
+    let user = await User.findOne({ $or: [{ githubId }, { email }, { businessEmail: email }] });
+    if (!user) {
+      user = await User.create({ githubId, fullName, email, avatarUrl, accountType: 'INDIVIDUAL', role: 'USER', isEmailVerified: true });
+    } else {
+      if (!user.githubId) user.githubId = githubId;
+      if (!user.avatarUrl && avatarUrl) user.avatarUrl = avatarUrl;
+      user.isEmailVerified = true;
+      await user.save({ validateBeforeSave: false });
+    }
+
+    const token = generateToken(user._id);
+    return res.redirect(`${process.env.CLIENT_URL}/auth/github/success?token=${token}`);
+  } catch (err) {
+    console.error('githubCallback error:', err.message);
+    return res.redirect(`${process.env.CLIENT_URL}/?auth_error=github_failed`);
+  }
+};

@@ -8,9 +8,9 @@ const SCOPES = [
 ];
 
 function assertConfigured() {
-  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
+  if (!process.env.GOOGLE_CALENDAR_CLIENT_ID || !process.env.GOOGLE_CALENDAR_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
     const err = new Error(
-      'Google Calendar chưa được cấu hình. Cần thiết lập GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI trong backend/.env.'
+      'Google Calendar chưa được cấu hình. Cần GOOGLE_CALENDAR_CLIENT_ID, GOOGLE_CALENDAR_CLIENT_SECRET, GOOGLE_REDIRECT_URI trong backend/.env.'
     );
     err.code = 'GOOGLE_NOT_CONFIGURED';
     throw err;
@@ -20,8 +20,8 @@ function assertConfigured() {
 function createOAuthClient() {
   assertConfigured();
   return new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_CALENDAR_CLIENT_ID,
+    process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
     process.env.GOOGLE_REDIRECT_URI
   );
 }

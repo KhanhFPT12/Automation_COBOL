@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Search, Loader2, CheckSquare, CheckCircle2, XCircle, Ban, CircleCheck, X } from "lucide-react";
+import { Eye, Search, Loader2, CheckSquare, CheckCircle2, XCircle, Ban, CircleCheck, X } from "lucide-react";
 import { adminApi } from "../../services/adminApi";
+import { useAppStore } from "../../store";
 import type { Meeting, MeetingDuration, MeetingStatus } from "../../types";
 
 const STATUS_BADGE: Record<MeetingStatus, string> = {
@@ -134,6 +135,7 @@ function RejectModal({ meeting, onClose, onDone }: { meeting: Meeting; onClose: 
 }
 
 export function MeetingManagementPage() {
+  const { setActivePage } = useAppStore();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [status, setStatus] = useState<MeetingStatus | "all">("all");
   const [search, setSearch] = useState("");
@@ -160,6 +162,8 @@ export function MeetingManagementPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
+
+  const handleViewMeeting = (id) => { sessionStorage.setItem("alsm_view_meeting_id", id); setActivePage("meeting-detail"); };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,6 +255,7 @@ export function MeetingManagementPage() {
                     <td className="px-5 py-3 text-slate-500 text-xs">{new Date(m.createdAt).toLocaleDateString()}</td>
                     <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-2">
+                        <button onClick={() => handleViewMeeting(m._id)} title="View" className="p-1.5 rounded-md text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition cursor-pointer"><Eye className="h-4 w-4" /></button>
                         {m.status === "Pending" && (
                           <>
                             <button onClick={() => setApproveTarget(m)} title="Approve" className="p-1.5 rounded-md text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition">
