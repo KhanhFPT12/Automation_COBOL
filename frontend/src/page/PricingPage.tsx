@@ -1,10 +1,63 @@
 import { useEffect, useState } from "react";
-import { Check, Database, FolderKanban, Loader2, Monitor } from "lucide-react";
-import { pricingApi, type PricingPlan } from "../services/pricingApi";
+import { Check, Database, FolderKanban, Loader2, Monitor, X, CreditCard, Copy, CheckCircle, AlertCircle } from "lucide-react";
+import { pricingApi, type PricingPlan, type UpgradePreview } from "../services/pricingApi";
+import { invoiceApi } from "../services/invoiceApi";
 import { useAppStore } from "../store";
 
 const formatLimit = (value: number | null) =>
   value === null ? "Unlimited" : value.toLocaleString();
+
+const formatMoney = (amount: number, currency: string) => {
+  if (amount === 0) return "Free";
+  return new Intl.NumberFormat(currency === "VND" ? "vi-VN" : "en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+  }).format(amount);
+};
+
+interface PaymentCountdownProps {
+  invoiceDate: string;
+  onExpire: () => void;
+}
+
+function PaymentCountdown({ invoiceDate, onExpire }: PaymentCountdownProps) {
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  useEffect(() => {
+    const expiresAt = new Date(invoiceDate).getTime() + 15 * 60 * 1000;
+
+    const update = () => {
+      const sec = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+      setTimeLeft(sec);
+      if (sec === 0) {
+        onExpire();
+      }
+    };
+
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [invoiceDate, onExpire]);
+
+  if (timeLeft <= 0) {
+    return (
+      <span className="text-rose-600 font-bold">
+        Hết hạn
+      </span>
+    );
+  }
+
+  const mins = Math.floor(timeLeft / 60);
+  const secs = timeLeft % 60;
+  const formatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+
+  return (
+    <span className="font-mono font-bold text-amber-600 bg-amber-50 px-2 py-0.5 border border-amber-100 rounded">
+      {formatted}
+    </span>
+  );
+}
 
 export function PricingPage() {
   const isLoggedIn = useAppStore((state) => state.session.isLoggedIn);
@@ -16,6 +69,19 @@ export function PricingPage() {
   const [trialError, setTrialError] = useState("");
   const [trialSuccess, setTrialSuccess] = useState("");
   const [trialEligible, setTrialEligible] = useState<boolean | null>(null);
+  const [currentPlanName, setCurrentPlanName] = useState<string | null>(null);
+
+  // Upgrade Flow States
+  const [preview, setPreview] = useState<UpgradePreview | null>(null);
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+
+  // QR Code Payment States
+  const [paymentInvoice, setPaymentInvoice] = useState<any>(null);
+  const [paymentQrUrl, setPaymentQrUrl] = useState<string | null>(null);
+  const [paymentBankDetails, setPaymentBankDetails] = useState<any>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const startTrial = async (plan: PricingPlan) => {
     setTrialPlanId(plan.id);
@@ -26,6 +92,8 @@ export function PricingPage() {
       const trialEnd = new Date(result.data.trialEnd).toLocaleDateString();
       setTrialSuccess(`${result.message} Trial ends on ${trialEnd}.`);
       setTrialEligible(false);
+      // Reload current plan slug
+      setCurrentPlanName(plan.name);
     } catch (err) {
       setTrialError(err instanceof Error ? err.message : "Unable to start free trial.");
     } finally {
@@ -91,10 +159,99 @@ export function PricingPage() {
         if (!cancelled) setTrialEligible(null);
       });
 
+    void pricingApi
+      .getBilling()
+      .then((res) => {
+        if (!cancelled && res.success && res.data) {
+          setCurrentPlanName(res.data.currentPlan.name);
+        }
+      })
+      .catch(console.error);
+
     return () => {
       cancelled = true;
     };
   }, [isLoggedIn]);
+
+  // Poll open invoice status
+  useEffect(() => {
+    if (!paymentInvoice || paymentInvoice.status !== "open") return;
+
+    let timer: number;
+    const poll = async () => {
+      try {
+        const response = await invoiceApi.getInvoice(paymentInvoice.id);
+        if (response.success && response.data.status === "paid") {
+          setPaymentInvoice(response.data);
+          setPaymentSuccess(true);
+          // Reload current plan slug
+          const billingRes = await pricingApi.getBilling();
+          if (billingRes.success && billingRes.data) {
+            setCurrentPlanName(billingRes.data.currentPlan.name);
+          }
+        } else {
+          timer = window.setTimeout(poll, 4000);
+        }
+      } catch (err) {
+        console.error("Error polling invoice status on pricing page:", err);
+        timer = window.setTimeout(poll, 4000);
+      }
+    };
+
+    timer = window.setTimeout(poll, 4000);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [paymentInvoice]);
+
+  const handleCopy = (text: string, field: string) => {
+    void navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const openPreview = async (plan: PricingPlan) => {
+    setPreviewingId(plan.id);
+    setTrialError("");
+    setTrialSuccess("");
+    try {
+      const response = await pricingApi.previewUpgrade(plan.id);
+      setPreview(response.data);
+    } catch (err) {
+      setTrialError(err instanceof Error ? err.message : "Unable to calculate the upgrade charge.");
+    } finally {
+      setPreviewingId(null);
+    }
+  };
+
+  const confirmUpgrade = async () => {
+    if (!preview) return;
+    setConfirming(true);
+    setTrialError("");
+    try {
+      const response = await pricingApi.confirmUpgrade(preview.targetPlan.id);
+      if (response.data?.invoice?.status === "open") {
+        setPaymentInvoice(response.data.invoice);
+        setPaymentQrUrl(response.data.vietQrUrl || null);
+        setPaymentBankDetails(response.data.bankDetails || null);
+        setPaymentSuccess(false);
+        setPreview(null);
+      } else {
+        setTrialSuccess(response.message);
+        setPreview(null);
+        // Reload current plan
+        const billingRes = await pricingApi.getBilling();
+        if (billingRes.success && billingRes.data) {
+          setCurrentPlanName(billingRes.data.currentPlan.name);
+        }
+      }
+    } catch (err) {
+      setTrialError(err instanceof Error ? err.message : "Payment failed. Your plan has not changed.");
+      setPreview(null);
+    } finally {
+      setConfirming(false);
+    }
+  };
 
   return (
     <div className="min-h-[70vh] bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
@@ -175,11 +332,11 @@ export function PricingPage() {
                       ? "Contact us"
                       : plan.price.amount === 0
                         ? "Free"
-                        : `$${plan.price.amount}`}
+                        : formatMoney(plan.price.amount, plan.price.currency)}
                   </span>
                   {plan.price.amount !== null && plan.price.amount > 0 && (
                     <span className="pb-1 text-sm text-slate-500">
-                      /{plan.price.interval}
+                      /{plan.price.interval === "month" ? "tháng" : plan.price.interval}
                     </span>
                   )}
                 </div>
@@ -222,28 +379,248 @@ export function PricingPage() {
                     </li>
                   ))}
                 </ul>
-                {plan.name === "Professional" && (
-                  <button
-                    type="button"
-                    disabled={trialPlanId !== null || (isLoggedIn && trialEligible !== true) || Boolean(trialSuccess)}
-                    onClick={() => void startTrial(plan)}
-                    className="mt-7 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-                  >
-                    {trialPlanId === plan.id && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {trialPlanId === plan.id
-                      ? "Starting trial…"
-                      : isLoggedIn && trialEligible === null
-                        ? "Checking trial availability…"
-                      : trialEligible === false
-                        ? "Free trial already used"
-                        : "Start free 14-day trial"}
-                  </button>
-                )}
+
+                {/* Subscribing / Upgrading Action button */}
+                <div className="mt-7">
+                  {!isLoggedIn ? (
+                    <a
+                      href="/signin"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
+                    >
+                      Đăng nhập để đăng ký
+                    </a>
+                  ) : plan.name === currentPlanName ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-200 px-5 py-3 text-sm font-semibold text-slate-500 cursor-not-allowed"
+                    >
+                      Gói hiện tại
+                    </button>
+                  ) : plan.name === "Starter" ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-400 cursor-not-allowed"
+                    >
+                      Mặc định
+                    </button>
+                  ) : plan.name === "Professional" && trialEligible === true ? (
+                    <button
+                      type="button"
+                      disabled={trialPlanId !== null || Boolean(trialSuccess)}
+                      onClick={() => void startTrial(plan)}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    >
+                      {trialPlanId === plan.id && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {trialPlanId === plan.id ? "Đang kích hoạt..." : "Bắt đầu dùng thử 14 ngày"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={previewingId !== null}
+                      onClick={() => void openPreview(plan)}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    >
+                      {previewingId === plan.id && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {previewingId === plan.id ? "Đang xử lý..." : `Nâng cấp lên ${plan.name}`}
+                    </button>
+                  )}
+                </div>
               </article>
             ))}
           </div>
         )}
       </div>
+
+      {/* Upgrade Preview Modal */}
+      {preview && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-sky-600">Xác nhận đăng ký</p>
+                <h2 id="upgrade-title" className="mt-1 text-2xl font-bold text-slate-900">
+                  Nâng cấp lên gói {preview.targetPlan.name}
+                </h2>
+              </div>
+              <button type="button" disabled={confirming} onClick={() => setPreview(null)} aria-label="Close" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-6 rounded-xl bg-slate-50 p-5">
+              <div className="flex justify-between gap-4 text-sm text-slate-600">
+                <span>Số tiền thanh toán</span>
+                <strong className="text-lg text-slate-900 font-extrabold">
+                  {formatMoney(preview.charge.amountDue, preview.charge.currency)}
+                </strong>
+              </div>
+              <p className="mt-3 text-xs text-slate-500">
+                Chu kỳ thanh toán 30 ngày sẽ bắt đầu ngay lập tức và kéo dài đến {new Date(preview.charge.periodEnd).toLocaleDateString()}.
+                Các giới hạn mới sẽ được áp dụng ngay sau khi giao dịch hoàn tất.
+              </p>
+            </div>
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button type="button" disabled={confirming} onClick={() => setPreview(null)} className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+                Hủy
+              </button>
+              <button type="button" disabled={confirming} onClick={() => void confirmUpgrade()} className="flex items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:bg-slate-300">
+                {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                {confirming ? "Đang xử lý..." : "Xác nhận thanh toán"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Countdown Payment Modal */}
+      {paymentInvoice && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="payment-title">
+          <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-sky-600">Thanh toán hóa đơn</p>
+                <h2 id="payment-title" className="mt-1 text-2xl font-bold text-slate-900">
+                  Thanh toán chuyển khoản
+                </h2>
+              </div>
+              <button type="button" onClick={() => setPaymentInvoice(null)} aria-label="Close" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {paymentInvoice.status === "void" ? (
+              <div className="text-center py-8 space-y-4">
+                <div className="mx-auto h-16 w-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center">
+                  <X className="h-10 w-10 text-rose-600 animate-pulse" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">Giao dịch đã hết hạn!</h3>
+                <p className="text-sm text-slate-600 max-w-sm mx-auto">
+                  Thời gian chuyển khoản (15 phút) đã trôi qua. Giao dịch này đã bị hủy tự động. Vui lòng thực hiện đăng ký lại.
+                </p>
+                <div className="pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentInvoice(null)}
+                    className="w-full bg-slate-600 text-white font-semibold rounded-lg px-6 py-3 hover:bg-slate-700 transition"
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </div>
+            ) : paymentSuccess ? (
+              <div className="text-center py-8 space-y-4">
+                <div className="mx-auto h-16 w-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                  <CheckCircle className="h-10 w-10 text-emerald-600 animate-bounce" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">Thanh toán thành công!</h3>
+                <p className="text-sm text-slate-600 max-w-sm mx-auto">
+                  Hệ thống đã ghi nhận thanh toán cho hóa đơn #{paymentInvoice.invoiceNumber}. Tài khoản của bạn đã được nâng cấp!
+                </p>
+                <div className="pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentInvoice(null)}
+                    className="w-full bg-sky-600 text-white font-semibold rounded-lg px-6 py-3 hover:bg-sky-700 transition"
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Left side: QR Code (large size) */}
+                <div className="flex flex-col items-center justify-center border border-slate-100 rounded-xl p-4 bg-slate-50">
+                  {paymentQrUrl ? (
+                    <>
+                      <img
+                        src={paymentQrUrl}
+                        alt="QR Code"
+                        className="w-[240px] h-[240px] object-contain rounded-lg shadow-sm border border-slate-200"
+                      />
+                      <p className="mt-3 text-[10px] text-center text-slate-500 font-medium max-w-[180px]">
+                        Quét mã QR bằng ứng dụng Mobile Banking của bạn để chuyển khoản nhanh.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-sky-600" />
+                      <p className="text-xs text-slate-500 mt-2">Đang tải mã QR...</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right side: Bank Details */}
+                <div className="space-y-4 text-sm">
+                  <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3.5 text-xs text-rose-800 font-medium">
+                    ⚠️ Vui lòng chuyển khoản chính xác số tiền và nội dung chuyển khoản dưới đây để giao dịch được duyệt tự động.
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Số tài khoản</span>
+                      <div className="flex items-center justify-between gap-2 mt-1">
+                        <span className="font-bold text-slate-900 select-all">{paymentBankDetails?.accountNumber}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(paymentBankDetails?.accountNumber || "", "accountNumber")}
+                          className="text-xs font-semibold text-sky-600 hover:text-sky-700 flex items-center gap-1 shrink-0"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                          {copiedField === "accountNumber" ? "Đã copy!" : "Copy"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Chủ tài khoản</span>
+                      <span className="block font-semibold text-slate-800 mt-0.5">{paymentBankDetails?.accountName}</span>
+                    </div>
+
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Số tiền</span>
+                      <span className="block font-extrabold text-slate-950 text-base mt-0.5">
+                        {formatMoney(paymentInvoice.total, paymentInvoice.currency || "VND")}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Nội dung chuyển khoản</span>
+                      <div className="flex items-center justify-between gap-2 mt-1 p-2 rounded-lg bg-sky-50 border border-sky-100">
+                        <span className="font-mono font-bold text-sky-800 text-sm select-all">{paymentInvoice.paymentReference}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(paymentInvoice.paymentReference || "", "paymentReference")}
+                          className="text-xs font-semibold text-sky-700 hover:text-sky-800 flex items-center gap-1 shrink-0"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                          {copiedField === "paymentReference" ? "Đã copy!" : "Copy"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Thời gian còn lại</span>
+                      <div className="mt-1 flex items-center gap-2">
+                        <PaymentCountdown
+                          invoiceDate={paymentInvoice.invoiceDate}
+                          onExpire={() => setPaymentInvoice((prev: any) => prev ? { ...prev, status: "void" } : null)}
+                        />
+                        <span className="text-[10px] text-slate-500">Nếu quá 15 phút, giao dịch sẽ tự động bị huỷ.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-4 flex items-center gap-2 text-slate-500 text-xs">
+                    <Loader2 className="h-4 w-4 animate-spin text-sky-600" />
+                    <span>Đang chờ ngân hàng xác nhận giao dịch...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

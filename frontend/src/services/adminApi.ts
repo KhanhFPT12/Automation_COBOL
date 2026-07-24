@@ -132,4 +132,141 @@ export const adminApi = {
 
   disconnectGoogle: () =>
     apiFetch<{ success: boolean; message: string }>(`${BASE}/google`, { method: 'DELETE' }),
+
+  // ─── Bank account settings ──────────────────────────────────────
+  getBankAccounts: () =>
+    apiFetch<{
+      success: boolean;
+      data: Array<{ id: string; bin: string; accountNumber: string; accountName: string; isDefault: boolean; updatedAt: string }>;
+    }>(`${BASE}/settings/bank-account`),
+
+  createBankAccount: (data: { bin: string; accountNumber: string; accountName: string; isDefault?: boolean }) =>
+    apiFetch<{
+      success: boolean;
+      message: string;
+      data: { id: string; bin: string; accountNumber: string; accountName: string; isDefault: boolean; updatedAt: string };
+    }>(`${BASE}/settings/bank-account`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateBankAccount: (id: string, data: { bin: string; accountNumber: string; accountName: string }) =>
+    apiFetch<{
+      success: boolean;
+      message: string;
+      data: { id: string; bin: string; accountNumber: string; accountName: string; isDefault: boolean; updatedAt: string };
+    }>(`${BASE}/settings/bank-account/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteBankAccount: (id: string) =>
+    apiFetch<{
+      success: boolean;
+      message: string;
+    }>(`${BASE}/settings/bank-account/${id}`, {
+      method: 'DELETE',
+    }),
+
+  setDefaultBankAccount: (id: string) =>
+    apiFetch<{
+      success: boolean;
+      message: string;
+      data: { id: string; bin: string; accountNumber: string; accountName: string; isDefault: boolean; updatedAt: string };
+    }>(`${BASE}/settings/bank-account/${id}/default`, {
+      method: 'PATCH',
+    }),
+
+  getBankAccountAuditLogs: () =>
+    apiFetch<{
+      success: boolean;
+      data: Array<{ id: string; action: string; description: string; performedBy: string; createdAt: string; ipAddress: string }>;
+    }>(`${BASE}/settings/bank-account/audit-logs`),
+
+  // ─── Plan settings ───────────────────────────────────────────────
+  getPlans: () =>
+    apiFetch<{
+      success: boolean;
+      data: Array<{
+        _id: string;
+        name: string;
+        slug: string;
+        description: string;
+        price_monthly: number | null;
+        price_yearly: number | null;
+        currency: string;
+        limits: {
+          max_projects: number | null;
+          max_screens_per_month: number | null;
+          max_storage_gb: number | null;
+          max_team_members: number | null;
+        };
+        features: string[];
+        is_active: boolean;
+        display_order: number;
+        badge_text: string;
+        updatedAt: string;
+      }>;
+    }>(`${BASE}/settings/plans`),
+
+  updatePlan: (
+    id: string,
+    data: {
+      name?: string;
+      description?: string;
+      priceMonthly?: number | null;
+      priceYearly?: number | null;
+      currency?: string;
+      limits?: {
+        maxProjects?: number | null;
+        maxScreensPerMonth?: number | null;
+        maxStorageGb?: number | null;
+        maxTeamMembers?: number | null;
+      };
+      features?: string[];
+      isActive?: boolean;
+      badgeText?: string;
+      displayOrder?: number;
+    }
+  ) =>
+    apiFetch<{
+      success: boolean;
+      message: string;
+      data: any;
+    }>(`${BASE}/settings/plans/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  // ─── Invoice management ──────────────────────────────────────────
+  getInvoices: () =>
+    apiFetch<{
+      success: boolean;
+      data: AdminInvoice[];
+    }>(`${BASE}/settings/invoices`),
+
+  confirmInvoicePayment: (id: string) =>
+    apiFetch<{
+      success: boolean;
+      message: string;
+      data: any;
+    }>(`${BASE}/settings/invoices/${id}/confirm`, {
+      method: "POST",
+    }),
 };
+
+export interface AdminInvoice {
+  id: string;
+  invoiceNumber: string;
+  amount: number;
+  total: number;
+  currency: string;
+  status: 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
+  paymentReference?: string;
+  createdAt: string;
+  paidAt: string | null;
+  customerEmail: string;
+  customerName: string;
+  pendingPlanName: string;
+  pdfUrl: string | null;
+}

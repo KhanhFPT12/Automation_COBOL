@@ -7,6 +7,7 @@ import {
   XCircle,
   FileCode2,
   Loader2,
+  Banknote,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -29,6 +30,7 @@ const STAT_CARDS: { key: keyof DashboardStats; label: string; icon: typeof Users
   { key: "approvedMeetings", label: "Approved Meetings", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50" },
   { key: "rejectedMeetings", label: "Rejected Meetings", icon: XCircle, color: "text-rose-600 bg-rose-50" },
   { key: "totalConversions", label: "Conversions Run", icon: FileCode2, color: "text-purple-600 bg-purple-50" },
+  { key: "totalRevenue", label: "Doanh thu nhận", icon: Banknote, color: "text-emerald-600 bg-emerald-50" },
 ];
 
 function formatDay(dateStr: string) {
@@ -83,13 +85,19 @@ export function AdminDashboard() {
         <p className="text-slate-500 text-sm mt-1">Overview of users, meetings, and conversions.</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {STAT_CARDS.map(({ key, label, icon: Icon, color }) => (
           <div key={key} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <div className={`h-9 w-9 rounded-lg flex items-center justify-center mb-3 ${color}`}>
               <Icon className="h-4.5 w-4.5" />
             </div>
-            <p className="text-2xl font-extrabold text-slate-900">{stats ? stats[key] : 0}</p>
+            <p className="text-2xl font-extrabold text-slate-900">
+              {stats
+                ? key === "totalRevenue"
+                  ? new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", minimumFractionDigits: 0 }).format(Number(stats[key]) || 0)
+                  : stats[key]
+                : 0}
+            </p>
             <p className="text-xs text-slate-500 mt-0.5">{label}</p>
           </div>
         ))}

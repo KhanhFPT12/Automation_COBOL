@@ -88,13 +88,29 @@ interface UpgradePreviewResponse {
   data: UpgradePreview;
 }
 
-interface UpgradeResponse {
+export interface UpgradeResponse {
   success: boolean;
   message: string;
   data: {
-    subscription: BillingSubscription;
-    plan: PricingPlan;
-    charge: UpgradePreview["charge"];
+    subscription?: BillingSubscription;
+    plan?: PricingPlan;
+    charge?: UpgradePreview["charge"];
+    vietQrUrl?: string;
+    bankDetails?: {
+      bin: string;
+      accountNumber: string;
+      accountName: string;
+    };
+    invoice: {
+      id: string;
+      invoiceNumber: string;
+      status: "draft" | "open" | "paid" | "void" | "uncollectible";
+      total?: number;
+      currency?: string;
+      paymentReference?: string;
+      pdfStatus: string;
+      invoiceDate?: string;
+    };
   };
 }
 

@@ -16,10 +16,17 @@ export interface InvoiceSummary {
   dueDate: string;
   paidAt: string | null;
   pdfStatus: InvoicePdfStatus;
+  paymentReference?: string;
 }
 
 export interface InvoiceDetail extends InvoiceSummary {
   subscriptionId: string;
+  vietQrUrl?: string;
+  bankDetails?: {
+    bin: string;
+    accountNumber: string;
+    accountName: string;
+  };
   lineItems: Array<{
     description: string;
     quantity: number;

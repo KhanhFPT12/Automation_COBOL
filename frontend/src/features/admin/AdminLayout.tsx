@@ -9,6 +9,7 @@ import {
   ShieldAlert,
   LogOut,
   User,
+  Receipt,
 } from "lucide-react";
 import { useAppStore } from "../../store";
 import { NotificationBell } from "../../components/NotificationBell";
@@ -20,6 +21,7 @@ const NAV_ITEMS: { page: ActivePage; label: string; icon: typeof LayoutDashboard
   { page: "admin-meetings", label: "Meeting Management", icon: CalendarClock },
   { page: "admin-conversions", label: "Conversion History", icon: History },
   { page: "admin-reports", label: "Reports", icon: BarChart3 },
+  { page: "admin-invoices", label: "Hóa đơn & Thanh toán", icon: Receipt },
   { page: "admin-settings", label: "Settings", icon: Settings },
 ];
 

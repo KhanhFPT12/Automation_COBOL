@@ -23,6 +23,7 @@ import { AdminMeetingsPage } from "./page/AdminMeetingsPage";
 import { AdminConversionsPage } from "./page/AdminConversionsPage";
 import { AdminReportsPage } from "./page/AdminReportsPage";
 import { AdminSettingsPage } from "./page/AdminSettingsPage";
+import { AdminInvoicesPage } from "./page/AdminInvoicesPage";
 import { MeetingDetailPage } from "./page/MeetingDetailPage";
 
 export default function App() {
@@ -102,6 +103,8 @@ export default function App() {
         return <AdminReportsPage />;
       case 'admin-settings':
         return <AdminSettingsPage />;
+      case 'admin-invoices':
+        return <AdminInvoicesPage />;
       case 'meeting-detail':
         return <MeetingDetailPage />;
       default:

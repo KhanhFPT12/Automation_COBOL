@@ -20,6 +20,7 @@ export type ActivePage =
   | 'admin-conversions'
   | 'admin-reports'
   | 'admin-settings'
+  | 'admin-invoices'
   | 'meeting-detail';
 
 export interface UserSession {
@@ -132,6 +133,7 @@ export interface DashboardStats {
   cancelledMeetings: number;
   completedMeetings: number;
   totalConversions: number;
+  totalRevenue: number;
 }
 
 export interface DashboardCharts {
