@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://automation-cobol.onrender.com/api/:path*"
+    }
+  ]
+}
