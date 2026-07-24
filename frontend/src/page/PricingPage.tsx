@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Database, FolderKanban, Loader2, Monitor, X, CreditCard, Copy, CheckCircle, AlertCircle } from "lucide-react";
+import { Check, Database, FolderKanban, Loader2, Monitor, X, CreditCard, Copy, CheckCircle } from "lucide-react";
 import { pricingApi, type PricingPlan, type UpgradePreview } from "../services/pricingApi";
 import { invoiceApi } from "../services/invoiceApi";
 import { useAppStore } from "../store";
