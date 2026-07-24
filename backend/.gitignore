@@ -1,9 +1,7 @@
-<<<<<<< HEAD
 node_modules/
 .env
 *.log
-=======
-HELP.md
+
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
@@ -36,8 +34,6 @@ build/
 
 ### VS Code ###
 .vscode/
-node_modules
 
 bin
 *.properties
->>>>>>> 60850e00fbce3e9515348b053d6dae59ae045d71

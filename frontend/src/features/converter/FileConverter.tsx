@@ -21,7 +21,6 @@ import {
   X as XIcon,
   ArrowRight,
   AlertCircle,
-  Loader2,
 } from "lucide-react";
 
 export function FileConverter() {

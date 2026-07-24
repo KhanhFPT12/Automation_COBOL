@@ -14,6 +14,7 @@ const cassoRoutes = require('./routes/cassoRoutes');
 const { startMeetingReminderJob } = require('./jobs/meetingReminder');
 const { startSubscriptionExpirationJob } = require('./jobs/subscriptionExpiration');
 const { startCassoPolling } = require('./services/cassoSubscriptionService');
+const { cleanEnvUrl } = require('./utils/env');
 
 const app = express();
 
@@ -28,7 +29,7 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: cleanEnvUrl(process.env.CLIENT_URL, 'http://localhost:5173'),
     credentials: true,
   })
 );
