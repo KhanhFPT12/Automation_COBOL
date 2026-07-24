@@ -1,8 +1,26 @@
 const Plan = require('../models/Plan');
 const Subscription = require('../models/Subscription');
 const Invoice = require('../models/Invoice');
+const BankAccountSettings = require('../models/BankAccountSettings');
 const { ensureStarterSubscription, cancelExpiredSubscriptions } = require('../services/subscriptionService');
 const { generateInvoicePdf } = require('../services/invoicePdfService');
+
+const generatePaymentReference = async () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let reference = '';
+  let isUnique = false;
+  while (!isUnique) {
+    reference = 'ALSM';
+    for (let i = 0; i < 8; i++) {
+      reference += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const exists = await Invoice.exists({ payment_reference: reference });
+    if (!exists) {
+      isUnique = true;
+    }
+  }
+  return reference;
+};
 
 const TRIAL_DURATION_MS = 14 * 24 * 60 * 60 * 1000;
 const UPGRADE_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
@@ -217,88 +235,172 @@ exports.confirmUpgrade = async (req, res, next) => {
     const { subscription, currentPlan, targetPlan } = await findUpgrade(req.user._id, planSlug);
     const charge = calculateUpgradeCharge(targetPlan);
 
-    // Temporary payment boundary for UC-21. Stripe will replace this explicit
-    // confirmation flag; the subscription update deliberately remains below it.
-    if (req.body.paymentConfirmed !== true) {
-      return res.status(402).json({
-        success: false,
-        message: 'Payment was not confirmed. Your current plan has not changed.',
-      });
-    }
-
-    const updatedSubscription = await Subscription.findOneAndUpdate(
-      { _id: subscription._id, status: subscription.status, plan_id: currentPlan._id },
-      {
-        $set: {
-          plan_id: targetPlan._id,
-          plan_name: targetPlan.name,
-          status: 'active',
-          current_period_start: charge.periodStart,
-          current_period_end: charge.periodEnd,
-        },
-      },
-      { new: true }
-    );
-    if (!updatedSubscription) {
-      return res.status(409).json({
-        success: false,
-        message: 'Subscription changed while upgrading. No plan change was applied.',
-      });
-    }
-
-    const paidAt = new Date();
-    const invoice = await Invoice.create({
-      organization_id: req.user._id,
-      // Temporary tenant identifier until the Organization domain is introduced.
-      organization_uuid: req.user._id.toString(),
-      subscription_id: updatedSubscription._id,
-      invoice_number: createInvoiceNumber(req.user._id),
-      amount: charge.amountDue,
-      currency: charge.currency,
-      tax_rate: 0,
-      tax_amount: 0,
-      total: charge.amountDue,
-      status: 'paid',
-      line_items: [
+    // If amountDue is 0, we can immediately activate
+    if (charge.amountDue === 0) {
+      const updatedSubscription = await Subscription.findOneAndUpdate(
+        { _id: subscription._id, status: subscription.status, plan_id: currentPlan._id },
         {
-          description: `${targetPlan.name} plan subscription`,
-          quantity: 1,
-          unit_price: charge.amountDue,
-          amount: charge.amountDue,
-          period_start: charge.periodStart,
-          period_end: charge.periodEnd,
+          $set: {
+            plan_id: targetPlan._id,
+            plan_name: targetPlan.name,
+            status: 'active',
+            current_period_start: charge.periodStart,
+            current_period_end: charge.periodEnd,
+          },
         },
-      ],
-      invoice_date: paidAt,
-      due_date: paidAt,
-      paid_at: paidAt,
-      pdf_url: null,
+        { new: true }
+      );
+      if (!updatedSubscription) {
+        return res.status(409).json({
+          success: false,
+          message: 'Subscription changed while upgrading. No plan change was applied.',
+        });
+      }
+
+      const paidAt = new Date();
+      const invoice = await Invoice.create({
+        organization_id: req.user._id,
+        organization_uuid: req.user._id.toString(),
+        subscription_id: updatedSubscription._id,
+        invoice_number: createInvoiceNumber(req.user._id),
+        amount: charge.amountDue,
+        currency: charge.currency,
+        tax_rate: 0,
+        tax_amount: 0,
+        total: charge.amountDue,
+        status: 'paid',
+        line_items: [
+          {
+            description: `${targetPlan.name} plan subscription`,
+            quantity: 1,
+            unit_price: charge.amountDue,
+            amount: charge.amountDue,
+            period_start: charge.periodStart,
+            period_end: charge.periodEnd,
+          },
+        ],
+        invoice_date: paidAt,
+        due_date: paidAt,
+        paid_at: paidAt,
+        pdf_url: null,
+      });
+
+      try {
+        await generateInvoicePdf(invoice);
+        invoice.pdf_url = `/api/invoices/${invoice._id}/pdf`;
+        await invoice.save();
+      } catch (pdfError) {
+        console.error(`Unable to generate PDF for invoice ${invoice.invoice_number}:`, pdfError);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Your subscription has been upgraded to ${targetPlan.name}.`,
+        data: {
+          subscription: {
+            id: updatedSubscription._id,
+            status: updatedSubscription.status,
+            currentPeriodEnd: updatedSubscription.current_period_end,
+          },
+          plan: serializePlan(targetPlan),
+          charge,
+          invoice: {
+            id: invoice._id,
+            invoiceNumber: invoice.invoice_number,
+            status: invoice.status,
+            pdfStatus: invoice.pdf_url ? 'ready' : 'processing',
+          },
+        },
+      });
+    }
+
+    // For paid upgrades, we require bank transfer via VietQR
+    const bankSettings = await BankAccountSettings.findOne({ is_default: true }).lean()
+      || await BankAccountSettings.findOne().lean();
+    if (!bankSettings) {
+      return res.status(400).json({
+        success: false,
+        message: "The platform's receiving bank account is not configured by the administrator. Please contact support.",
+      });
+    }
+
+    let invoice = await Invoice.findOne({
+      organization_id: req.user._id,
+      status: Invoice.InvoiceStatus.OPEN,
+      subscription_id: subscription._id,
     });
 
-    try {
-      await generateInvoicePdf(invoice);
-      invoice.pdf_url = `/api/invoices/${invoice._id}/pdf`;
-      await invoice.save();
-    } catch (pdfError) {
-      console.error(`Unable to generate PDF for invoice ${invoice.invoice_number}:`, pdfError);
+    if (invoice) {
+      const expirationLimitMs = 15 * 60 * 1000;
+      const isExpired = Date.now() - new Date(invoice.created_at).getTime() > expirationLimitMs;
+
+      if (invoice.pending_plan_id.toString() !== targetPlan._id.toString() || isExpired) {
+        invoice.status = Invoice.InvoiceStatus.VOID;
+        await invoice.save();
+        invoice = null;
+      }
     }
+
+    if (!invoice) {
+      const paymentRef = await generatePaymentReference();
+      invoice = await Invoice.create({
+        organization_id: req.user._id,
+        organization_uuid: req.user._id.toString(),
+        subscription_id: subscription._id,
+        invoice_number: createInvoiceNumber(req.user._id),
+        amount: charge.amountDue,
+        currency: charge.currency,
+        tax_rate: 0,
+        tax_amount: 0,
+        total: charge.amountDue,
+        status: Invoice.InvoiceStatus.OPEN,
+        line_items: [
+          {
+            description: `${targetPlan.name} plan subscription`,
+            quantity: 1,
+            unit_price: charge.amountDue,
+            amount: charge.amountDue,
+            period_start: charge.periodStart,
+            period_end: charge.periodEnd,
+          },
+        ],
+        invoice_date: new Date(),
+        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days due date
+        payment_reference: paymentRef,
+        pending_plan_id: targetPlan._id,
+      });
+    }
+
+    // Generate VietQR URL
+    const { generateVietQR } = require('../utils/emvco');
+    const qrData = generateVietQR({
+      bin: bankSettings.bin,
+      accountNumber: bankSettings.account_number,
+      accountName: bankSettings.account_name,
+      amount: invoice.total,
+      orderCode: invoice.payment_reference,
+    });
+    const vietQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}`;
 
     return res.status(200).json({
       success: true,
-      message: `Your subscription has been upgraded to ${targetPlan.name}.`,
+      message: 'Invoice created. Please complete the bank transfer to activate your subscription.',
       data: {
-        subscription: {
-          id: updatedSubscription._id,
-          status: updatedSubscription.status,
-          currentPeriodEnd: updatedSubscription.current_period_end,
+        vietQrUrl,
+        bankDetails: {
+          bin: bankSettings.bin,
+          accountNumber: bankSettings.account_number,
+          accountName: bankSettings.account_name,
         },
-        plan: serializePlan(targetPlan),
-        charge,
         invoice: {
           id: invoice._id,
           invoiceNumber: invoice.invoice_number,
-          status: invoice.status,
-          pdfStatus: invoice.pdf_url ? 'ready' : 'processing',
+          status: Invoice.InvoiceStatusNames[invoice.status] || 'draft',
+          total: invoice.total,
+          currency: invoice.currency,
+          paymentReference: invoice.payment_reference,
+          pdfStatus: 'processing',
+          invoiceDate: invoice.invoice_date,
         },
       },
     });

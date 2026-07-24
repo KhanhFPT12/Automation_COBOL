@@ -1,6 +1,7 @@
 const fs = require('fs/promises');
 const mongoose = require('mongoose');
 const Invoice = require('../models/Invoice');
+const BankAccountSettings = require('../models/BankAccountSettings');
 const { generateInvoicePdf, getInvoicePdfPath } = require('../services/invoicePdfService');
 
 const ensureInvoicePdf = async (invoice) => {
@@ -23,11 +24,12 @@ const serializeInvoice = (invoice, includeLineItems = false) => ({
   taxRate: invoice.tax_rate,
   taxAmount: invoice.tax_amount,
   total: invoice.total,
-  status: invoice.status,
+  status: Invoice.InvoiceStatusNames[invoice.status] || 'draft',
   invoiceDate: invoice.invoice_date,
   dueDate: invoice.due_date,
   paidAt: invoice.paid_at,
   pdfStatus: invoice.pdf_url ? 'ready' : 'processing',
+  paymentReference: invoice.payment_reference,
   ...(includeLineItems
     ? {
         subscriptionId: invoice.subscription_id,
@@ -73,11 +75,50 @@ exports.getInvoice = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Invoice not found.' });
     }
 
+    // Auto-void if open and past 15 minutes
+    if (invoice.status === Invoice.InvoiceStatus.OPEN) {
+      // Trigger throttled Casso fetch on-demand
+      const { fetchAndProcessCassoTransactionsThrottled } = require('../services/cassoSubscriptionService');
+      fetchAndProcessCassoTransactionsThrottled().catch(err => {
+        console.error('[Casso] On-demand throttled fetch failed:', err.message);
+      });
+
+      const expirationLimitMs = 15 * 60 * 1000;
+      if (Date.now() - new Date(invoice.created_at).getTime() > expirationLimitMs) {
+        invoice.status = Invoice.InvoiceStatus.VOID;
+        await invoice.save();
+      }
+    }
+
     await ensureInvoicePdf(invoice);
+
+    const data = serializeInvoice(invoice, true);
+
+    // If the invoice is still open, attach the payment QR code and bank details
+    if (invoice.status === Invoice.InvoiceStatus.OPEN) {
+      const bankSettings = await BankAccountSettings.findOne({ is_default: true }).lean()
+        || await BankAccountSettings.findOne().lean();
+      if (bankSettings) {
+        const { generateVietQR } = require('../utils/emvco');
+        const qrData = generateVietQR({
+          bin: bankSettings.bin,
+          accountNumber: bankSettings.account_number,
+          accountName: bankSettings.account_name,
+          amount: invoice.total,
+          orderCode: invoice.payment_reference,
+        });
+        data.vietQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}`;
+        data.bankDetails = {
+          bin: bankSettings.bin,
+          accountNumber: bankSettings.account_number,
+          accountName: bankSettings.account_name,
+        };
+      }
+    }
 
     return res.status(200).json({
       success: true,
-      data: serializeInvoice(invoice, true),
+      data,
     });
   } catch (error) {
     return next(error);

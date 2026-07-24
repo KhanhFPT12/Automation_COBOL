@@ -25,7 +25,7 @@ const DEFAULT_PLANS = [
 
 const ensureDefaultPlans = async () => {
   for (const plan of DEFAULT_PLANS) {
-    await Plan.updateOne({ slug: plan.slug }, { $set: plan }, { upsert: true });
+    await Plan.updateOne({ slug: plan.slug }, { $setOnInsert: plan }, { upsert: true });
   }
 };
 

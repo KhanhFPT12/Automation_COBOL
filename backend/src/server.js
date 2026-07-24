@@ -10,8 +10,10 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const pricingRoutes = require('./routes/pricingRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
+const cassoRoutes = require('./routes/cassoRoutes');
 const { startMeetingReminderJob } = require('./jobs/meetingReminder');
 const { startSubscriptionExpirationJob } = require('./jobs/subscriptionExpiration');
+const { startCassoPolling } = require('./services/cassoSubscriptionService');
 
 const app = express();
 
@@ -19,6 +21,7 @@ const app = express();
 connectDB();
 startMeetingReminderJob();
 startSubscriptionExpirationJob();
+startCassoPolling();
 
 // ─── Security Middleware ─────────────────────────────────────────
 app.use(helmet());
@@ -42,6 +45,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/casso', cassoRoutes);
 
 // ─── Health Check ────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

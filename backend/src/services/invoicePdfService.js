@@ -35,7 +35,9 @@ const generateInvoicePdf = async (invoice) => {
     document.text(`Invoice number: ${invoice.invoice_number}`);
     document.text(`Invoice date: ${formatDate(invoice.invoice_date)}`);
     document.text(`Due date: ${formatDate(invoice.due_date)}`);
-    document.text(`Status: ${invoice.status.toUpperCase()}`);
+    const { InvoiceStatusNames } = require('../models/Invoice');
+    const statusText = (InvoiceStatusNames[invoice.status] || 'draft').toUpperCase();
+    document.text(`Status: ${statusText}`);
 
     document.moveDown(2);
     document.fontSize(13).fillColor('#0f172a').text('Description', 50, document.y, { continued: true });

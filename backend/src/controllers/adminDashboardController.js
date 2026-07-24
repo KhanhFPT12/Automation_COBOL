@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Meeting = require('../models/Meeting');
 const ConversionLog = require('../models/ConversionLog');
+const Invoice = require('../models/Invoice');
 
 function daysAgo(n) {
   const d = new Date();
@@ -51,6 +52,7 @@ exports.getStats = async (req, res) => {
       totalConversions,
       meetingsPerDay,
       conversionsPerDay,
+      paymentStats,
     ] = await Promise.all([
       User.countDocuments({ role: { $ne: 'ADMIN' } }),
       Meeting.countDocuments({}),
@@ -62,7 +64,13 @@ exports.getStats = async (req, res) => {
       ConversionLog.countDocuments({ success: true }),
       dailyCounts(Meeting, 14),
       dailyCounts(ConversionLog, 14, { success: true }),
+      Invoice.aggregate([
+        { $match: { status: Invoice.InvoiceStatus.PAID } },
+        { $group: { _id: null, totalRevenue: { $sum: '$total' } } }
+      ]),
     ]);
+
+    const totalRevenue = paymentStats.length > 0 ? paymentStats[0].totalRevenue : 0;
 
     return res.status(200).json({
       success: true,
@@ -75,6 +83,7 @@ exports.getStats = async (req, res) => {
         cancelledMeetings,
         completedMeetings,
         totalConversions,
+        totalRevenue,
       },
       charts: {
         meetingsPerDay,

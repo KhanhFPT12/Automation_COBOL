@@ -4,6 +4,7 @@ const adminUserController = require('../controllers/adminUserController');
 const adminMeetingController = require('../controllers/adminMeetingController');
 const adminDashboardController = require('../controllers/adminDashboardController');
 const googleAuthController = require('../controllers/googleAuthController');
+const adminPaymentSettingsController = require('../controllers/adminPaymentSettingsController');
 
 const router = express.Router();
 
@@ -42,5 +43,21 @@ router.patch('/meetings/:id/complete', adminMeetingController.completeMeeting);
 router.get('/google/connect', googleAuthController.connect);
 router.get('/google/status', googleAuthController.status);
 router.delete('/google', googleAuthController.disconnect);
+
+// ─── Bank account settings (Settings page) ─────────────────────
+router.get('/settings/bank-account', adminPaymentSettingsController.getBankAccounts);
+router.post('/settings/bank-account', adminPaymentSettingsController.createBankAccount);
+router.put('/settings/bank-account/:id', adminPaymentSettingsController.updateBankAccount);
+router.delete('/settings/bank-account/:id', adminPaymentSettingsController.deleteBankAccount);
+router.patch('/settings/bank-account/:id/default', adminPaymentSettingsController.setDefaultBankAccount);
+router.get('/settings/bank-account/audit-logs', adminPaymentSettingsController.getAuditLogs);
+
+// ─── Plan settings (Settings page) ─────────────────────────────
+router.get('/settings/plans', adminPaymentSettingsController.getPlans);
+router.put('/settings/plans/:id', adminPaymentSettingsController.updatePlan);
+
+// ─── Invoice settings (Invoices & Billing) ──────────────────────
+router.get('/settings/invoices', adminPaymentSettingsController.getInvoices);
+router.post('/settings/invoices/:id/confirm', adminPaymentSettingsController.confirmInvoicePayment);
 
 module.exports = router;

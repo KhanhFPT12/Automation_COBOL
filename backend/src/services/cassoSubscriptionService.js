@@ -7,15 +7,15 @@ const CASSO_REFERENCE_PATTERN = /(ALSM[A-Z0-9]{8})/;
 
 const activateInvoice = async (invoiceId) => {
   const invoice = await Invoice.findOneAndUpdate(
-    { _id: invoiceId, status: 'open' },
-    { $set: { status: 'paid', paid_at: new Date(), payment_provider: 'casso' } },
+    { _id: invoiceId, status: Invoice.InvoiceStatus.OPEN },
+    { $set: { status: Invoice.InvoiceStatus.PAID, paid_at: new Date(), payment_provider: 'casso' } },
     { new: true }
   );
   if (!invoice) return false; // Already handled by a concurrent webhook/poll.
 
   const plan = await Plan.findById(invoice.pending_plan_id);
   if (!plan) {
-    await Invoice.updateOne({ _id: invoice._id }, { $set: { status: 'uncollectible' } });
+    await Invoice.updateOne({ _id: invoice._id }, { $set: { status: Invoice.InvoiceStatus.UNCOLLECTIBLE } });
     return false;
   }
 
@@ -53,8 +53,22 @@ const processCassoRecord = async (record) => {
 
   const reference = referenceMatch[1];
   const receivedAmount = Math.abs(Number(record.amount));
-  const invoice = await Invoice.findOne({ payment_reference: reference, status: 'open' });
-  if (!invoice || !Number.isFinite(receivedAmount) || receivedAmount < invoice.total) return false;
+  
+  const invoice = await Invoice.findOne({ payment_reference: reference });
+  if (!invoice) return false;
+
+  if (invoice.status === Invoice.InvoiceStatus.OPEN) {
+    const expirationLimitMs = 15 * 60 * 1000;
+    if (Date.now() - new Date(invoice.created_at).getTime() > expirationLimitMs) {
+      invoice.status = Invoice.InvoiceStatus.VOID;
+      await invoice.save();
+      return false; // Expired, cannot be activated
+    }
+  } else if (invoice.status !== Invoice.InvoiceStatus.PAID) {
+    return false;
+  }
+
+  if (!Number.isFinite(receivedAmount) || receivedAmount < invoice.total) return false;
 
   const activated = await activateInvoice(invoice._id);
   if (activated) console.log(`[Casso] Subscription invoice ${invoice.invoice_number} paid.`);
@@ -63,8 +77,12 @@ const processCassoRecord = async (record) => {
 
 const fetchAndProcessCassoTransactions = async () => {
   if (!process.env.CASSO_API_KEY) return;
-  const fromDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   try {
+    // Chỉ gọi Casso khi có ít nhất một hóa đơn đang chờ thanh toán (status = OPEN)
+    const openInvoiceExists = await Invoice.exists({ status: Invoice.InvoiceStatus.OPEN });
+    if (!openInvoiceExists) return;
+
+    const fromDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const response = await fetch(`https://oauth.casso.vn/v2/transactions?fromDate=${fromDate}&sort=DESC&pageSize=50`, {
       headers: { Authorization: `Apikey ${process.env.CASSO_API_KEY}`, 'Content-Type': 'application/json' },
     });
@@ -76,8 +94,16 @@ const fetchAndProcessCassoTransactions = async () => {
   }
 };
 
+let lastFetchTime = 0;
+const fetchAndProcessCassoTransactionsThrottled = async () => {
+  const now = Date.now();
+  if (now - lastFetchTime < 20000) return; // Throttle to 20 seconds
+  lastFetchTime = now;
+  await fetchAndProcessCassoTransactions();
+};
+
 let pollingTimer = null;
-const startCassoPolling = (intervalMs = 3 * 60 * 1000) => {
+const startCassoPolling = (intervalMs = 25 * 1000) => {
   if (pollingTimer || !process.env.CASSO_API_KEY) return;
   const poll = async () => {
     await fetchAndProcessCassoTransactions();
@@ -86,4 +112,9 @@ const startCassoPolling = (intervalMs = 3 * 60 * 1000) => {
   pollingTimer = setTimeout(poll, 5000);
 };
 
-module.exports = { processCassoRecord, fetchAndProcessCassoTransactions, startCassoPolling };
+module.exports = {
+  processCassoRecord,
+  fetchAndProcessCassoTransactions,
+  fetchAndProcessCassoTransactionsThrottled,
+  startCassoPolling
+};
