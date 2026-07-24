@@ -21,7 +21,7 @@ const NAV_ITEMS: { page: ActivePage; label: string; icon: typeof LayoutDashboard
   { page: "admin-meetings", label: "Meeting Management", icon: CalendarClock },
   { page: "admin-conversions", label: "Conversion History", icon: History },
   { page: "admin-reports", label: "Reports", icon: BarChart3 },
-  { page: "admin-invoices", label: "Hóa đơn & Thanh toán", icon: Receipt },
+  { page: "admin-invoices", label: "payment invoice", icon: Receipt },
   { page: "admin-settings", label: "Settings", icon: Settings },
 ];
 
