@@ -3,10 +3,12 @@ const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 const { sendEmail, buildVerificationEmail, buildResetPasswordEmail } = require('../utils/sendEmail');
 const { ensureStarterSubscription } = require('../services/subscriptionService');
+const { cleanEnvUrl } = require('../utils/env');
 
 // ─── Helpers ─────────────────────────────────────────────────────
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CLIENT_URL = cleanEnvUrl(process.env.CLIENT_URL, 'http://localhost:5173');
 
 /** Hash a raw token with SHA-256 (for DB storage) */
 const hashToken = (raw) =>
@@ -370,7 +372,7 @@ exports.forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 min
     await user.save({ validateBeforeSave: false });
 
-    const resetURL = `${process.env.CLIENT_URL}/reset-password/${rawToken}`;
+    const resetURL = `${CLIENT_URL}/reset-password/${rawToken}`;
 
     try {
       await sendEmail({
@@ -519,14 +521,14 @@ exports.githubLogin = (req, res) => {
 exports.githubCallback = async (req, res) => {
   try {
     const { code } = req.query;
-    if (!code) return res.redirect(`${process.env.CLIENT_URL}/?auth_error=github_missing_code`);
+    if (!code) return res.redirect(`${CLIENT_URL}/?auth_error=github_missing_code`);
 
     const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify({ client_id: process.env.GITHUB_CLIENT_ID, client_secret: process.env.GITHUB_CLIENT_SECRET, code, redirect_uri: process.env.GITHUB_CALLBACK_URL }),
     });
     const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) return res.redirect(`${process.env.CLIENT_URL}/?auth_error=github_token_failed`);
+    if (!tokenData.access_token) return res.redirect(`${CLIENT_URL}/?auth_error=github_token_failed`);
 
     const userRes = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${tokenData.access_token}`, Accept: 'application/vnd.github+json' } });
     const githubUser = await userRes.json();
@@ -535,7 +537,7 @@ exports.githubCallback = async (req, res) => {
     const emails = await emailsRes.json();
     const primaryEmailObj = Array.isArray(emails) ? emails.find(e => e.primary && e.verified) || emails.find(e => e.verified) : null;
     const email = primaryEmailObj?.email?.toLowerCase();
-    if (!email) return res.redirect(`${process.env.CLIENT_URL}/?auth_error=github_email_missing`);
+    if (!email) return res.redirect(`${CLIENT_URL}/?auth_error=github_email_missing`);
 
     const githubId = String(githubUser.id);
     const fullName = githubUser.name || githubUser.login || email;
@@ -552,9 +554,9 @@ exports.githubCallback = async (req, res) => {
     }
 
     const token = generateToken(user._id);
-    return res.redirect(`${process.env.CLIENT_URL}/auth/github/success?token=${token}`);
+    return res.redirect(`${CLIENT_URL}/auth/github/success?token=${token}`);
   } catch (err) {
     console.error('githubCallback error:', err.message);
-    return res.redirect(`${process.env.CLIENT_URL}/?auth_error=github_failed`);
+    return res.redirect(`${CLIENT_URL}/?auth_error=github_failed`);
   }
 };
