@@ -26,7 +26,7 @@ export function SignIn() {
     await loginUser(email, password);
   };
 
-  const handleGoogleSuccess = (credential) => { if (credential) loginWithGoogle(credential); };
+  const handleGoogleSuccess = (credential: string | undefined) => { if (credential) loginWithGoogle(credential); };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();

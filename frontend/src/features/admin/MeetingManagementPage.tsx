@@ -163,7 +163,7 @@ export function MeetingManagementPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
-  const handleViewMeeting = (id) => { sessionStorage.setItem("alsm_view_meeting_id", id); setActivePage("meeting-detail"); };
+  const handleViewMeeting = (id: string) => { sessionStorage.setItem("alsm_view_meeting_id", id); setActivePage("meeting-detail"); };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -21,8 +21,6 @@ interface AppStore {
   loginUser: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
   setAuthError: (message: string) => void;
-  loginWithGoogle: (credential: string) => Promise<void>;
-  setAuthError: (message: string) => void;
   logout: () => void;
   clearAuthError: () => void;
   initAuth: () => Promise<void>;
