@@ -16,6 +16,15 @@ const formatMoney = (amount: number, currency: string) => {
   }).format(amount);
 };
 
+const getPlanTier = (planId: string) => {
+  switch (planId) {
+    case "starter": return 0;
+    case "professional": return 1;
+    case "enterprise": return 2;
+    default: return 0;
+  }
+};
+
 interface PaymentCountdownProps {
   invoiceDate: string;
   onExpire: () => void;
@@ -70,7 +79,7 @@ export function PricingPage() {
   const [trialError, setTrialError] = useState("");
   const [trialSuccess, setTrialSuccess] = useState("");
   const [trialEligible, setTrialEligible] = useState<boolean | null>(null);
-  const [currentPlanName, setCurrentPlanName] = useState<string | null>(null);
+  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
 
   // Upgrade Flow States
   const [preview, setPreview] = useState<UpgradePreview | null>(null);
@@ -94,7 +103,7 @@ export function PricingPage() {
       setTrialSuccess(`${result.message} Trial ends on ${trialEnd}.`);
       setTrialEligible(false);
       // Reload current plan slug
-      setCurrentPlanName(plan.name);
+      setCurrentPlanId(plan.id);
     } catch (err) {
       setTrialError(err instanceof Error ? err.message : "Unable to start free trial.");
     } finally {
@@ -142,7 +151,7 @@ export function PricingPage() {
       .getBilling()
       .then((res) => {
         if (!cancelled && res.success && res.data) {
-          setCurrentPlanName(res.data.currentPlan.name);
+          setCurrentPlanId(res.data.currentPlan.id);
         }
       })
       .catch(console.error);
@@ -166,7 +175,7 @@ export function PricingPage() {
           // Reload current plan slug
           const billingRes = await pricingApi.getBilling();
           if (billingRes.success && billingRes.data) {
-            setCurrentPlanName(billingRes.data.currentPlan.name);
+            setCurrentPlanId(billingRes.data.currentPlan.id);
           }
         } else {
           timer = window.setTimeout(poll, 4000);
@@ -221,7 +230,7 @@ export function PricingPage() {
         // Reload current plan
         const billingRes = await pricingApi.getBilling();
         if (billingRes.success && billingRes.data) {
-          setCurrentPlanName(billingRes.data.currentPlan.name);
+          setCurrentPlanId(billingRes.data.currentPlan.id);
         }
       }
     } catch (err) {
@@ -231,6 +240,8 @@ export function PricingPage() {
       setConfirming(false);
     }
   };
+
+  const currentTier = currentPlanId ? getPlanTier(currentPlanId) : 0;
 
   return (
     <div className="min-h-[70vh] bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
@@ -369,7 +380,7 @@ export function PricingPage() {
                     >
                       Sign in to subscribe
                     </button>
-                  ) : plan.name === currentPlanName ? (
+                  ) : getPlanTier(plan.id) === currentTier ? (
                     <button
                       type="button"
                       disabled
@@ -377,13 +388,13 @@ export function PricingPage() {
                     >
                       Current plan
                     </button>
-                  ) : plan.name === "Starter" ? (
+                  ) : getPlanTier(plan.id) < currentTier ? (
                     <button
                       type="button"
                       disabled
                       className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-400 cursor-not-allowed"
                     >
-                      Default
+                      {plan.id === "starter" ? "Default" : "Included"}
                     </button>
                   ) : plan.name === "Professional" && trialEligible === true ? (
                     <button

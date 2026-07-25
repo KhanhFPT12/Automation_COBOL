@@ -435,6 +435,7 @@ exports.startTrial = async (req, res, next) => {
       });
     }
 
+    const starterPlan = await Plan.findOne({ slug: 'starter' });
     const [plan, previousTrial, activeSubscription] = await Promise.all([
       Plan.findOne({ slug: planSlug, is_active: true }),
       Subscription.exists({ user_id: req.user._id, trial_start: { $ne: null } }),
@@ -442,6 +443,7 @@ exports.startTrial = async (req, res, next) => {
         user_id: req.user._id,
         status: { $in: ['trialing', 'active'] },
         current_period_end: { $gt: new Date() },
+        plan_id: { $ne: starterPlan ? starterPlan._id : null },
       }),
     ]);
 
@@ -463,17 +465,22 @@ exports.startTrial = async (req, res, next) => {
 
     const trialStart = new Date();
     const trialEnd = new Date(trialStart.getTime() + TRIAL_DURATION_MS);
-    const subscription = await Subscription.create({
-      user_id: req.user._id,
-      plan_id: plan._id,
-      plan_name: plan.name,
-      status: 'trialing',
-      trial_start: trialStart,
-      trial_end: trialEnd,
-      current_period_start: trialStart,
-      current_period_end: trialEnd,
-      usage: {},
-    });
+    const subscription = await Subscription.findOneAndUpdate(
+      { user_id: req.user._id },
+      {
+        $set: {
+          plan_id: plan._id,
+          plan_name: plan.name,
+          status: 'trialing',
+          trial_start: trialStart,
+          trial_end: trialEnd,
+          current_period_start: trialStart,
+          current_period_end: trialEnd,
+          usage: {},
+        },
+      },
+      { new: true, upsert: true }
+    );
 
     return res.status(201).json({
       success: true,
