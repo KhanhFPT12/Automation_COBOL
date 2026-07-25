@@ -75,7 +75,7 @@ exports.getUserDetail = async (req, res) => {
     const [conversionHistory, meetingHistory, subscription] = await Promise.all([
       ConversionLog.find({ user: user._id }).sort({ createdAt: -1 }).limit(50),
       Meeting.find({ user: user._id }).sort({ createdAt: -1 }),
-      Subscription.findOne({ user_id: user._id }).sort({ created_at: -1 }),
+      Subscription.findOne({ user_id: user._id }).populate('plan_id').sort({ created_at: -1 }),
     ]);
 
     // No payment/billing system exists yet - always return an empty list so
@@ -90,7 +90,7 @@ exports.getUserDetail = async (req, res) => {
       paymentHistory,
       subscription: subscription ? {
         id: subscription._id,
-        planName: subscription.plan_name,
+        planName: subscription.plan_id ? subscription.plan_id.name : subscription.plan_name,
         status: subscription.status,
         currentPeriodEnd: subscription.current_period_end,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
@@ -120,7 +120,8 @@ exports.reactivateSubscription = async (req, res) => {
         },
       },
       { new: true }
-    );
+    ).populate('plan_id');
+
     if (!subscription) {
       return res.status(409).json({
         success: false,
@@ -132,7 +133,7 @@ exports.reactivateSubscription = async (req, res) => {
       message: 'Subscription renewal reactivated.',
       subscription: {
         id: subscription._id,
-        planName: subscription.plan_name,
+        planName: subscription.plan_id ? subscription.plan_id.name : subscription.plan_name,
         status: subscription.status,
         currentPeriodEnd: subscription.current_period_end,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,

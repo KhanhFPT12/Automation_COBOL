@@ -78,7 +78,7 @@ const processCassoRecord = async (record) => {
 const fetchAndProcessCassoTransactions = async () => {
   if (!process.env.CASSO_API_KEY) return;
   try {
-    // Chỉ gọi Casso khi có ít nhất một hóa đơn đang chờ thanh toán (status = OPEN)
+    // Only call Casso when there is at least one invoice pending payment (status = OPEN)
     const openInvoiceExists = await Invoice.exists({ status: Invoice.InvoiceStatus.OPEN });
     if (!openInvoiceExists) return;
 

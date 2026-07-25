@@ -50,11 +50,11 @@ async function logConversion({ user, fileType, screenCount, success, errorMessag
 function buildConversionError(code, message, rawDetails = '') {
   const details = String(rawDetails || message || '');
   const lineMatch = details.match(/(?:line|dòng)\s*[:#]?\s*(\d+)/i);
-  let suggestion = 'Kiểm tra định dạng và nội dung file BMS, sửa lỗi rồi thử lại.';
-  if (/timed?\s*out|timeout/i.test(details)) suggestion = 'Giảm kích thước bộ file hoặc chia nhỏ file ZIP rồi thử lại.';
-  else if (/python.*(?:not recognized|not found)|ENOENT/i.test(details)) suggestion = 'Kiểm tra Python đã được cài đặt và lệnh python có trong PATH của backend.';
-  else if (/zip|archive|invalid signature/i.test(details)) suggestion = 'Kiểm tra file ZIP không bị hỏng và bên trong có ít nhất một file .bms.';
-  return { code, message: message || 'Không thể hoàn tất quá trình chuyển đổi.', line: lineMatch ? `Line ${lineMatch[1]}` : 'Không xác định', suggestion };
+  let suggestion = 'Check the format and content of the BMS file, fix any errors, and try again.';
+  if (/timed?\s*out|timeout/i.test(details)) suggestion = 'Reduce the bundle size or split the ZIP file and try again.';
+  else if (/python.*(?:not recognized|not found)|ENOENT/i.test(details)) suggestion = 'Verify that Python is installed and the python command is in the PATH of the backend.';
+  else if (/zip|archive|invalid signature/i.test(details)) suggestion = 'Check that the ZIP file is not corrupted and contains at least one .bms file.';
+  return { code, message: message || 'Unable to complete the conversion process.', line: lineMatch ? `Line ${lineMatch[1]}` : 'Unknown', suggestion };
 }
 
 function sendConversionError(res, status, code, message, rawDetails) {
@@ -73,69 +73,69 @@ const FRONTEND_TEMPLATE = process.env.FRONTEND_TEMPLATE_DIR
 // Folders/files to skip when copying the template
 const COPY_EXCLUDE = new Set(['node_modules', 'dist', '.git', 'build', '.env', '.env.local']);
 
-const README_CONTENT = `# BMS to React — Dự án React hoàn chỉnh
+const README_CONTENT = `# BMS to React — Complete React Project
 
-Dự án React đã được tự động sinh ra từ các file BMS của bạn bằng công cụ **CICS2React** của ALSM.
+The React project has been automatically generated from your BMS files using the ALSM **CICS2React** tool.
 
 ---
 
-## Hướng dẫn chạy nhanh
+## Quick Start Guide
 
 \`\`\`bash
-# 1. Cài thư viện
+# 1. Install dependencies
 npm install
 
-# 2. Khởi động ứng dụng
+# 2. Start the application
 npm run dev
 \`\`\`
 
-Sau đó mở trình duyệt tại: **http://localhost:5173** — trang chủ sẽ tự chuyển thẳng đến màn hình BMS đầu tiên đã convert.
+Then open your browser at: **http://localhost:5173** — the home page will automatically redirect to the first converted BMS screen.
 
 ---
 
-## Điều hướng đến màn hình BMS
+## Navigating BMS Screens
 
-Dùng menu bên trái (Sidebar) để chuyển qua các màn hình BMS khác đã được convert,
-hoặc truy cập trực tiếp qua URL theo tên màn hình, ví dụ \`http://localhost:5173/BNK1MAI\`.
+Use the left menu (Sidebar) to switch between the other converted BMS screens,
+or access them directly via URL by screen name, e.g., \`http://localhost:5173/BNK1MAI\`.
 
 ---
 
-## Cấu trúc dự án
+## Project Structure
 
 \`\`\`
 src/
 ├── pages/
-│   └── BMSPage/          ← Các màn hình BMS đã được convert
+│   └── BMSPage/          ← Converted BMS screens
 │       ├── SCREEN1.tsx
 │       ├── SCREEN2.tsx
-│       └── bmsRoutes.tsx ← Routes tự động sinh
-├── components/           ← GridItem, Input, Button, Menu, v.v.
+│       └── bmsRoutes.tsx ← Automatically generated routes
+├── components/           ← GridItem, Input, Button, Menu, etc.
 ├── layouts/              ← DefaultLayout (Header, Footer, Sidebar)
 └── features/             ← Redux store, theme slices
 \`\`\`
 
 ---
 
-## Đổi giao diện (Theme)
+## Change Theme
 
-Nhấn nút bánh răng ⚙ góc phải giữa màn hình để đổi theme:
-- **Default** — nền tối, chữ xám
-- **Mainframe Green** — nền đen, chữ xanh lá
-- **Mainframe Yellow** — nền đen, chữ vàng cam
-- **Mainframe White** — nền đen, chữ trắng
-
----
-
-## Ghi chú
-
-- Các màn hình BMS có form input có thể submit (Enter) để gọi API.
-  Nếu chưa có backend Spring Boot, API sẽ trả lỗi — đây là bình thường, UI vẫn hiển thị đúng.
-- Backend mặc định kết nối tới \`http://localhost:8080\`.
-  Sửa trong \`src/config/httpConfig.tsx\` nếu cần.
+Click the gear icon ⚙ in the right middle of the screen to change the theme:
+- **Default** — dark background, grey text
+- **Mainframe Green** — black background, green text
+- **Mainframe Yellow** — black background, orange/yellow text
+- **Mainframe White** — black background, white text
 
 ---
 
-Được tạo bởi **ALSM · CICS2React Converter**
+## Notes
+
+- Converted BMS screens with input forms can be submitted (Enter) to call APIs.
+  If the backend Spring Boot app is not running, APIs will return errors — this is normal, the UI will still display correctly.
+- The backend defaults to \`http://localhost:8080\`.
+  Modify this in \`src/config/httpConfig.tsx\` if needed.
+
+---
+
+Created by **ALSM · CICS2React Converter**
 `;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -318,13 +318,13 @@ exports.convertBmsFiles = async (req, res) => {
         }
       }
     } else {
-      return sendConversionError(res, 400, 'BMS_FILE_REQUIRED', 'Không có file nào được tải lên.');
+      return sendConversionError(res, 400, 'BMS_FILE_REQUIRED', 'No file was uploaded.');
     }
 
     // ── 2. Locate BMS files ───────────────────────────────────────────────
     const bmsDir = findBmsDirectory(inputDir);
     if (!bmsDir) {
-      return sendConversionError(res, 400, 'BMS_FILE_NOT_FOUND', 'Không tìm thấy file .bms nào. Hãy đảm bảo file ZIP chứa các file .bms.');
+      return sendConversionError(res, 400, 'BMS_FILE_NOT_FOUND', 'No .bms files found. Make sure the ZIP file contains .bms files.');
     }
 
     // ── 3. Run Python conversion ──────────────────────────────────────────
@@ -340,7 +340,7 @@ exports.convertBmsFiles = async (req, res) => {
       .map((f) => path.basename(f, '.tsx'));
 
     if (generatedScreens.length === 0) {
-      return sendConversionError(res, 500, 'BMS_OUTPUT_EMPTY', 'Quá trình chuyển đổi không sinh ra file nào. Kiểm tra lại định dạng file BMS.', stderr || stdout);
+      return sendConversionError(res, 500, 'BMS_OUTPUT_EMPTY', 'The conversion process produced no files. Please check the BMS file format.', stderr || stdout);
     }
 
     // ── 4. Copy full CICS2React frontend template ─────────────────────────
@@ -404,7 +404,7 @@ exports.convertBmsFiles = async (req, res) => {
     const archive = new ZipArchive({ zlib: { level: 6 } });
     archive.on('error', (err) => {
       if (!res.headersSent) {
-        res.status(500).json({ success: false, message: 'Lỗi khi tạo zip: ' + err.message });
+         res.status(500).json({ success: false, message: 'Error generating ZIP: ' + err.message });
       }
     });
     archive.pipe(res);
@@ -423,7 +423,7 @@ exports.convertBmsFiles = async (req, res) => {
     });
     if (!res.headersSent) {
       const rawDetails = [err.stderr, err.stdout, err.stack].filter(Boolean).join('\n');
-      sendConversionError(res, 500, err.killed ? 'BMS_CONVERSION_TIMEOUT' : 'BMS_CONVERSION_FAILED', 'Lỗi chuyển đổi: ' + (err.message || 'Unknown error'), rawDetails);
+      sendConversionError(res, 500, err.killed ? 'BMS_CONVERSION_TIMEOUT' : 'BMS_CONVERSION_FAILED', 'Conversion error: ' + (err.message || 'Unknown error'), rawDetails);
     }
   } finally {
     try { fs.rmSync(jobDir, { recursive: true, force: true }); } catch {}

@@ -24,10 +24,10 @@ export function InvoicesPage() {
       if (response.success) {
         setInvoices(response.data);
       } else {
-        setError("Không thể tải danh sách hóa đơn.");
+        setError("Failed to load invoice list.");
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi tải danh sách hóa đơn.");
+      setError(err instanceof Error ? err.message : "An error occurred while loading the invoice list.");
     } finally {
       setLoading(false);
     }
@@ -45,15 +45,15 @@ export function InvoicesPage() {
     try {
       const response = await adminApi.confirmInvoicePayment(confirmingInvoice.id);
       if (response.success) {
-        setSuccessMessage(`Đã xác nhận thanh toán thủ công cho hóa đơn ${confirmingInvoice.invoiceNumber} thành công.`);
+        setSuccessMessage(`Manual payment confirmed for invoice ${confirmingInvoice.invoiceNumber} successfully.`);
         setConfirmingInvoice(null);
         await fetchInvoices();
         setTimeout(() => setSuccessMessage(""), 5000);
       } else {
-        setError(response.message || "Xác nhận thanh toán thất bại.");
+        setError(response.message || "Manual payment confirmation failed.");
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi xác nhận thanh toán.");
+      setError(err instanceof Error ? err.message : "An error occurred during manual payment confirmation.");
     } finally {
       setSubmittingConfirm(false);
     }
@@ -74,31 +74,31 @@ export function InvoicesPage() {
       case "paid":
         return (
           <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-semibold border border-emerald-100">
-            <CheckCircle2 className="h-3.5 w-3.5" /> Đã thanh toán
+            <CheckCircle2 className="h-3.5 w-3.5" /> Paid
           </span>
         );
       case "open":
         return (
           <span className="inline-flex items-center gap-1 bg-sky-50 text-sky-700 px-2.5 py-1 rounded-full text-xs font-semibold border border-sky-100">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Chờ chuyển khoản
+            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Pending Transfer
           </span>
         );
       case "void":
         return (
           <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full text-xs font-semibold border border-slate-200">
-            <XCircle className="h-3.5 w-3.5" /> Đã hủy/Hết hạn
+            <XCircle className="h-3.5 w-3.5" /> Cancelled/Expired
           </span>
         );
       case "uncollectible":
         return (
           <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full text-xs font-semibold border border-rose-100">
-            <XCircle className="h-3.5 w-3.5" /> Thất thu
+            <XCircle className="h-3.5 w-3.5" /> Uncollectible
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full text-xs font-semibold border border-slate-200">
-            <HelpCircle className="h-3.5 w-3.5" /> Nháp
+            <HelpCircle className="h-3.5 w-3.5" /> Draft
           </span>
         );
     }
@@ -147,14 +147,14 @@ export function InvoicesPage() {
               }`}
             >
               {s === "all"
-                ? "Tất cả"
+                ? "All"
                 : s === "open"
-                ? "Chờ thanh toán"
+                ? "Pending Payment"
                 : s === "paid"
-                ? "Đã thanh toán"
+                ? "Paid"
                 : s === "void"
-                ? "Đã hủy/Hết hạn"
-                : "Thất thu"}
+                ? "Cancelled/Expired"
+                : "Uncollectible"}
             </button>
           ))}
         </div>
@@ -166,7 +166,7 @@ export function InvoicesPage() {
           </span>
           <input
             type="text"
-            placeholder="Tìm theo Mã hóa đơn, Email, ND CK..."
+            placeholder="Search by Invoice ID, Email, Ref..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full text-sm pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white"
@@ -180,14 +180,14 @@ export function InvoicesPage() {
           <table className="w-full text-sm text-left">
             <thead>
               <tr className="border-b border-slate-100 text-xs text-slate-400 uppercase tracking-wide">
-                <th className="px-5 py-4 font-semibold">Mã Hóa đơn</th>
-                <th className="px-5 py-4 font-semibold">Khách hàng</th>
-                <th className="px-5 py-4 font-semibold">Nội dung chuyển khoản</th>
-                <th className="px-5 py-4 font-semibold">Gói đăng ký</th>
-                <th className="px-5 py-4 font-semibold">Số tiền</th>
-                <th className="px-5 py-4 font-semibold">Trạng thái</th>
-                <th className="px-5 py-4 font-semibold">Ngày tạo</th>
-                <th className="px-5 py-4 font-semibold text-right">Thao tác</th>
+                <th className="px-5 py-4 font-semibold">Invoice ID</th>
+                <th className="px-5 py-4 font-semibold">Customer</th>
+                <th className="px-5 py-4 font-semibold">Payment Reference</th>
+                <th className="px-5 py-4 font-semibold">Subscription Plan</th>
+                <th className="px-5 py-4 font-semibold">Amount</th>
+                <th className="px-5 py-4 font-semibold">Status</th>
+                <th className="px-5 py-4 font-semibold">Created Date</th>
+                <th className="px-5 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -195,13 +195,13 @@ export function InvoicesPage() {
                 <tr>
                   <td colSpan={8} className="text-center py-12 text-slate-400">
                     <Loader2 className="h-6 w-6 animate-spin inline mr-2 text-sky-600" />
-                    Đang tải dữ liệu...
+                    Loading data...
                   </td>
                 </tr>
               ) : filteredInvoices.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-12 text-slate-400">
-                    Không tìm thấy hóa đơn nào phù hợp.
+                    No matching invoices found.
                   </td>
                 </tr>
               ) : (
@@ -218,7 +218,7 @@ export function InvoicesPage() {
                           {inv.paymentReference}
                         </span>
                       ) : (
-                        <span className="text-slate-400 italic text-xs">Không có</span>
+                        <span className="text-slate-400 italic text-xs">None</span>
                       )}
                     </td>
                     <td className="px-5 py-4 font-medium text-slate-700">{inv.pendingPlanName}</td>
@@ -227,7 +227,7 @@ export function InvoicesPage() {
                     </td>
                     <td className="px-5 py-4">{getStatusBadge(inv.status)}</td>
                     <td className="px-5 py-4 text-xs text-slate-400">
-                      {new Date(inv.createdAt).toLocaleString("vi-VN")}
+                      {new Date(inv.createdAt).toLocaleString("en-US")}
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex justify-end items-center gap-2">
@@ -248,7 +248,7 @@ export function InvoicesPage() {
                             onClick={() => setConfirmingInvoice(inv)}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1.5 rounded-lg text-xs transition"
                           >
-                            Duyệt tay
+                            Manual Approve
                           </button>
                         )}
                       </div>
@@ -265,18 +265,18 @@ export function InvoicesPage() {
       {confirmingInvoice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-100">
-            <h3 className="text-lg font-bold text-slate-900">Xác nhận thanh toán thủ công</h3>
+            <h3 className="text-lg font-bold text-slate-900">Manual Payment Confirmation</h3>
             <div className="mt-4 space-y-3 text-sm text-slate-600">
-              <p>Bạn có chắc chắn muốn xác nhận thanh toán thủ công cho hóa đơn này?</p>
+              <p>Are you sure you want to confirm the payment manually for this invoice?</p>
               <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100 space-y-1.5 font-medium">
-                <div>Mã hóa đơn: <span className="font-bold text-slate-900">{confirmingInvoice.invoiceNumber}</span></div>
-                <div>Khách hàng: <span className="text-slate-900">{confirmingInvoice.customerName}</span></div>
-                <div>Gói cước: <span className="text-slate-900">{confirmingInvoice.pendingPlanName}</span></div>
-                <div>Số tiền: <span className="font-bold text-slate-900">{formatMoney(confirmingInvoice.total, confirmingInvoice.currency)}</span></div>
-                <div>Mã CK: <span className="font-mono font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded">{confirmingInvoice.paymentReference}</span></div>
+                <div>Invoice ID: <span className="font-bold text-slate-900">{confirmingInvoice.invoiceNumber}</span></div>
+                <div>Customer: <span className="text-slate-900">{confirmingInvoice.customerName}</span></div>
+                <div>Plan: <span className="text-slate-900">{confirmingInvoice.pendingPlanName}</span></div>
+                <div>Amount: <span className="font-bold text-slate-900">{formatMoney(confirmingInvoice.total, confirmingInvoice.currency)}</span></div>
+                <div>Ref Code: <span className="font-mono font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded">{confirmingInvoice.paymentReference}</span></div>
               </div>
               <p className="text-xs text-rose-600 font-semibold">
-                ⚠️ Hành động này sẽ lập tức nâng cấp gói cước cho tài khoản khách hàng và ghi nhận doanh thu vào hệ thống.
+                ⚠️ This action will immediately upgrade the subscription plan for the customer account and record the revenue.
               </p>
             </div>
             <div className="mt-6 flex justify-end gap-3">
@@ -286,7 +286,7 @@ export function InvoicesPage() {
                 onClick={() => setConfirmingInvoice(null)}
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
-                Hủy
+                Cancel
               </button>
               <button
                 type="button"
@@ -295,7 +295,7 @@ export function InvoicesPage() {
                 className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
                 {submittingConfirm && <Loader2 className="h-4 w-4 animate-spin" />}
-                Xác nhận
+                Confirm
               </button>
             </div>
           </div>

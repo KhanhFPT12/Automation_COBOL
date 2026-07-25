@@ -14,7 +14,7 @@ const upload = multer({
     if (['.zip', '.bms'].includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Chỉ chấp nhận file .zip hoặc .bms'));
+      cb(new Error('Only .zip or .bms files are accepted'));
     }
   },
 });

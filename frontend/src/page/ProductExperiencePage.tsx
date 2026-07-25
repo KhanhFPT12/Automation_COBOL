@@ -238,7 +238,7 @@ export function ProductExperiencePage() {
                 {errorDetails && <ConversionErrorLog error={errorDetails} expanded={showError} onToggle={() => setShowError((show) => !show)} />}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button onClick={handleConvert} className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-xl transition"><RefreshCw className="h-4 w-4" /> Retry</button>
-                  <button onClick={reset} className="flex items-center justify-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-6 py-3 rounded-xl transition">Chọn file khác</button>
+                  <button onClick={reset} className="flex items-center justify-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold px-6 py-3 rounded-xl transition">Select another file</button>
                 </div>
               </motion.div>
             )}

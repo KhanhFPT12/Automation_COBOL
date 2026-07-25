@@ -11,6 +11,7 @@ const googleMeetService = require('../services/googleMeetService');
 // @route   GET /api/admin/google/connect
 // @access  Private/Admin
 // ────────────────────────────────────────────────────────────────
+// 
 exports.connect = async (req, res) => {
   try {
     // The OAuth callback below is a plain browser redirect from Google (no
@@ -21,7 +22,7 @@ exports.connect = async (req, res) => {
     return res.status(200).json({ success: true, url });
   } catch (err) {
     console.error('google connect error:', err.message);
-    return res.status(500).json({ success: false, message: `Không thể khởi tạo kết nối Google: ${err.message}` });
+    return res.status(500).json({ success: false, message: `Could not initialize Google connection: ${err.message}` });
   }
 };
 
@@ -34,35 +35,35 @@ exports.callback = async (req, res) => {
   try {
     const { code, state, error } = req.query;
     if (error) {
-      return res.status(400).send(`Google từ chối cấp quyền: ${error}`);
+      return res.status(400).send(`Google access denied: ${error}`);
     }
     if (!code || !state) {
-      return res.status(400).send('Thiếu code hoặc state từ Google.');
+      return res.status(400).send('Missing code or state from Google.');
     }
 
     let decoded;
     try {
       decoded = jwt.verify(state, process.env.JWT_SECRET);
     } catch {
-      return res.status(401).send('Phiên xác thực đã hết hạn, vui lòng thử kết nối lại.');
+      return res.status(401).send('Authentication session expired. Please connect again.');
     }
 
     const admin = await User.findById(decoded.id);
     if (!admin || admin.role !== 'ADMIN') {
-      return res.status(403).send('Chỉ tài khoản Admin mới được kết nối Google Calendar.');
+      return res.status(403).send('Only admin accounts are permitted to connect Google Calendar.');
     }
 
     const { connectedEmail } = await googleMeetService.connectFromCode(code, admin._id);
 
     return res.send(`
       <html><body style="font-family: sans-serif; text-align:center; padding-top: 80px;">
-        <h2>Đã kết nối Google Calendar (${connectedEmail || 'unknown'})</h2>
-        <p>Bạn có thể đóng tab này và quay lại trang Admin Settings.</p>
+        <h2>Google Calendar Connected (${connectedEmail || 'unknown'})</h2>
+        <p>You can close this tab and return to the Admin Settings page.</p>
       </body></html>
     `);
   } catch (err) {
     console.error('google callback error:', err.message);
-    return res.status(500).send(`Kết nối thất bại: ${err.message}`);
+    return res.status(500).send(`Connection failed: ${err.message}`);
   }
 };
 
@@ -89,7 +90,7 @@ exports.status = async (req, res) => {
 exports.disconnect = async (req, res) => {
   try {
     await googleMeetService.disconnect();
-    return res.status(200).json({ success: true, message: 'Đã ngắt kết nối Google Calendar.' });
+    return res.status(200).json({ success: true, message: 'Disconnected Google Calendar.' });
   } catch (err) {
     console.error('google disconnect error:', err.message);
     return res.status(500).json({ success: false, message: 'Server error. Please try again.' });

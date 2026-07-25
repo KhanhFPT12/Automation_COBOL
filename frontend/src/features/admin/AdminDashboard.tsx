@@ -30,7 +30,7 @@ const STAT_CARDS: { key: keyof DashboardStats; label: string; icon: typeof Users
   { key: "approvedMeetings", label: "Approved Meetings", icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50" },
   { key: "rejectedMeetings", label: "Rejected Meetings", icon: XCircle, color: "text-rose-600 bg-rose-50" },
   { key: "totalConversions", label: "Conversions Run", icon: FileCode2, color: "text-purple-600 bg-purple-50" },
-  { key: "totalRevenue", label: "Doanh thu nhận", icon: Banknote, color: "text-emerald-600 bg-emerald-50" },
+  { key: "totalRevenue", label: "Total Revenue", icon: Banknote, color: "text-emerald-600 bg-emerald-50" },
 ];
 
 function formatDay(dateStr: string) {

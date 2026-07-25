@@ -73,7 +73,7 @@ exports.createMeeting = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Yêu cầu đặt lịch đã được gửi và đang chờ Admin phê duyệt.',
+      message: 'Meeting request submitted successfully and is pending admin approval.',
       meeting,
     });
   } catch (err) {

@@ -91,7 +91,7 @@ public class CustomerRecord {
           
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-4" id="breadcrumbs">
-            <span className="hover:text-sky-600 transition cursor-pointer">Tài liệu</span>
+            <span className="hover:text-sky-600 transition cursor-pointer">Docs</span>
             <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
             <span className="hover:text-sky-600 transition cursor-pointer">COBOL to Java</span>
             <ChevronRight className="h-3.5 w-3.5 text-slate-400" />

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 // One row per BMS/DSPF conversion job run through /api/bms-converter/upload.
-// Powers the "Conversion History" admin page and the "Lượt convert" stat on
+// Powers the "Conversion History" admin page and the "Conversions" stat on
 // the dashboard. Logging is best-effort (see converterController.js) so a
 // logging failure never breaks the actual conversion feature.
 const conversionLogSchema = new mongoose.Schema(

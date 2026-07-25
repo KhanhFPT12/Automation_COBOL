@@ -53,7 +53,7 @@ function PaymentCountdown({ invoiceDate, onExpire }: PaymentCountdownProps) {
   if (timeLeft <= 0) {
     return (
       <span className="text-rose-600 font-bold">
-        Hết hạn
+        Expired
       </span>
     );
   }
@@ -108,25 +108,7 @@ export function BillingPage() {
   };
 
   useEffect(() => {
-    let cancelled = false;
-
-    void pricingApi
-      .getBilling()
-      .then((response) => {
-        if (!cancelled) setBilling(response.data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Unable to load billing information.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    void loadBilling();
   }, []);
 
   const loadInvoices = async () => {
@@ -143,25 +125,7 @@ export function BillingPage() {
   };
 
   useEffect(() => {
-    let cancelled = false;
-
-    void invoiceApi
-      .getInvoices()
-      .then((response) => {
-        if (!cancelled) setInvoices(response.data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setInvoiceError(err instanceof Error ? err.message : "Unable to load invoices.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setInvoicesLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    void loadInvoices();
   }, []);
 
   // Poll open invoice status
@@ -556,18 +520,18 @@ export function BillingPage() {
                     alt="QR Code"
                     className="w-[200px] h-[200px] object-contain"
                   />
-                  <span className="text-[10px] text-slate-500 font-medium mt-1">Quét mã QR để thanh toán</span>
+                  <span className="text-[10px] text-slate-500 font-medium mt-1">Scan QR Code to pay</span>
                 </div>
                 <div className="space-y-3 text-xs flex flex-col justify-center">
-                  <p className="font-bold text-amber-800 text-sm">Vui lòng chuyển khoản ngân hàng theo thông tin:</p>
+                  <p className="font-bold text-amber-800 text-sm">Please complete the bank transfer using the following details:</p>
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Ngân hàng</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Bank</span>
                     <span className="font-semibold text-slate-800">
                       BIN: {selectedInvoice.bankDetails?.bin} | {selectedInvoice.bankDetails?.accountName}
                     </span>
                   </div>
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Số tài khoản</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Account Number</span>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="font-mono font-bold text-slate-900 select-all">{selectedInvoice.bankDetails?.accountNumber}</span>
                       <button
@@ -575,12 +539,12 @@ export function BillingPage() {
                         onClick={() => handleCopy(selectedInvoice.bankDetails?.accountNumber || "", "detailAcc")}
                         className="text-[10px] font-semibold text-sky-600 hover:text-sky-700 shrink-0"
                       >
-                        {copiedField === "detailAcc" ? "Đã copy" : "Copy"}
+                        {copiedField === "detailAcc" ? "Copied" : "Copy"}
                       </button>
                     </div>
                   </div>
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Nội dung chuyển khoản</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Payment Reference</span>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="font-mono font-bold text-sky-800 bg-sky-50 border border-sky-100 px-1.5 py-0.5 rounded select-all">
                         {selectedInvoice.paymentReference}
@@ -590,18 +554,18 @@ export function BillingPage() {
                         onClick={() => handleCopy(selectedInvoice.paymentReference || "", "detailMsg")}
                         className="text-[10px] font-semibold text-sky-600 hover:text-sky-700 shrink-0"
                       >
-                        {copiedField === "detailMsg" ? "Đã copy" : "Copy"}
+                        {copiedField === "detailMsg" ? "Copied" : "Copy"}
                       </button>
                     </div>
                   </div>
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Thời gian còn lại</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Time Remaining</span>
                     <div className="mt-1 flex items-center gap-2">
                       <PaymentCountdown
                         invoiceDate={selectedInvoice.invoiceDate}
                         onExpire={() => setSelectedInvoice((prev: any) => prev ? { ...prev, status: "void" } : null)}
                       />
-                      <span className="text-[10px] text-slate-500">Hóa đơn tự động hủy sau 15 phút.</span>
+                      <span className="text-[10px] text-slate-500">Invoice cancels automatically after 15 minutes.</span>
                     </div>
                   </div>
                 </div>
@@ -641,9 +605,9 @@ export function BillingPage() {
           <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div className="flex items-start justify-between gap-4 mb-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-sky-600">Thanh toán hóa đơn</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-sky-600">Invoice Payment</p>
                 <h2 id="payment-title" className="mt-1 text-2xl font-bold text-slate-900">
-                  Thanh toán chuyển khoản
+                  Bank Transfer Payment
                 </h2>
               </div>
               <button type="button" onClick={() => setPaymentInvoice(null)} aria-label="Close" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
@@ -656,9 +620,9 @@ export function BillingPage() {
                 <div className="mx-auto h-16 w-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center">
                   <X className="h-10 w-10 text-rose-600 animate-pulse" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900">Giao dịch đã hết hạn!</h3>
+                <h3 className="text-xl font-bold text-slate-900">Transaction expired!</h3>
                 <p className="text-sm text-slate-600 max-w-sm mx-auto">
-                  Thời gian chuyển khoản (15 phút) đã trôi qua. Giao dịch này đã bị hủy tự động. Vui lòng thực hiện đăng ký lại.
+                  The 15-minute transfer window has expired. This transaction has been cancelled. Please try again.
                 </p>
                 <div className="pt-4">
                   <button
@@ -666,7 +630,7 @@ export function BillingPage() {
                     onClick={() => setPaymentInvoice(null)}
                     className="w-full bg-slate-600 text-white font-semibold rounded-lg px-6 py-3 hover:bg-slate-700 transition"
                   >
-                    Đóng
+                    Close
                   </button>
                 </div>
               </div>
@@ -675,9 +639,9 @@ export function BillingPage() {
                 <div className="mx-auto h-16 w-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center">
                   <CheckCircle className="h-10 w-10 text-emerald-600 animate-bounce" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900">Thanh toán thành công!</h3>
+                <h3 className="text-xl font-bold text-slate-900">Payment Successful!</h3>
                 <p className="text-sm text-slate-600 max-w-sm mx-auto">
-                  Hệ thống đã ghi nhận thanh toán cho hóa đơn #{paymentInvoice.invoiceNumber}. Tài khoản của bạn đã được nâng cấp!
+                  Payment received for invoice #{paymentInvoice.invoiceNumber}. Your account has been upgraded!
                 </p>
                 <div className="pt-4">
                   <button
@@ -685,7 +649,7 @@ export function BillingPage() {
                     onClick={() => setPaymentInvoice(null)}
                     className="w-full bg-sky-600 text-white font-semibold rounded-lg px-6 py-3 hover:bg-sky-700 transition"
                   >
-                    Đóng
+                    Close
                   </button>
                 </div>
               </div>
@@ -701,13 +665,13 @@ export function BillingPage() {
                         className="w-[240px] h-[240px] object-contain rounded-lg shadow-sm border border-slate-200"
                       />
                       <p className="mt-3 text-[10px] text-center text-slate-500 font-medium max-w-[180px]">
-                        Quét mã QR bằng ứng dụng Mobile Banking của bạn để chuyển khoản nhanh.
+                        Scan the QR code with your Mobile Banking app to complete the transfer.
                       </p>
                     </>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12">
                       <Loader2 className="h-8 w-8 animate-spin text-sky-600" />
-                      <p className="text-xs text-slate-500 mt-2">Đang tải mã QR...</p>
+                      <p className="text-xs text-slate-500 mt-2">Loading QR code...</p>
                     </div>
                   )}
                 </div>
@@ -715,12 +679,12 @@ export function BillingPage() {
                 {/* Right side: Bank Details */}
                 <div className="space-y-4 text-sm">
                   <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3.5 text-xs text-rose-800 font-medium">
-                    ⚠️ Vui lòng chuyển khoản chính xác số tiền và nội dung chuyển khoản dưới đây để giao dịch được duyệt tự động.
+                    ⚠️ Please transfer the exact amount with the exact payment reference below for automated approval.
                   </div>
 
                   <div className="space-y-3">
                     <div>
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Số tài khoản</span>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Account Number</span>
                       <div className="flex items-center justify-between gap-2 mt-1">
                         <span className="font-bold text-slate-900 select-all">{paymentBankDetails?.accountNumber}</span>
                         <button
@@ -729,25 +693,25 @@ export function BillingPage() {
                           className="text-xs font-semibold text-sky-600 hover:text-sky-700 flex items-center gap-1 shrink-0"
                         >
                           <Copy className="h-3.5 w-3.5" />
-                          {copiedField === "accountNumber" ? "Đã copy!" : "Copy"}
+                          {copiedField === "accountNumber" ? "Copied!" : "Copy"}
                         </button>
                       </div>
                     </div>
 
                     <div>
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Chủ tài khoản</span>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Account Holder</span>
                       <span className="block font-semibold text-slate-800 mt-0.5">{paymentBankDetails?.accountName}</span>
                     </div>
 
                     <div>
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Số tiền</span>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Amount</span>
                       <span className="block font-extrabold text-slate-950 text-base mt-0.5">
                         {formatMoney(paymentInvoice.total, paymentInvoice.currency || "VND")}
                       </span>
                     </div>
 
                     <div>
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Nội dung chuyển khoản</span>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Payment Reference</span>
                       <div className="flex items-center justify-between gap-2 mt-1 p-2 rounded-lg bg-sky-50 border border-sky-100">
                         <span className="font-mono font-bold text-sky-800 text-sm select-all">{paymentInvoice.paymentReference}</span>
                         <button
@@ -756,26 +720,26 @@ export function BillingPage() {
                           className="text-xs font-semibold text-sky-700 hover:text-sky-800 flex items-center gap-1 shrink-0"
                         >
                           <Copy className="h-3.5 w-3.5" />
-                          {copiedField === "paymentReference" ? "Đã copy!" : "Copy"}
+                          {copiedField === "paymentReference" ? "Copied!" : "Copy"}
                         </button>
                       </div>
                     </div>
 
                     <div>
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Thời gian còn lại</span>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Time Remaining</span>
                       <div className="mt-1 flex items-center gap-2">
                         <PaymentCountdown
                           invoiceDate={paymentInvoice.invoiceDate}
                           onExpire={() => setPaymentInvoice((prev: any) => prev ? { ...prev, status: "void" } : null)}
                         />
-                        <span className="text-[10px] text-slate-500">Nếu quá 15 phút, giao dịch sẽ tự động bị huỷ.</span>
+                        <span className="text-[10px] text-slate-500">Transaction cancels automatically after 15 minutes.</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="border-t border-slate-100 pt-4 flex items-center gap-2 text-slate-500 text-xs">
                     <Loader2 className="h-4 w-4 animate-spin text-sky-600" />
-                    <span>Đang chờ ngân hàng xác nhận giao dịch...</span>
+                    <span>Waiting for bank payment confirmation...</span>
                   </div>
                 </div>
               </div>

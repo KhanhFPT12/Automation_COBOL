@@ -269,17 +269,17 @@ export function SettingsPage() {
 
     const targetBin = formIsCustomBin ? formCustomBin.trim() : formBin;
     if (!/^\d{6}$/.test(targetBin)) {
-      showToastError("BIN ngân hàng phải có đúng 6 chữ số.");
+      showToastError("Bank BIN must be exactly 6 digits.");
       setFormSaving(false);
       return;
     }
     if (!/^\d{6,30}$/.test(formAccountNumber.trim())) {
-      showToastError("Số tài khoản phải chứa từ 6 đến 30 chữ số.");
+      showToastError("Account number must contain between 6 and 30 digits.");
       setFormSaving(false);
       return;
     }
     if (!formAccountName.trim()) {
-      showToastError("Tên chủ tài khoản là bắt buộc.");
+      showToastError("Account name is required.");
       setFormSaving(false);
       return;
     }
@@ -293,7 +293,7 @@ export function SettingsPage() {
           accountName: formAccountName.trim().toUpperCase(),
         });
         if (response.success) {
-          showToastSuccess("Đã cập nhật tài khoản ngân hàng thành công.");
+          showToastSuccess("Updated bank account successfully.");
           setIsFormOpen(false);
           await loadBankSettings();
         }
@@ -306,28 +306,28 @@ export function SettingsPage() {
           isDefault: formIsDefault,
         });
         if (response.success) {
-          showToastSuccess("Đã thêm tài khoản ngân hàng mới thành công.");
+          showToastSuccess("Added new bank account successfully.");
           setIsFormOpen(false);
           await loadBankSettings();
         }
       }
     } catch (err: unknown) {
-      showToastError(err instanceof Error ? err.message : "Không thể lưu thông tin tài khoản.");
+      showToastError(err instanceof Error ? err.message : "Failed to save bank account details.");
     } finally {
       setFormSaving(false);
     }
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản ngân hàng: ${name}?`)) return;
+    if (!confirm(`Are you sure you want to delete bank account: ${name}?`)) return;
     try {
       const response = await adminApi.deleteBankAccount(id);
       if (response.success) {
-        showToastSuccess("Đã xóa tài khoản ngân hàng.");
+        showToastSuccess("Deleted bank account successfully.");
         await loadBankSettings();
       }
     } catch (err: unknown) {
-      showToastError(err instanceof Error ? err.message : "Lỗi khi xóa tài khoản.");
+      showToastError(err instanceof Error ? err.message : "Error deleting bank account.");
     }
   };
 
@@ -335,11 +335,11 @@ export function SettingsPage() {
     try {
       const response = await adminApi.setDefaultBankAccount(id);
       if (response.success) {
-        showToastSuccess("Đã chuyển tài khoản nhận tiền mặc định.");
+        showToastSuccess("Set default bank account successfully.");
         await loadBankSettings();
       }
     } catch (err: unknown) {
-      showToastError(err instanceof Error ? err.message : "Không thể đặt mặc định.");
+      showToastError(err instanceof Error ? err.message : "Failed to set default bank account.");
     }
   };
 
@@ -392,12 +392,12 @@ export function SettingsPage() {
       });
 
       if (response.success) {
-        showToastSuccess("Đã cập nhật cấu hình gói cước thành công.");
+        showToastSuccess("Updated subscription plan successfully.");
         setIsPlanFormOpen(false);
         await loadPlans();
       }
     } catch (err: unknown) {
-      showToastError(err instanceof Error ? err.message : "Lỗi khi lưu cấu hình gói.");
+      showToastError(err instanceof Error ? err.message : "Error saving plan settings.");
     } finally {
       setPlanSaving(false);
     }
@@ -405,7 +405,7 @@ export function SettingsPage() {
 
   const getBankDisplayName = (bin: string) => {
     const bank = POPULAR_BANKS.find((b) => b.bin === bin);
-    return bank ? bank.name.split(" - ")[0] : `Mã BIN: ${bin}`;
+    return bank ? bank.name.split(" - ")[0] : `BIN: ${bin}`;
   };
 
   const maskAccountNumber = (num: string) => {
@@ -420,8 +420,8 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900">Cài đặt hệ thống</h1>
-        <p className="text-slate-500 text-sm mt-1">Cấu hình chi tiết thanh toán và tích hợp mở rộng cho nền tảng.</p>
+        <h1 className="text-2xl font-extrabold text-slate-900">System Settings</h1>
+        <p className="text-slate-500 text-sm mt-1">Configure payment details and integration settings for the platform.</p>
       </div>
 
       {/* Tabs navigation */}
@@ -435,7 +435,7 @@ export function SettingsPage() {
                 : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
             }`}
           >
-            Tài khoản nhận tiền
+            Receiving Bank Accounts
           </button>
           <button
             onClick={() => setActiveTab("plans")}
@@ -445,27 +445,27 @@ export function SettingsPage() {
                 : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
             }`}
           >
-            Gói dịch vụ
+            Subscription Plans
           </button>
           <button
             onClick={() => setActiveTab("calendar")}
             className={`border-b-2 py-4 px-1 text-sm font-medium transition-all ${
               activeTab === "calendar"
-                ? "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                : "border-sky-600 text-sky-600"
+                ? "border-sky-600 text-sky-600"
+                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
             }`}
           >
-            Tích hợp Lịch
+            Calendar Integration
           </button>
           <button
             onClick={() => setActiveTab("audit")}
             className={`border-b-2 py-4 px-1 text-sm font-medium transition-all ${
               activeTab === "audit"
-                ? "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                : "border-sky-600 text-sky-600"
+                ? "border-sky-600 text-sky-600"
+                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
             }`}
           >
-            Nhật ký sửa đổi
+            Audit Logs
           </button>
         </nav>
       </div>
@@ -493,22 +493,22 @@ export function SettingsPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-800">Danh sách tài khoản nhận tiền</h2>
-              <p className="text-xs text-slate-500 mt-1">Cấu hình các tài khoản ngân hàng dùng để tạo mã chuyển khoản tự động.</p>
+              <h2 className="text-lg font-bold text-slate-800">Receiving Bank Accounts</h2>
+              <p className="text-xs text-slate-500 mt-1">Configure the bank accounts used to generate automatic QR codes for transfers.</p>
             </div>
             {!isFormOpen && (
               <button
                 onClick={openAddForm}
                 className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition"
               >
-                <Plus className="h-4 w-4" /> Thêm tài khoản
+                <Plus className="h-4 w-4" /> Add Account
               </button>
             )}
           </div>
 
           {loadingBank ? (
             <div className="flex items-center gap-2 text-slate-400 text-sm py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-sky-600" /> Đang tải danh sách tài khoản...
+              <Loader2 className="h-5 w-5 animate-spin text-sky-600" /> Loading bank accounts...
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
@@ -521,7 +521,7 @@ export function SettingsPage() {
                 >
                   {account.isDefault && (
                     <span className="absolute top-4 right-4 inline-flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700 px-2.5 py-0.5 rounded-full">
-                      <ShieldCheck className="h-3 w-3" /> Mặc định nhận tiền
+                      <ShieldCheck className="h-3 w-3" /> Default Receiver
                     </span>
                   )}
 
@@ -532,13 +532,13 @@ export function SettingsPage() {
                       </div>
                       <div>
                         <h4 className="font-bold text-slate-800 text-sm">{getBankDisplayName(account.bin)}</h4>
-                        <p className="text-[10px] text-slate-400">Mã BIN: {account.bin}</p>
+                        <p className="text-[10px] text-slate-400">BIN: {account.bin}</p>
                       </div>
                     </div>
 
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400 font-medium">Số tài khoản:</span>
+                        <span className="text-slate-400 font-medium">Account Number:</span>
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-bold text-slate-900">
                             {visibleAccountIds[account.id] ? account.accountNumber : maskAccountNumber(account.accountNumber)}
@@ -547,14 +547,14 @@ export function SettingsPage() {
                             type="button"
                             onClick={() => setVisibleAccountIds((prev) => ({ ...prev, [account.id]: !prev[account.id] }))}
                             className="text-slate-400 hover:text-slate-600"
-                            title={visibleAccountIds[account.id] ? "Ẩn" : "Hiện"}
+                            title={visibleAccountIds[account.id] ? "Hide" : "Show"}
                           >
                             {visibleAccountIds[account.id] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                           </button>
                         </div>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400 font-medium">Chủ tài khoản:</span>
+                        <span className="text-slate-400 font-medium">Account Holder:</span>
                         <span className="font-bold text-slate-800">{account.accountName}</span>
                       </div>
                     </div>
@@ -565,7 +565,7 @@ export function SettingsPage() {
                       <button
                         onClick={() => openEditForm(account)}
                         className="text-slate-500 hover:text-slate-700 p-1.5 hover:bg-slate-50 rounded-lg transition"
-                        title="Chỉnh sửa"
+                        title="Edit"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
@@ -573,7 +573,7 @@ export function SettingsPage() {
                         <button
                           onClick={() => handleDelete(account.id, account.accountName)}
                           className="text-rose-500 hover:text-rose-700 p-1.5 hover:bg-rose-50 rounded-lg transition"
-                          title="Xóa tài khoản"
+                          title="Delete account"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -585,7 +585,7 @@ export function SettingsPage() {
                         onClick={() => void handleSetDefault(account.id)}
                         className="text-xs font-semibold text-sky-600 hover:text-sky-700 flex items-center gap-1 hover:bg-sky-50 px-2.5 py-1.5 rounded-lg transition"
                       >
-                        <Check className="h-3 w-3" /> Đặt mặc định
+                        <Check className="h-3 w-3" /> Set Default
                       </button>
                     )}
                   </div>
@@ -594,7 +594,7 @@ export function SettingsPage() {
 
               {accounts.length === 0 && (
                 <div className="md:col-span-2 border border-dashed border-slate-300 rounded-2xl p-8 text-center text-slate-500">
-                  Chưa cấu hình tài khoản ngân hàng nào. Vui lòng thêm tài khoản để bắt đầu.
+                  No bank accounts configured yet. Please add an account to get started.
                 </div>
               )}
             </div>
@@ -606,7 +606,7 @@ export function SettingsPage() {
               <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
                 <div className="flex items-start justify-between mb-4">
                   <h3 className="font-bold text-slate-900 text-lg">
-                    {editingId ? "Cập nhật tài khoản" : "Thêm tài khoản nhận tiền mới"}
+                    {editingId ? "Update Bank Account" : "Add New Bank Account"}
                   </h3>
                   <button
                     onClick={() => setIsFormOpen(false)}
@@ -619,7 +619,7 @@ export function SettingsPage() {
                 <form onSubmit={saveBankAccount} className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                      Chọn Ngân hàng
+                      Select Bank
                     </label>
                     <select
                       value={formIsCustomBin ? "custom" : formBin}
@@ -635,25 +635,25 @@ export function SettingsPage() {
                       }}
                       className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                     >
-                      <option value="">-- Chọn ngân hàng --</option>
+                      <option value="">-- Select Bank --</option>
                       {POPULAR_BANKS.map((b) => (
                         <option key={b.bin} value={b.bin}>
                           {b.name}
                         </option>
                       ))}
-                      <option value="custom">Ngân hàng khác (Tự điền BIN)</option>
+                      <option value="custom">Other Bank (Enter BIN manually)</option>
                     </select>
                   </div>
 
                   {formIsCustomBin && (
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                        Mã BIN ngân hàng (6 chữ số)
+                        Bank BIN Code (6 digits)
                       </label>
                       <input
                         type="text"
                         maxLength={6}
-                        placeholder="Ví dụ: 970436"
+                        placeholder="Example: 970436"
                         value={formCustomBin}
                         onChange={(e) => setFormCustomBin(e.target.value.replace(/\D/g, ""))}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
@@ -663,12 +663,12 @@ export function SettingsPage() {
 
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                      Số tài khoản
+                      Account Number
                     </label>
                     <div className="relative">
                       <input
                         type={showFormAccountNumber ? "text" : "password"}
-                        placeholder="Nhập số tài khoản ngân hàng"
+                        placeholder="Enter bank account number"
                         value={formAccountNumber}
                         onChange={(e) => setFormAccountNumber(e.target.value.replace(/\D/g, ""))}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
@@ -685,11 +685,11 @@ export function SettingsPage() {
 
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                      Tên chủ tài khoản (Viết hoa không dấu)
+                      Account Holder Name (Uppercase, no accents)
                     </label>
                     <input
                       type="text"
-                      placeholder="Ví dụ: NGUYEN VAN A"
+                      placeholder="Example: NGUYEN VAN A"
                       value={formAccountName}
                       onChange={(e) => setFormAccountName(e.target.value.toUpperCase())}
                       className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
@@ -706,7 +706,7 @@ export function SettingsPage() {
                         className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4"
                       />
                       <label htmlFor="formIsDefault" className="text-xs text-slate-600 font-medium cursor-pointer">
-                        Đặt tài khoản này làm mặc định nhận tiền
+                        Set this account as the default receiver
                       </label>
                     </div>
                   )}
@@ -717,7 +717,7 @@ export function SettingsPage() {
                       onClick={() => setIsFormOpen(false)}
                       className="rounded-lg border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                     >
-                      Hủy
+                      Cancel
                     </button>
                     <button
                       type="submit"
@@ -725,7 +725,7 @@ export function SettingsPage() {
                       className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 disabled:bg-slate-200 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"
                     >
                       {formSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      {editingId ? "Cập nhật" : "Thêm mới"}
+                      {editingId ? "Update" : "Add New"}
                     </button>
                   </div>
                 </form>
@@ -739,13 +739,13 @@ export function SettingsPage() {
       {activeTab === "plans" && (
         <div className="space-y-6">
           <div>
-            <h2 className="text-lg font-bold text-slate-800">Cấu hình các gói dịch vụ & Giá</h2>
-            <p className="text-xs text-slate-500 mt-1">Điều chỉnh giá cước, giới hạn kỹ thuật (Dự án, Số màn hình, Storage) và quyền lợi của từng gói.</p>
+            <h2 className="text-lg font-bold text-slate-800">Subscription Plans & Pricing Configuration</h2>
+            <p className="text-xs text-slate-500 mt-1">Adjust subscription pricing, resource limits (Projects, Screens, Storage) and benefits for each plan.</p>
           </div>
 
           {loadingPlans ? (
             <div className="flex items-center gap-2 text-slate-400 text-sm py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-sky-600" /> Đang tải danh sách gói dịch vụ...
+              <Loader2 className="h-5 w-5 animate-spin text-sky-600" /> Loading subscription plans...
             </div>
           ) : (
             <div className="grid gap-6 lg:grid-cols-3">
@@ -773,7 +773,7 @@ export function SettingsPage() {
                             p.is_active ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-slate-100 text-slate-500"
                           }`}
                         >
-                          {p.is_active ? "Hoạt động" : "Tạm dừng"}
+                          {p.is_active ? "Active" : "Inactive"}
                         </span>
                       </div>
                     </div>
@@ -782,50 +782,50 @@ export function SettingsPage() {
 
                     <div className="border-t border-b border-slate-100 py-3 mb-4 space-y-2 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Giá theo tháng:</span>
+                        <span className="text-slate-400">Monthly Price:</span>
                         <span className="font-bold text-slate-800">
-                          {p.price_monthly === null || p.price_monthly === 0 ? "Miễn phí" : formatMoney(p.price_monthly)}
+                          {p.price_monthly === null || p.price_monthly === 0 ? "Free" : formatMoney(p.price_monthly)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Giá theo năm:</span>
+                        <span className="text-slate-400">Yearly Price:</span>
                         <span className="font-bold text-slate-800">
-                          {p.price_yearly === null || p.price_yearly === 0 ? "Miễn phí" : formatMoney(p.price_yearly)}
+                          {p.price_yearly === null || p.price_yearly === 0 ? "Free" : formatMoney(p.price_yearly)}
                         </span>
                       </div>
                     </div>
 
                     <div className="space-y-2 text-xs mb-4">
-                      <h4 className="font-bold text-slate-700 uppercase text-[10px] tracking-wider">Thông số giới hạn:</h4>
+                      <h4 className="font-bold text-slate-700 uppercase text-[10px] tracking-wider">Resource Limits:</h4>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Dự án tối đa:</span>
+                        <span className="text-slate-400">Max Projects:</span>
                         <span className="font-semibold text-slate-800">
-                          {p.limits.max_projects === null ? "Không giới hạn" : p.limits.max_projects}
+                          {p.limits.max_projects === null ? "Unlimited" : p.limits.max_projects}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Số màn hình / tháng:</span>
+                        <span className="text-slate-400">Screens / Month:</span>
                         <span className="font-semibold text-slate-800">
-                          {p.limits.max_screens_per_month === null ? "Không giới hạn" : p.limits.max_screens_per_month}
+                          {p.limits.max_screens_per_month === null ? "Unlimited" : p.limits.max_screens_per_month}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Dung lượng:</span>
+                        <span className="text-slate-400">Storage Space:</span>
                         <span className="font-semibold text-slate-800">
-                          {p.limits.max_storage_gb === null ? "Không giới hạn" : `${p.limits.max_storage_gb} GB`}
+                          {p.limits.max_storage_gb === null ? "Unlimited" : `${p.limits.max_storage_gb} GB`}
                         </span>
                       </div>
                     </div>
 
                     <div className="space-y-1.5 text-xs mb-4">
-                      <h4 className="font-bold text-slate-700 uppercase text-[10px] tracking-wider">Tính năng:</h4>
+                      <h4 className="font-bold text-slate-700 uppercase text-[10px] tracking-wider">Features:</h4>
                       <ul className="list-disc list-inside text-slate-600 pl-1 space-y-1">
                         {p.features.map((f, i) => (
                           <li key={i} className="truncate" title={f}>
                             {f}
                           </li>
                         ))}
-                        {p.features.length === 0 && <li className="text-slate-400 italic">Không có chi tiết</li>}
+                        {p.features.length === 0 && <li className="text-slate-400 italic">No details</li>}
                       </ul>
                     </div>
                   </div>
@@ -834,7 +834,7 @@ export function SettingsPage() {
                     onClick={() => openEditPlanForm(p)}
                     className="w-full flex items-center justify-center gap-1.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold py-2 rounded-lg transition mt-2"
                   >
-                    <Settings className="h-3.5 w-3.5" /> Điều chỉnh cấu hình
+                    <Settings className="h-3.5 w-3.5" /> Adjust Configuration
                   </button>
                 </div>
               ))}
@@ -847,7 +847,7 @@ export function SettingsPage() {
               <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
                 <div className="flex items-start justify-between mb-4 border-b border-slate-100 pb-3">
                   <h3 className="font-bold text-slate-900 text-lg">
-                    Thiết lập gói dịch vụ: {planName}
+                    Subscription Plan Settings: {planName}
                   </h3>
                   <button
                     onClick={() => setIsPlanFormOpen(false)}
@@ -861,7 +861,7 @@ export function SettingsPage() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                        Tên gói cước
+                        Plan Name
                       </label>
                       <input
                         type="text"
@@ -873,11 +873,11 @@ export function SettingsPage() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                        Nhãn nổi bật (Badge)
+                        Feature Badge
                       </label>
                       <input
                         type="text"
-                        placeholder="Ví dụ: Dùng thử miễn phí"
+                        placeholder="Example: Free Trial"
                         value={planBadge}
                         onChange={(e) => setPlanBadge(e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:outline-none"
@@ -887,7 +887,7 @@ export function SettingsPage() {
 
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                      Mô tả ngắn
+                      Short Description
                     </label>
                     <input
                       type="text"
@@ -901,7 +901,7 @@ export function SettingsPage() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                        Giá theo Tháng (VND)
+                        Monthly Price (VND)
                       </label>
                       <input
                         type="number"
@@ -914,7 +914,7 @@ export function SettingsPage() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                        Giá theo Năm (VND)
+                        Yearly Price (VND)
                       </label>
                       <input
                         type="number"
@@ -928,57 +928,57 @@ export function SettingsPage() {
                   </div>
 
                   <div className="border-t border-slate-100 pt-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-3">Giới hạn tài nguyên (Để trống nếu không giới hạn)</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-3">Resource Limits (Leave blank for unlimited)</h4>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
                         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                          Số lượng Dự án tối đa
+                          Max Projects Count
                         </label>
                         <input
                           type="number"
                           min={0}
                           value={planLimitProjects}
                           onChange={(e) => setPlanLimitProjects(e.target.value)}
-                          placeholder="Không giới hạn"
+                          placeholder="Unlimited"
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:outline-none"
                         />
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                          Số Màn hình chuyển đổi / tháng
+                          Converted Screens / Month
                         </label>
                         <input
                           type="number"
                           min={0}
                           value={planLimitScreens}
                           onChange={(e) => setPlanLimitScreens(e.target.value)}
-                          placeholder="Không giới hạn"
+                          placeholder="Unlimited"
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:outline-none"
                         />
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                          Dung lượng lưu trữ (GB)
+                          Storage Capacity (GB)
                         </label>
                         <input
                           type="number"
                           min={0}
                           value={planLimitStorage}
                           onChange={(e) => setPlanLimitStorage(e.target.value)}
-                          placeholder="Không giới hạn"
+                          placeholder="Unlimited"
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:outline-none"
                         />
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                          Thành viên nhóm tối đa
+                          Max Team Members
                         </label>
                         <input
                           type="number"
                           min={0}
                           value={planLimitTeam}
                           onChange={(e) => setPlanLimitTeam(e.target.value)}
-                          placeholder="Không giới hạn"
+                          placeholder="Unlimited"
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:outline-none"
                         />
                       </div>
@@ -987,13 +987,13 @@ export function SettingsPage() {
 
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                      Các quyền lợi & Tính năng (Mỗi dòng một tính năng)
+                      Benefits & Features (One item per line)
                     </label>
                     <textarea
                       rows={3}
                       value={planFeatures}
                       onChange={(e) => setPlanFeatures(e.target.value)}
-                      placeholder="Tính năng 1&#10;Tính năng 2"
+                      placeholder="Feature 1&#10;Feature 2"
                       className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:outline-none"
                     />
                   </div>
@@ -1001,7 +1001,7 @@ export function SettingsPage() {
                   <div className="grid gap-4 sm:grid-cols-2 items-center pt-2">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                        Thứ tự hiển thị (Bắt đầu từ 0)
+                        Display Order (Starting from 0)
                       </label>
                       <input
                         type="number"
@@ -1021,7 +1021,7 @@ export function SettingsPage() {
                         className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4"
                       />
                       <label htmlFor="planIsActive" className="text-xs text-slate-600 font-medium cursor-pointer">
-                        Kích hoạt gói dịch vụ này
+                        Activate this subscription plan
                       </label>
                     </div>
                   </div>
@@ -1032,7 +1032,7 @@ export function SettingsPage() {
                       onClick={() => setIsPlanFormOpen(false)}
                       className="rounded-lg border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                     >
-                      Hủy
+                      Cancel
                     </button>
                     <button
                       type="submit"
@@ -1040,7 +1040,7 @@ export function SettingsPage() {
                       className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 disabled:bg-slate-200 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"
                     >
                       {planSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Lưu thay đổi
+                      Save Changes
                     </button>
                   </div>
                 </form>
@@ -1058,19 +1058,19 @@ export function SettingsPage() {
               <CalendarCheck2 className="h-5 w-5 text-sky-600" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800">Tích hợp Lịch Google Calendar</h3>
-              <p className="text-xs text-slate-500">Tự động đồng bộ lịch và tạo phòng họp Google Meet khi duyệt cuộc họp.</p>
+              <h3 className="font-bold text-slate-800">Google Calendar Integration</h3>
+              <p className="text-xs text-slate-500">Automatically synchronize meetings and create Google Meet links when approving schedules.</p>
             </div>
           </div>
 
           {loadingCalendar ? (
             <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
-              <Loader2 className="h-4 w-4 animate-spin text-sky-600" /> Đang kiểm tra trạng thái liên kết...
+              <Loader2 className="h-4 w-4 animate-spin text-sky-600" /> Checking integration status...
             </div>
           ) : connected ? (
             <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
               <div>
-                <p className="text-sm font-semibold text-emerald-700">Đã kết nối</p>
+                <p className="text-sm font-semibold text-emerald-700">Connected</p>
                 <p className="text-xs text-emerald-600">{connectedEmail}</p>
               </div>
               <button
@@ -1078,19 +1078,19 @@ export function SettingsPage() {
                 disabled={calendarBusy}
                 className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 transition disabled:opacity-40"
               >
-                <Unlink className="h-3.5 w-3.5" /> Hủy liên kết
+                <Unlink className="h-3.5 w-3.5" /> Disconnect
               </button>
             </div>
           ) : (
             <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-4">
-              <p className="text-sm text-slate-600 mb-3">Hiện chưa liên kết tài khoản Google Calendar. Việc duyệt các cuộc họp mới có thể bị giới hạn tính năng tạo link Meet.</p>
+              <p className="text-sm text-slate-600 mb-3">Google Calendar is not currently connected. Meeting approvals might not include automatically generated Google Meet links.</p>
               <button
                 onClick={connectCalendar}
                 disabled={calendarBusy}
                 className="flex items-center gap-2 bg-sky-600 hover:bg-sky-700 disabled:bg-slate-200 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition"
               >
                 {calendarBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                Liên kết tài khoản Google
+                Connect Google Account
               </button>
             </div>
           )}
@@ -1107,13 +1107,13 @@ export function SettingsPage() {
       {activeTab === "audit" && (
         <section className="space-y-4">
           <div>
-            <h3 className="font-bold text-slate-800">Nhật ký thay đổi hệ thống nhận tiền & gói cước</h3>
-            <p className="text-xs text-slate-500 mt-1">Lịch sử ghi lại mọi hành động liên quan đến việc cấu hình tài khoản nhận tiền và điều chỉnh gói dịch vụ.</p>
+            <h3 className="font-bold text-slate-800">System Receiving Bank & Plan Configuration Audit Logs</h3>
+            <p className="text-xs text-slate-500 mt-1">History of all administrative actions related to bank accounts and subscription packages.</p>
           </div>
 
           {loadingLogs ? (
             <div className="flex items-center gap-2 text-slate-400 text-sm py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-sky-600" /> Đang tải nhật ký...
+              <Loader2 className="h-5 w-5 animate-spin text-sky-600" /> Loading logs...
             </div>
           ) : (
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -1121,10 +1121,10 @@ export function SettingsPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 uppercase tracking-wider text-slate-500 border-b border-slate-100">
                     <tr>
-                      <th className="px-4 py-3 font-bold">Thời gian</th>
-                      <th className="px-4 py-3 font-bold">Hành động</th>
-                      <th className="px-4 py-3 font-bold">Nội dung chi tiết</th>
-                      <th className="px-4 py-3 font-bold">Người thực hiện</th>
+                      <th className="px-4 py-3 font-bold">Timestamp</th>
+                      <th className="px-4 py-3 font-bold">Action</th>
+                      <th className="px-4 py-3 font-bold">Details</th>
+                      <th className="px-4 py-3 font-bold">Performed By</th>
                       <th className="px-4 py-3 font-bold">IP Address</th>
                     </tr>
                   </thead>
@@ -1132,7 +1132,7 @@ export function SettingsPage() {
                     {auditLogs.map((log) => (
                       <tr key={log.id} className="hover:bg-slate-50/70">
                         <td className="px-4 py-3 whitespace-nowrap text-slate-500">
-                          {new Date(log.createdAt).toLocaleString("vi-VN")}
+                          {new Date(log.createdAt).toLocaleString("en-US")}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span
@@ -1149,14 +1149,14 @@ export function SettingsPage() {
                             }`}
                           >
                             {log.action === "create"
-                              ? "Thêm mới"
+                              ? "Create"
                               : log.action === "delete"
-                              ? "Xóa"
+                              ? "Delete"
                               : log.action === "set_default"
-                              ? "Đặt mặc định"
+                              ? "Set Default"
                               : log.action === "update_plan"
-                              ? "Gói cước"
-                              : "Cập nhật"}
+                              ? "Plan"
+                              : "Update"}
                           </span>
                         </td>
                         <td className="px-4 py-3 max-w-sm break-words font-medium text-slate-800">
@@ -1173,7 +1173,7 @@ export function SettingsPage() {
                     {auditLogs.length === 0 && (
                       <tr>
                         <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
-                          Chưa có hoạt động nào được ghi lại.
+                          No activities recorded yet.
                         </td>
                       </tr>
                     )}

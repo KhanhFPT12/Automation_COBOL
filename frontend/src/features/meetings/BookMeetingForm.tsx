@@ -129,7 +129,7 @@ export function BookMeetingForm() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label className={labelClass}><User className="h-3.5 w-3.5" /> Full Name *</label>
-            <input className={inputClass} value={form.fullName} onChange={(e) => update("fullName", e.target.value)} placeholder="Nguyễn Văn A" />
+            <input className={inputClass} value={form.fullName} onChange={(e) => update("fullName", e.target.value)} placeholder="John Doe" />
             {fieldErrors.fullName && <p className="text-xs text-rose-500 mt-1">{fieldErrors.fullName}</p>}
           </div>
           <div>

@@ -32,7 +32,7 @@ exports.createBankAccount = async (req, res, next) => {
     const isDefault = Boolean(req.body.isDefault);
 
     if (!/^\d{6}$/.test(bin) || !/^\d{6,30}$/.test(accountNumber) || !accountName) {
-      return res.status(400).json({ success: false, message: 'Nhập mã BIN ngân hàng 6 chữ số, số tài khoản hợp lệ, và tên chủ tài khoản.' });
+      return res.status(400).json({ success: false, message: 'Enter a valid 6-digit bank BIN, account number, and account holder name.' });
     }
 
     // If this is the first account, it should automatically be default
@@ -57,12 +57,12 @@ exports.createBankAccount = async (req, res, next) => {
     await BankAccountAuditLog.create({
       action: 'create',
       bank_account_id: account._id,
-      description: `Thêm tài khoản mới: ${accountName} - ${accountNumber} (${bin})${shouldBeDefault ? ' làm mặc định' : ''}.`,
+      description: `Added new bank account: ${accountName} - ${accountNumber} (${bin})${shouldBeDefault ? ' as default' : ''}.`,
       performed_by: req.user._id,
       ip_address: req.ip || '',
     });
 
-    return res.status(201).json({ success: true, message: 'Đã thêm tài khoản ngân hàng mới.', data: serialize(account) });
+    return res.status(201).json({ success: true, message: 'Successfully added new bank account.', data: serialize(account) });
   } catch (error) {
     return next(error);
   }
@@ -77,12 +77,12 @@ exports.updateBankAccount = async (req, res, next) => {
     const accountName = String(req.body.accountName || '').trim();
 
     if (!/^\d{6}$/.test(bin) || !/^\d{6,30}$/.test(accountNumber) || !accountName) {
-      return res.status(400).json({ success: false, message: 'Nhập mã BIN ngân hàng 6 chữ số, số tài khoản hợp lệ, và tên chủ tài khoản.' });
+      return res.status(400).json({ success: false, message: 'Enter a valid 6-digit bank BIN, account number, and account holder name.' });
     }
 
     const account = await BankAccountSettings.findById(id);
     if (!account) {
-      return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản ngân hàng.' });
+      return res.status(404).json({ success: false, message: 'Bank account not found.' });
     }
 
     const oldNum = account.account_number;
@@ -99,12 +99,12 @@ exports.updateBankAccount = async (req, res, next) => {
     await BankAccountAuditLog.create({
       action: 'update',
       bank_account_id: account._id,
-      description: `Cập nhật tài khoản từ [${oldName} - ${oldNum} (BIN: ${oldBin})] thành [${accountName} - ${accountNumber} (BIN: ${bin})].`,
+      description: `Updated bank account from [${oldName} - ${oldNum} (BIN: ${oldBin})] to [${accountName} - ${accountNumber} (BIN: ${bin})].`,
       performed_by: req.user._id,
       ip_address: req.ip || '',
     });
 
-    return res.status(200).json({ success: true, message: 'Đã cập nhật tài khoản ngân hàng.', data: serialize(account) });
+    return res.status(200).json({ success: true, message: 'Successfully updated bank account.', data: serialize(account) });
   } catch (error) {
     return next(error);
   }
@@ -116,7 +116,7 @@ exports.deleteBankAccount = async (req, res, next) => {
     const { id } = req.params;
     const account = await BankAccountSettings.findById(id);
     if (!account) {
-      return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản ngân hàng.' });
+      return res.status(404).json({ success: false, message: 'Bank account not found.' });
     }
 
     const wasDefault = account.is_default;
@@ -126,7 +126,7 @@ exports.deleteBankAccount = async (req, res, next) => {
     await BankAccountAuditLog.create({
       action: 'delete',
       bank_account_id: account._id,
-      description: `Xóa tài khoản: ${account.account_name} - ${account.account_number} (${account.bin}).`,
+      description: `Deleted bank account: ${account.account_name} - ${account.account_number} (${account.bin}).`,
       performed_by: req.user._id,
       ip_address: req.ip || '',
     });
@@ -141,14 +141,14 @@ exports.deleteBankAccount = async (req, res, next) => {
         await BankAccountAuditLog.create({
           action: 'set_default',
           bank_account_id: nextDefault._id,
-          description: `Tự động đặt tài khoản ${nextDefault.account_name} - ${nextDefault.account_number} làm mặc định sau khi xóa tài khoản mặc định cũ.`,
+          description: `Automatically set bank account ${nextDefault.account_name} - ${nextDefault.account_number} as default after deleting the old default account.`,
           performed_by: req.user._id,
           ip_address: req.ip || '',
         });
       }
     }
 
-    return res.status(200).json({ success: true, message: 'Đã xóa tài khoản ngân hàng.' });
+    return res.status(200).json({ success: true, message: 'Successfully deleted bank account.' });
   } catch (error) {
     return next(error);
   }
@@ -160,11 +160,11 @@ exports.setDefaultBankAccount = async (req, res, next) => {
     const { id } = req.params;
     const account = await BankAccountSettings.findById(id);
     if (!account) {
-      return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản ngân hàng.' });
+      return res.status(404).json({ success: false, message: 'Bank account not found.' });
     }
 
     if (account.is_default) {
-      return res.status(200).json({ success: true, message: 'Tài khoản này đã là mặc định.', data: serialize(account) });
+      return res.status(200).json({ success: true, message: 'This bank account is already the default.', data: serialize(account) });
     }
 
     // Set all others to false
@@ -178,12 +178,12 @@ exports.setDefaultBankAccount = async (req, res, next) => {
     await BankAccountAuditLog.create({
       action: 'set_default',
       bank_account_id: account._id,
-      description: `Đặt tài khoản ${account.account_name} - ${account.account_number} (${account.bin}) làm mặc định nhận tiền.`,
+      description: `Set bank account ${account.account_name} - ${account.account_number} (${account.bin}) as default receiver.`,
       performed_by: req.user._id,
       ip_address: req.ip || '',
     });
 
-    return res.status(200).json({ success: true, message: 'Đã thiết lập tài khoản mặc định mới.', data: serialize(account) });
+    return res.status(200).json({ success: true, message: 'Successfully set new default bank account.', data: serialize(account) });
   } catch (error) {
     return next(error);
   }
@@ -243,7 +243,7 @@ exports.updatePlan = async (req, res, next) => {
 
     const plan = await Plan.findById(id);
     if (!plan) {
-      return res.status(404).json({ success: false, message: 'Không tìm thấy gói cước.' });
+      return res.status(404).json({ success: false, message: 'Pricing plan not found.' });
     }
 
     const oldName = plan.name;
@@ -274,12 +274,12 @@ exports.updatePlan = async (req, res, next) => {
     // Log this action to the BankAccountAuditLog
     await BankAccountAuditLog.create({
       action: 'update_plan',
-      description: `Cập nhật cấu hình gói cước [${plan.name}]: Đổi từ giá ${oldPrice} VND/tháng thành ${plan.price_monthly} VND/tháng. Giới hạn Dự án: ${plan.limits.max_projects}, Màn hình/tháng: ${plan.limits.max_screens_per_month}.`,
+      description: `Updated pricing plan [${plan.name}]: Price changed from ${oldPrice} VND/month to ${plan.price_monthly} VND/month. Project Limit: ${plan.limits.max_projects}, Screens/Month: ${plan.limits.max_screens_per_month}.`,
       performed_by: req.user._id,
       ip_address: req.ip || '',
     });
 
-    return res.status(200).json({ success: true, message: 'Đã cập nhật cấu hình gói cước.', data: plan });
+    return res.status(200).json({ success: true, message: 'Successfully updated pricing plan configuration.', data: plan });
   } catch (error) {
     return next(error);
   }
@@ -323,12 +323,12 @@ exports.confirmInvoicePayment = async (req, res, next) => {
     const { id } = req.params;
     const invoice = await Invoice.findOne({ _id: id, status: Invoice.InvoiceStatus.OPEN });
     if (!invoice) {
-      return res.status(404).json({ success: false, message: 'Hóa đơn không tồn tại hoặc đã được thanh toán/hủy.' });
+      return res.status(404).json({ success: false, message: 'Invoice does not exist or has already been paid/cancelled.' });
     }
 
     const plan = await Plan.findById(invoice.pending_plan_id);
     if (!plan) {
-      return res.status(400).json({ success: false, message: 'Gói cước cần nâng cấp của hóa đơn này không khả dụng.' });
+      return res.status(400).json({ success: false, message: 'The subscription plan for this invoice is not available.' });
     }
 
     // Set invoice as paid
@@ -369,14 +369,14 @@ exports.confirmInvoicePayment = async (req, res, next) => {
     // Add audit log entry
     await BankAccountAuditLog.create({
       action: 'confirm_payment',
-      description: `Admin xác nhận thanh toán thủ công cho hóa đơn ${invoice.invoice_number} (Gói ${plan.name}, số tiền: ${invoice.total} ${invoice.currency})`,
+      description: `Admin manually confirmed payment for invoice ${invoice.invoice_number} (Plan ${plan.name}, amount: ${invoice.total} ${invoice.currency})`,
       performed_by: req.user._id,
       ip_address: req.ip || '',
     });
 
     return res.status(200).json({
       success: true,
-      message: 'Xác nhận thanh toán thủ công thành công.',
+      message: 'Successfully confirmed invoice payment manually.',
       data: invoice,
     });
   } catch (error) {

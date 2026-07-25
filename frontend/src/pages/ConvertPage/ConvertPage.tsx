@@ -27,7 +27,7 @@ export default function ConvertPage() {
     );
     if (invalid.length > 0) {
       setErrorMsg(
-        `Bỏ qua ${invalid.length} file không hợp lệ (chỉ chấp nhận ${acceptedExt})`
+        `Skipped ${invalid.length} invalid file(s) (only ${acceptedExt} accepted)`
       );
     } else {
       setErrorMsg('');
@@ -90,7 +90,7 @@ export default function ConvertPage() {
       const msg =
         err?.response?.data instanceof Blob
           ? await err.response.data.text()
-          : 'Chuyển đổi thất bại. Kiểm tra lại file đầu vào.';
+          : 'Conversion failed. Please check the input file.';
       setErrorMsg(msg);
       setStatus('error');
     }
@@ -106,15 +106,15 @@ export default function ConvertPage() {
 
   return (
     <div className={styles.page}>
-      <h2 className={styles.title}>Chuyển đổi Mainframe → React</h2>
+      <h2 className={styles.title}>Mainframe → React Conversion</h2>
       <p className={styles.subtitle}>
-        Upload file <strong>.bms</strong> hoặc <strong>.dspf</strong> — nhận về
-        React TypeScript components dạng ZIP.
+        Upload <strong>.bms</strong> or <strong>.dspf</strong> files — receive
+        React TypeScript components as a ZIP file.
       </p>
 
       {/* Type selector */}
       <div className={styles.typeRow}>
-        <span className={styles.label}>Loại file:</span>
+        <span className={styles.label}>File type:</span>
         {(['bms', 'dspf'] as FileType[]).map((t) => (
           <button
             key={t}
@@ -144,8 +144,8 @@ export default function ConvertPage() {
         />
         <p className={styles.dropzoneText}>
           {isDragging
-            ? `Thả file ${acceptedExt} vào đây`
-            : `Kéo thả hoặc click để chọn file ${acceptedExt}`}
+            ? `Drop ${acceptedExt} file here`
+            : `Drag & drop or click to select a ${acceptedExt} file`}
         </p>
       </div>
 
@@ -153,9 +153,9 @@ export default function ConvertPage() {
       {files.length > 0 && (
         <div className={styles.fileList}>
           <div className={styles.fileListHeader}>
-            <span>{files.length} file đã chọn</span>
+            <span>{files.length} file(s) selected</span>
             <button className={styles.clearBtn} onClick={clearAll}>
-              Xoá tất cả
+              Clear all
             </button>
           </div>
           {files.map((f) => (
@@ -185,7 +185,7 @@ export default function ConvertPage() {
           onClick={handleConvert}
           disabled={files.length === 0 || status === 'converting'}
         >
-          {status === 'converting' ? 'Đang chuyển đổi...' : 'Chuyển đổi'}
+          {status === 'converting' ? 'Converting...' : 'Convert'}
         </button>
 
         {status === 'success' && downloadUrl && (
@@ -194,15 +194,15 @@ export default function ConvertPage() {
             download="converted_react.zip"
             className={styles.downloadBtn}
           >
-            Tải xuống ZIP
+            Download ZIP
           </a>
         )}
       </div>
 
       {status === 'success' && (
         <p className={styles.successMsg}>
-          Chuyển đổi thành công! Giải nén ZIP vào{' '}
-          <code>frontend/src/pages/BMSPage</code> hoặc{' '}
+          Conversion successful! Extract the ZIP to{' '}
+          <code>frontend/src/pages/BMSPage</code> or{' '}
           <code>frontend/src/pages/DSPFPage</code>.
         </p>
       )}

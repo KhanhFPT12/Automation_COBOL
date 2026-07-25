@@ -10,7 +10,7 @@ const SCOPES = [
 function assertConfigured() {
   if (!process.env.GOOGLE_CALENDAR_CLIENT_ID || !process.env.GOOGLE_CALENDAR_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
     const err = new Error(
-      'Google Calendar chưa được cấu hình. Cần GOOGLE_CALENDAR_CLIENT_ID, GOOGLE_CALENDAR_CLIENT_SECRET, GOOGLE_REDIRECT_URI trong backend/.env.'
+      'Google Calendar is not configured. GOOGLE_CALENDAR_CLIENT_ID, GOOGLE_CALENDAR_CLIENT_SECRET, and GOOGLE_REDIRECT_URI are required in backend/.env.'
     );
     err.code = 'GOOGLE_NOT_CONFIGURED';
     throw err;
@@ -114,7 +114,7 @@ async function createMeetEvent({ summary, description, startISO, endISO, timeZon
   const client = await getAuthorizedClient();
   if (!client) {
     const err = new Error(
-      'Chưa kết nối Google Calendar. Vào Admin > Settings để kết nối trước khi duyệt lịch họp.'
+      'Google Calendar is not connected. Go to Admin > Settings to connect before approving meetings.'
     );
     err.code = 'GOOGLE_NOT_CONNECTED';
     throw err;
