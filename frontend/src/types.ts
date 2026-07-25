@@ -21,7 +21,10 @@ export type ActivePage =
   | 'admin-reports'
   | 'admin-settings'
   | 'admin-invoices'
-  | 'meeting-detail';
+  | 'meeting-detail'
+  | 'change-password'
+  | 'profile'
+  | 'admin-chat';
 
 export interface UserSession {
   email: string | null;

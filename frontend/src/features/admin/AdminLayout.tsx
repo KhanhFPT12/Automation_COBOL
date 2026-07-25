@@ -10,6 +10,7 @@ import {
   LogOut,
   User,
   Receipt,
+  MessageCircle,
 } from "lucide-react";
 import { useAppStore } from "../../store";
 import { NotificationBell } from "../../components/NotificationBell";
@@ -23,6 +24,7 @@ const NAV_ITEMS: { page: ActivePage; label: string; icon: typeof LayoutDashboard
   { page: "admin-reports", label: "Reports", icon: BarChart3 },
   { page: "admin-invoices", label: "payment invoice", icon: Receipt },
   { page: "admin-settings", label: "Settings", icon: Settings },
+  { page: "admin-chat", label: "Chat", icon: MessageCircle },
 ];
 
 export function AdminLayout({ children }: { children: ReactNode }) {

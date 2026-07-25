@@ -25,6 +25,11 @@ import { AdminReportsPage } from "./page/AdminReportsPage";
 import { AdminSettingsPage } from "./page/AdminSettingsPage";
 import { AdminInvoicesPage } from "./page/AdminInvoicesPage";
 import { MeetingDetailPage } from "./page/MeetingDetailPage";
+import { ChangePasswordPage } from "./page/ChangePasswordPage";
+import { ProfilePage } from "./page/ProfilePage";
+import { AdminChatPageWrapper } from "./page/AdminChatPage";
+import { ChatWidget } from "./features/chat/ChatWidget";
+import { ResetPassword } from "./features/auth/ResetPassword";
 
 export default function App() {
   const { activePage, initAuth, session, setActivePage } = useAppStore();
@@ -58,6 +63,9 @@ export default function App() {
       setActivePage('admin-dashboard');
     }
   }, [isAdmin, isAdminPage, setActivePage]);
+
+  const resetMatch = window.location.pathname.match(/^\/reset-password\/(.+)$/);
+  if (resetMatch) return <ResetPassword />;
 
   const renderActiveView = () => {
     switch (activePage) {
@@ -107,6 +115,12 @@ export default function App() {
         return <AdminInvoicesPage />;
       case 'meeting-detail':
         return <MeetingDetailPage />;
+      case 'change-password':
+        return <ChangePasswordPage />;
+      case 'profile':
+        return <ProfilePage />;
+      case 'admin-chat':
+        return <AdminChatPageWrapper />;
       default:
         return <LandingPage />;
     }
@@ -130,6 +144,7 @@ export default function App() {
 
       <main className="flex-1 w-full bg-slate-55 flex flex-col">
         {renderActiveView()}
+        {session.isLoggedIn && session.role !== 'ADMIN' && <ChatWidget />}
       </main>
 
       <Footer />
