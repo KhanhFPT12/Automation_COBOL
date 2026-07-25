@@ -53,7 +53,7 @@ const processCassoRecord = async (record) => {
 
   const reference = referenceMatch[1];
   const receivedAmount = Math.abs(Number(record.amount));
-  
+
   const invoice = await Invoice.findOne({ payment_reference: reference });
   if (!invoice) return false;
 
@@ -97,13 +97,13 @@ const fetchAndProcessCassoTransactions = async () => {
 let lastFetchTime = 0;
 const fetchAndProcessCassoTransactionsThrottled = async () => {
   const now = Date.now();
-  if (now - lastFetchTime < 20000) return; // Throttle to 20 seconds
+  if (now - lastFetchTime < 10000) return; // Throttle to 10 seconds
   lastFetchTime = now;
   await fetchAndProcessCassoTransactions();
 };
 
 let pollingTimer = null;
-const startCassoPolling = (intervalMs = 25 * 1000) => {
+const startCassoPolling = (intervalMs = 10 * 1000) => {
   if (pollingTimer || !process.env.CASSO_API_KEY) return;
   const poll = async () => {
     await fetchAndProcessCassoTransactions();
