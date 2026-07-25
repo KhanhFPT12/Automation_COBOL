@@ -1,7 +1,9 @@
 const Invoice = require('../models/Invoice');
 const Plan = require('../models/Plan');
 const Subscription = require('../models/Subscription');
+const User = require('../models/User');
 const { generateInvoicePdf } = require('./invoicePdfService');
+const { notifyBillingEvent, notifyAdminsBillingEvent } = require('../utils/billingNotify');
 
 const CASSO_REFERENCE_PATTERN = /(ALSM[A-Z0-9]{8})/;
 
@@ -36,6 +38,37 @@ const activateInvoice = async (invoiceId) => {
       'usage.last_calculated_at': periodStart,
     },
   });
+
+  const user = await User.findById(invoice.organization_id)
+    .select('fullName companyName representativeName email businessEmail')
+    .lean();
+  const userName = user?.fullName || user?.companyName || user?.representativeName
+    || user?.email || user?.businessEmail || 'Không xác định';
+  const formattedAmount = new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: invoice.currency || 'VND',
+    maximumFractionDigits: 0,
+  }).format(invoice.total);
+
+  await Promise.all([
+    notifyBillingEvent({
+      user: invoice.organization_id,
+      type: 'payment_success',
+      title: 'Thanh toán thành công',
+      message: `Thanh toán thành công! Tài khoản của bạn đã được nâng cấp lên gói ${plan.name}.`,
+      invoice: invoice._id,
+      subscription: invoice.subscription_id,
+      eventKey: `casso-payment-user:${invoice._id}`,
+    }),
+    notifyAdminsBillingEvent({
+      type: 'payment_success_admin',
+      title: 'Người dùng thanh toán thành công',
+      message: `Người dùng ${userName} đã thanh toán gói ${plan.name} với số tiền là ${formattedAmount}.`,
+      invoice: invoice._id,
+      subscription: invoice.subscription_id,
+      eventKey: `casso-payment-admin:${invoice._id}`,
+    }),
+  ]);
 
   try {
     await generateInvoicePdf(invoice);

@@ -161,12 +161,28 @@ export function SignIn() {
                 </p>
               </div>
 
-                            <div className="space-y-3 mb-6">
-                <div className="flex justify-center">
-                  <GoogleLogin
-                    onSuccess={(credentialResponse) => handleGoogleSuccess(credentialResponse.credential)}
-                    onError={() => setAuthError('Google sign-in failed or was cancelled. Please try again.')}
-                  />
+              <div className="space-y-3 mb-6">
+                <div className="group relative h-[42px] w-full cursor-pointer overflow-hidden rounded-xl border border-slate-200 transition hover:bg-slate-50">
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-2 text-sm font-semibold text-slate-700">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                      <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.32 2.98-7.41Z" />
+                      <path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.42l-3.24-2.53c-.9.6-2.05.96-3.38.96-2.6 0-4.81-1.76-5.6-4.13H3.06v2.62A10 10 0 0 0 12 22Z" />
+                      <path fill="#FBBC05" d="M6.4 13.88A6.02 6.02 0 0 1 6.08 12c0-.65.11-1.29.32-1.88V7.5H3.06A10 10 0 0 0 2 12c0 1.61.39 3.14 1.06 4.5l3.34-2.62Z" />
+                      <path fill="#EA4335" d="M12 5.99c1.47 0 2.79.5 3.83 1.5l2.87-2.87A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.94 5.5l3.34 2.62C7.19 7.75 9.4 5.99 12 5.99Z" />
+                    </svg>
+                    Sign in with Google
+                  </div>
+                  <div className="absolute inset-0 z-10 opacity-[0.01] [&>div]:h-full [&>div]:w-full [&_iframe]:!h-full [&_iframe]:!w-full">
+                    <GoogleLogin
+                      onSuccess={(credentialResponse) => handleGoogleSuccess(credentialResponse.credential)}
+                      onError={() => setAuthError('Google sign-in failed or was cancelled. Please try again.')}
+                      theme="outline"
+                      size="large"
+                      shape="rectangular"
+                      text="signin_with"
+                      width="400"
+                    />
+                  </div>
                 </div>
                 <button
                   type="button"

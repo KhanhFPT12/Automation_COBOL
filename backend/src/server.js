@@ -18,8 +18,17 @@ const { startMeetingReminderJob } = require('./jobs/meetingReminder');
 const { startSubscriptionExpirationJob } = require('./jobs/subscriptionExpiration');
 const { startCassoPolling } = require('./services/cassoSubscriptionService');
 const { cleanEnvUrl } = require('./utils/env');
+const setupSocket = require('./services/socketService');
 
 const app = express();
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: cleanEnvUrl(process.env.CLIENT_URL, 'http://localhost:5173'),
+    credentials: true,
+  },
+});
+setupSocket(io);
 
 // ─── Connect Database ────────────────────────────────────────────
 connectDB();
@@ -82,6 +91,6 @@ app.use((err, req, res, next) => {
 
 // ─── Start Server ────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT} [${process.env.NODE_ENV || 'development'}]`);
 });

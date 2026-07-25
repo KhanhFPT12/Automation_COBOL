@@ -15,6 +15,8 @@ const notificationSchema = new mongoose.Schema(
         'meeting_cancelled',
         'meeting_reminder',
         'meeting_completed',
+        'payment_success',
+        'payment_success_admin',
       ],
       required: true,
     },
@@ -25,11 +27,23 @@ const notificationSchema = new mongoose.Schema(
       ref: 'Meeting',
       default: null,
     },
+    invoice: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Invoice',
+      default: null,
+    },
+    subscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Subscription',
+      default: null,
+    },
+    eventKey: { type: String },
     isRead: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
 notificationSchema.index({ user: 1, createdAt: -1 });
+notificationSchema.index({ eventKey: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Notification', notificationSchema);

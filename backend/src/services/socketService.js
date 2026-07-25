@@ -3,8 +3,10 @@ const User = require("../models/User");
 
 // Track which user email each socket belongs to
 const socketUsers = new Map();
+let socketServer = null;
 
 function setupSocket(io) {
+  socketServer = io;
   io.on("connection", (socket) => {
     console.log("Socket connected:", socket.id);
     let myEmail = null;
@@ -16,6 +18,7 @@ function setupSocket(io) {
       socket.join("user:" + userId);
       try {
         const user = await User.findOne({ $or: [{ email: userId }, { businessEmail: userId }] }).select("role").lean();
+        if (user) socket.join("user:" + user._id.toString());
         if (user && user.role === "ADMIN") {
           myRole = "ADMIN";
           socket.join("admins");
@@ -56,4 +59,10 @@ function setupSocket(io) {
   });
 }
 
+function emitNotification(userId, notification) {
+  if (!socketServer) return;
+  socketServer.to("user:" + userId.toString()).emit("notification:new", notification);
+}
+
 module.exports = setupSocket;
+module.exports.emitNotification = emitNotification;

@@ -8,6 +8,8 @@ const TYPE_DOT: Record<string, string> = {
   meeting_cancelled: "bg-slate-400",
   meeting_reminder: "bg-amber-500",
   meeting_completed: "bg-sky-500",
+  payment_success: "bg-emerald-500",
+  payment_success_admin: "bg-emerald-500",
 };
 
 export function NotificationBell() {

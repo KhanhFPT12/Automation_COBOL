@@ -30,6 +30,7 @@ import { ProfilePage } from "./page/ProfilePage";
 import { AdminChatPageWrapper } from "./page/AdminChatPage";
 import { ChatWidget } from "./features/chat/ChatWidget";
 import { ResetPassword } from "./features/auth/ResetPassword";
+import { NotificationSync } from "./components/NotificationSync";
 
 export default function App() {
   const { activePage, initAuth, session, setActivePage } = useAppStore();
@@ -133,6 +134,7 @@ export default function App() {
     if (!isAdminPage) return null;
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900" id="admin-root-shell">
+        <NotificationSync />
         {renderActiveView()}
       </div>
     );
@@ -140,6 +142,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900" id="app-root-shell">
+      <NotificationSync />
       <Header />
 
       <main className="flex-1 w-full bg-slate-55 flex flex-col">

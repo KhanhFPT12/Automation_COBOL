@@ -1,20 +1,12 @@
 import { useAppStore } from "../store";
 import { Calendar, Menu, X, User, LogOut, ShieldCheck, ChevronDown, Key } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { NotificationBell } from "./NotificationBell";
 
 export function Header() {
-  const { activePage, setActivePage, session, logout, fetchNotifications } = useAppStore();
+  const { activePage, setActivePage, session, logout } = useAppStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  useEffect(() => {
-    if (!session.isLoggedIn) return;
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session.isLoggedIn]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur-md">

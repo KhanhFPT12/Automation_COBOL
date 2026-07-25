@@ -11,6 +11,7 @@ interface ChatMsg {
   senderName: string;
   message: string;
   createdAt: string;
+  isRead: boolean;
 }
 
 export function ChatWidget() {
@@ -19,21 +20,24 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [unread, setUnread] = useState(0);
-  const lastCountRef = useRef(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const userEmail = session.email || "";
 
   const loadMessages = async () => {
     if (!userEmail) return;
     try {
-      const d = await apiFetch<{ success: boolean; messages: ChatMsg[] }>("/api/chat/messages/" + userEmail);
+      const d = await apiFetch<{ success: boolean; messages: ChatMsg[]; unreadCount?: number }>("/api/chat/messages/" + encodeURIComponent(userEmail));
       if (d.success) {
         const msgs = d.messages || [];
         setMessages(msgs);
-        if (!open && msgs.length > lastCountRef.current) {
-          setUnread((u) => u + (msgs.length - lastCountRef.current));
+        if (!open) {
+          const derivedUnread = msgs.filter(
+            (msg) =>
+              String(msg.senderEmail || "").toLowerCase() !== userEmail.toLowerCase() &&
+              msg.isRead !== true,
+          ).length;
+          setUnread(derivedUnread);
         }
-        lastCountRef.current = msgs.length;
       }
     } catch {}
   };
@@ -43,6 +47,17 @@ export function ChatWidget() {
     const timer = setInterval(loadMessages, 2000);
     return () => clearInterval(timer);
   }, [userEmail, open]);
+
+  const toggleChat = async () => {
+    const willOpen = !open;
+    setOpen(willOpen);
+    if (willOpen && userEmail) {
+      setUnread(0);
+      try {
+        await apiFetch("/api/chat/read/" + encodeURIComponent(userEmail), { method: "PATCH" });
+      } catch {}
+    }
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -63,7 +78,7 @@ export function ChatWidget() {
   return (
     <>
       <button
-        onClick={() => { if (!open) { setUnread(0); lastCountRef.current = messages.length; } setOpen(!open); }}
+        onClick={() => void toggleChat()}
         className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-sky-600 hover:bg-sky-700 text-white shadow-lg flex items-center justify-center transition cursor-pointer"
       >
         <MessageCircle className="h-6 w-6" />

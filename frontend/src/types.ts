@@ -79,7 +79,9 @@ export type NotificationType =
   | 'meeting_rejected'
   | 'meeting_cancelled'
   | 'meeting_reminder'
-  | 'meeting_completed';
+  | 'meeting_completed'
+  | 'payment_success'
+  | 'payment_success_admin';
 
 export interface AppNotification {
   _id: string;
@@ -87,6 +89,8 @@ export interface AppNotification {
   title: string;
   message: string;
   meeting: string | null;
+  invoice?: string | null;
+  subscription?: string | null;
   isRead: boolean;
   createdAt: string;
 }

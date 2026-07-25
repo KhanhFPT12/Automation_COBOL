@@ -18,3 +18,59 @@ body {
   background-color: var(--color-dark-bg);
   color: #0f172a;
 }
+
+/* Admin workspace — scoped so the public experience remains untouched. */
+#admin-root-shell {
+  background:
+    radial-gradient(circle at 82% 5%, rgb(14 165 233 / 0.07), transparent 25rem),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.admin-shell { position: relative; }
+.admin-content > div { animation: admin-enter .35s ease-out both; }
+
+.admin-content h1 {
+  font-family: var(--font-display);
+  letter-spacing: -0.035em;
+}
+
+.admin-content :is(.rounded-2xl.bg-white, .bg-white.rounded-2xl) {
+  border-color: rgb(226 232 240 / 0.85);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.03), 0 12px 30px rgb(15 23 42 / 0.035);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.admin-content :is(.rounded-2xl.bg-white, .bg-white.rounded-2xl):hover {
+  border-color: rgb(186 230 253 / 0.95);
+  box-shadow: 0 2px 4px rgb(15 23 42 / 0.04), 0 16px 36px rgb(15 23 42 / 0.055);
+}
+
+.admin-content table thead { background: rgb(248 250 252 / 0.9); }
+.admin-content table tbody tr { transition: background-color .15s ease; }
+.admin-content table tbody tr:hover { background-color: rgb(240 249 255 / 0.65); }
+
+.admin-content input,
+.admin-content select,
+.admin-content textarea {
+  background-color: rgb(255 255 255 / 0.9);
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+
+.admin-content input:focus,
+.admin-content select:focus,
+.admin-content textarea:focus {
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgb(14 165 233 / 0.10);
+}
+
+.admin-sidebar nav { scrollbar-width: none; }
+.admin-sidebar nav::-webkit-scrollbar { display: none; }
+
+@keyframes admin-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-content > div { animation: none; }
+}

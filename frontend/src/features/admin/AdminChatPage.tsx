@@ -10,6 +10,7 @@ interface ChatMsg {
   senderName: string;
   message: string;
   createdAt: string;
+  isRead: boolean;
 }
 
 interface ChatUser {
@@ -26,7 +27,6 @@ export function AdminChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [unreadByUser, setUnreadByUser] = useState<Record<string, number>>({});
-  const lastCounts = useRef<Record<string, number>>({});
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const loadUsers = async () => {
@@ -37,36 +37,42 @@ export function AdminChatPage() {
   };
   useEffect(() => { loadUsers(); }, []);
 
-  // Poll all users for unread message count
+  // Use persisted read state so badges remain correct across refreshes/devices.
   useEffect(() => {
     const checkUnread = async () => {
-      for (const u of users) {
-        const email = (u as any).email || (u as any).businessEmail;
-        if (!email) continue;
-        try {
-          const d = await apiFetch<{ success: boolean; messages: ChatMsg[] }>("/api/chat/messages/" + email);
-          if (!d.success) continue;
-          const msgs = (d.messages || []);
-          const prevCount = lastCounts.current[email] || 0;
-          if (msgs.length > prevCount) {
-            const newMsgs = msgs.length - prevCount;
-            setUnreadByUser((prev) => ({ ...prev, [email]: (prev[email] || 0) + newMsgs }));
-          }
-          lastCounts.current[email] = msgs.length;
-        } catch {}
-      }
+      try {
+        const d = await apiFetch<{ success: boolean; unreadByUser: Record<string, number> }>("/api/chat/unread");
+        if (d.success) setUnreadByUser(d.unreadByUser || {});
+      } catch {}
     };
     const t = setInterval(checkUnread, 3000);
     checkUnread();
     return () => clearInterval(t);
-  }, [users]);
+  }, []);
+
+  const openConversation = async (user: ChatUser, email: string) => {
+    setSelected(user);
+    setUnreadByUser((prev) => ({ ...prev, [email]: 0 }));
+    try {
+      await apiFetch("/api/chat/read/" + encodeURIComponent(email), { method: "PATCH" });
+      window.dispatchEvent(new Event("chat:read"));
+    } catch {}
+  };
 
   const loadMessages = async () => {
     if (!selected) return;
     const email = (selected as any).email || (selected as any).businessEmail;
     try {
       const d = await apiFetch<{ success: boolean; messages: ChatMsg[] }>("/api/chat/messages/" + email);
-      if (d.success) setMessages(d.messages || []);
+      if (d.success) {
+        const nextMessages = d.messages || [];
+        setMessages(nextMessages);
+        if (nextMessages.some((msg) => msg.senderRole === "USER" && !msg.isRead)) {
+          await apiFetch("/api/chat/read/" + encodeURIComponent(email), { method: "PATCH" });
+          setUnreadByUser((prev) => ({ ...prev, [email]: 0 }));
+          window.dispatchEvent(new Event("chat:read"));
+        }
+      }
     } catch {}
   };
   useEffect(() => { loadMessages(); }, [selected]);
@@ -110,7 +116,7 @@ export function AdminChatPage() {
                 return (
               <button
                 key={u._id}
-                onClick={() => { setSelected(u); setUnreadByUser((prev) => ({ ...prev, [uEmail]: 0 })); }}
+                onClick={() => void openConversation(u, uEmail)}
                 className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition border-b border-slate-50 flex items-center justify-between ${
                   selected?._id === u._id ? "bg-sky-50 border-l-2 border-l-sky-600" : ""
                 }`}
