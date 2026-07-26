@@ -147,6 +147,11 @@ exports.downloadInvoicePdf = async (req, res, next) => {
       });
     }
 
+    // Cloudinary URL → redirect; local path → download
+    if (invoice.pdf_url.startsWith('http')) {
+      return res.redirect(invoice.pdf_url);
+    }
+
     const filePath = getInvoicePdfPath(invoice._id);
     try {
       await fs.access(filePath);
