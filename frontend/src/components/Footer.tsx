@@ -1,12 +1,10 @@
-import React from "react";
 import { useAppStore } from "../store";
 import type { ActivePage } from "../types";
 
 export function Footer() {
   const { setActivePage } = useAppStore();
 
-  const handleLinkClick = (e: React.MouseEvent<HTMLButtonElement>, target: ActivePage) => {
-    e.preventDefault();
+  const navTo = (target: ActivePage) => {
     setActivePage(target);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -35,35 +33,35 @@ export function Footer() {
 
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs font-semibold text-slate-600">
           <button
-            onClick={(e) => handleLinkClick(e, 'pricing')}
+            onClick={() => navTo('pricing')}
             className="hover:text-sky-600 transition cursor-pointer"
             id="footer-pricing"
           >
             Pricing
           </button>
           <button 
-            onClick={(e) => handleLinkClick(e, 'data-mapping')}
+            onClick={() => navTo('data-mapping')}
             className="hover:text-sky-600 transition cursor-pointer"
             id="footer-about"
           >
             About us
           </button>
           <button 
-            onClick={(e) => handleLinkClick(e, 'converter')}
+            onClick={() => navTo('converter')}
             className="hover:text-sky-600 transition cursor-pointer"
             id="footer-careers"
           >
             Careers
           </button>
           <button 
-            onClick={(e) => handleLinkClick(e, 'auth-guide')}
+            onClick={() => navTo('auth-guide')}
             className="hover:text-sky-600 transition cursor-pointer"
             id="footer-support"
           >
             Support
           </button>
           <button 
-            onClick={(e) => handleLinkClick(e, 'data-mapping')}
+            onClick={() => navTo('data-mapping')}
             className="hover:text-sky-600 transition cursor-pointer"
             id="footer-privacy"
           >
