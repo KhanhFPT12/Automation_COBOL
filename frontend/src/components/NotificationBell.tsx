@@ -8,6 +8,7 @@ const TYPE_DOT: Record<string, string> = {
   meeting_cancelled: "bg-slate-400",
   meeting_reminder: "bg-amber-500",
   meeting_completed: "bg-sky-500",
+  meeting_new_admin: "bg-amber-500",
   payment_success: "bg-emerald-500",
   payment_success_admin: "bg-emerald-500",
 };
@@ -53,7 +54,20 @@ export function NotificationBell() {
                 notifications.map((n) => (
                   <button
                     key={n._id}
-                    onClick={() => { if (!n.isRead) markNotificationRead(n._id); if (n.meeting) { sessionStorage.setItem("alsm_view_meeting_id", n.meeting); setActivePage("meeting-detail"); } setOpen(false); }}
+                    onClick={() => {
+                      if (!n.isRead) markNotificationRead(n._id);
+                      if (n.type === "meeting_new_admin") {
+                        setActivePage("admin-meetings");
+                      } else if (n.meeting) {
+                        sessionStorage.setItem("alsm_view_meeting_id", n.meeting);
+                        setActivePage("meeting-detail");
+                      } else if (n.type === "payment_success") {
+                        setActivePage("billing");
+                      } else if (n.type === "payment_success_admin") {
+                        setActivePage("admin-invoices");
+                      }
+                      setOpen(false);
+                    }}
                     className={`w-full text-left px-4 py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition ${!n.isRead ? "bg-sky-50/50" : ""}`}
                   >
                     <div className="flex items-start gap-2">

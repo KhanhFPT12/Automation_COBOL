@@ -145,8 +145,18 @@ exports.approveMeeting = async (req, res) => {
     return res.status(200).json({ success: true, message: 'Meeting approved.', meeting });
   } catch (err) {
     console.error('approveMeeting error:', err.message);
-    const status = err.code === 'GOOGLE_NOT_CONNECTED' || err.code === 'GOOGLE_NOT_CONFIGURED' ? 409 : 500;
-    return res.status(status).json({ success: false, message: err.message || 'Server error. Please try again.' });
+    const isGoogleError =
+      err.code === 'GOOGLE_NOT_CONNECTED' ||
+      err.code === 'GOOGLE_NOT_CONFIGURED' ||
+      err.message?.includes('unauthorized_client') ||
+      err.message?.includes('invalid_grant');
+
+    const status = isGoogleError ? 409 : 500;
+    const message = isGoogleError
+      ? 'Tài khoản Google Calendar chưa được kết nối hoặc đã hết hạn (unauthorized_client). Vui lòng vào Admin > Settings để kết nối lại Google Calendar.'
+      : err.message || 'Server error. Please try again.';
+
+    return res.status(status).json({ success: false, message });
   }
 };
 
@@ -257,5 +267,20 @@ exports.completeMeeting = async (req, res) => {
   } catch (err) {
     console.error('completeMeeting error:', err.message);
     return res.status(500).json({ success: false, message: 'Server error. Please try again.' });
+  }
+};
+
+// ────────────────────────────────────────────────────────────────
+// @desc    Get count of pending meetings (for sidebar badge)
+// @route   GET /api/admin/meetings/pending-count
+// @access  Private/Admin
+// ────────────────────────────────────────────────────────────────
+exports.getPendingCount = async (req, res) => {
+  try {
+    const count = await Meeting.countDocuments({ status: 'Pending' });
+    return res.status(200).json({ success: true, count });
+  } catch (err) {
+    console.error('getPendingCount error:', err.message);
+    return res.status(500).json({ success: false, count: 0 });
   }
 };

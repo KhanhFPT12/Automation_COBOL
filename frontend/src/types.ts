@@ -80,6 +80,7 @@ export type NotificationType =
   | 'meeting_cancelled'
   | 'meeting_reminder'
   | 'meeting_completed'
+  | 'meeting_new_admin'
   | 'payment_success'
   | 'payment_success_admin';
 

@@ -15,6 +15,7 @@ const STATUS_BADGE: Record<MeetingStatus, string> = {
 const STATUS_FILTERS: (MeetingStatus | "all")[] = ["all", "Pending", "Approved", "Rejected", "Cancelled", "Completed"];
 
 function ApproveModal({ meeting, onClose, onDone }: { meeting: Meeting; onClose: () => void; onDone: () => void }) {
+  const { setActivePage } = useAppStore();
   const [form, setForm] = useState({
     topic: meeting.topic,
     description: meeting.description,
@@ -37,6 +38,8 @@ function ApproveModal({ meeting, onClose, onDone }: { meeting: Meeting; onClose:
       setBusy(false);
     }
   };
+
+  const isGoogleError = error.includes("Google Calendar") || error.includes("Settings") || error.includes("unauthorized_client");
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/40 flex items-center justify-center p-4">
@@ -72,7 +75,23 @@ function ApproveModal({ meeting, onClose, onDone }: { meeting: Meeting; onClose:
           </div>
         </div>
 
-        {error && <p className="text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2 mt-3">{error}</p>}
+        {error && (
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-3.5 mt-3 space-y-2">
+            <p className="text-xs font-medium text-rose-700 leading-relaxed">{error}</p>
+            {isGoogleError && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  setActivePage("admin-settings");
+                }}
+                className="text-xs font-bold text-sky-700 hover:text-sky-800 underline block"
+              >
+                → Go to Admin Settings to connect Google Calendar
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 mt-5">
           <button onClick={onClose} className="text-sm font-semibold text-slate-500 px-4 py-2 rounded-lg hover:bg-slate-50">Cancel</button>

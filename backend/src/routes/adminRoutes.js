@@ -33,6 +33,7 @@ router.delete('/users/:id', adminUserController.deleteUser);
 
 // ─── Meeting management ────────────────────────────────────────
 router.get('/meetings', adminMeetingController.listMeetings);
+router.get('/meetings/pending-count', adminMeetingController.getPendingCount);
 router.get('/meetings/:id', adminMeetingController.getMeeting);
 router.patch('/meetings/:id/approve', adminMeetingController.approveMeeting);
 router.patch('/meetings/:id/reject', adminMeetingController.rejectMeeting);

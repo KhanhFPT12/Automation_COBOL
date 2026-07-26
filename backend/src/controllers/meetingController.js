@@ -1,4 +1,7 @@
 const Meeting = require('../models/Meeting');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
+const { emitNotification } = require('../services/socketService');
 
 const REQUIRED_FIELDS = [
   'fullName',
@@ -39,6 +42,31 @@ function validatePayload(body) {
   return null;
 }
 
+/** Best-effort: fan out a meeting notification to every active admin. */
+async function notifyAdminsMeetingRequest(meeting) {
+  try {
+    const admins = await User.find({ role: 'ADMIN', isActive: { $ne: false } }).select('_id').lean();
+    if (!admins.length) return;
+
+    const docs = admins.map((admin) => ({
+      user: admin._id,
+      type: 'meeting_new_admin',
+      title: 'New meeting request',
+      message: `${meeting.fullName} requested a meeting: "${meeting.topic}".`,
+      meeting: meeting._id,
+      eventKey: `meeting-new-admin:${meeting._id}:${admin._id}`,
+    }));
+
+    const created = await Notification.insertMany(docs, { ordered: false });
+    // Push real-time via Socket.io
+    for (const notif of created) {
+      emitNotification(notif.user, notif.toJSON());
+    }
+  } catch (e) {
+    if (e.code !== 11000) console.warn('Failed to notify admins about new meeting:', e.message);
+  }
+}
+
 // ────────────────────────────────────────────────────────────────
 // @desc    Create a meeting request
 // @route   POST /api/meetings
@@ -70,6 +98,9 @@ exports.createMeeting = async (req, res) => {
       duration: Number(duration),
       status: 'Pending',
     });
+
+    // Notify all admins about the new meeting request
+    notifyAdminsMeetingRequest(meeting);
 
     return res.status(201).json({
       success: true,

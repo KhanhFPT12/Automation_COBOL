@@ -4,6 +4,7 @@ const Invoice = require('../models/Invoice');
 const BankAccountSettings = require('../models/BankAccountSettings');
 const { ensureStarterSubscription, cancelExpiredSubscriptions } = require('../services/subscriptionService');
 const { generateInvoicePdf } = require('../services/invoicePdfService');
+const { notifyBillingEvent, notifyAdminsBillingEvent } = require('../utils/billingNotify');
 
 const generatePaymentReference = async () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -292,6 +293,27 @@ exports.confirmUpgrade = async (req, res, next) => {
       } catch (pdfError) {
         console.error(`Unable to generate PDF for invoice ${invoice.invoice_number}:`, pdfError);
       }
+
+      // ── Notifications ────────────────────────────────────────────
+      await Promise.all([
+        notifyBillingEvent({
+          user: req.user._id,
+          type: 'payment_success',
+          title: 'Plan upgraded',
+          message: `Payment successful! Your account has been upgraded to the ${targetPlan.name} plan.`,
+          invoice: invoice._id,
+          subscription: updatedSubscription._id,
+          eventKey: `free-upgrade-user:${invoice._id}`,
+        }),
+        notifyAdminsBillingEvent({
+          type: 'payment_success_admin',
+          title: 'User upgraded (free)',
+          message: `${req.user.fullName || req.user.companyName || req.user.email} upgraded to the ${targetPlan.name} plan (free upgrade).`,
+          invoice: invoice._id,
+          subscription: updatedSubscription._id,
+          eventKey: `free-upgrade-admin:${invoice._id}`,
+        }),
+      ]);
 
       return res.status(200).json({
         success: true,

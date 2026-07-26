@@ -120,30 +120,51 @@ async function createMeetEvent({ summary, description, startISO, endISO, timeZon
     throw err;
   }
 
-  const calendar = google.calendar({ version: 'v3', auth: client });
-  const { data } = await calendar.events.insert({
-    calendarId: 'primary',
-    conferenceDataVersion: 1,
-    sendUpdates: 'all',
-    requestBody: {
-      summary,
-      description,
-      start: { dateTime: startISO, timeZone },
-      end: { dateTime: endISO, timeZone },
-      attendees: attendeeEmail ? [{ email: attendeeEmail }] : [],
-      conferenceData: {
-        createRequest: {
-          requestId: crypto.randomUUID(),
-          conferenceSolutionKey: { type: 'hangoutsMeet' },
+  try {
+    const calendar = google.calendar({ version: 'v3', auth: client });
+    const { data } = await calendar.events.insert({
+      calendarId: 'primary',
+      conferenceDataVersion: 1,
+      sendUpdates: 'all',
+      requestBody: {
+        summary,
+        description,
+        start: { dateTime: startISO, timeZone },
+        end: { dateTime: endISO, timeZone },
+        attendees: attendeeEmail ? [{ email: attendeeEmail }] : [],
+        conferenceData: {
+          createRequest: {
+            requestId: crypto.randomUUID(),
+            conferenceSolutionKey: { type: 'hangoutsMeet' },
+          },
         },
       },
-    },
-  });
+    });
 
-  return {
-    eventId: data.id,
-    meetLink: data.hangoutLink || '',
-  };
+    return {
+      eventId: data.id,
+      meetLink: data.hangoutLink || '',
+    };
+  } catch (apiError) {
+    console.error('Google Calendar API error during event creation:', apiError.message);
+    const msg = String(apiError.message || '');
+    if (
+      msg.includes('unauthorized_client') ||
+      msg.includes('invalid_grant') ||
+      msg.includes('invalid_client') ||
+      msg.includes('Token has been expired or revoked') ||
+      apiError.code === 401 ||
+      apiError.status === 401
+    ) {
+      await GoogleIntegration.deleteMany({});
+      const err = new Error(
+        'Google Calendar connection has expired or is invalid. Please go to Admin > Settings to re-connect Google Calendar.'
+      );
+      err.code = 'GOOGLE_NOT_CONNECTED';
+      throw err;
+    }
+    throw apiError;
+  }
 }
 
 module.exports = {

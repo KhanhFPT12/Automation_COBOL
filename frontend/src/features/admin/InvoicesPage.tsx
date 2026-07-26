@@ -209,7 +209,11 @@ export function InvoicesPage() {
                   <tr key={inv.id} className="hover:bg-slate-50/60 transition-colors">
                     <td className="px-5 py-4 font-semibold text-slate-900">{inv.invoiceNumber}</td>
                     <td className="px-5 py-4">
-                      <div className="font-semibold text-slate-800">{inv.customerName || "N/A"}</div>
+                      <div className="font-semibold text-slate-800">
+                        {inv.customerName && inv.customerName !== "N/A" && inv.customerName !== "Unknown"
+                          ? inv.customerName
+                          : (inv.customerEmail && inv.customerEmail !== "Unknown" ? inv.customerEmail.split("@")[0] : "Customer")}
+                      </div>
                       <div className="text-xs text-slate-400 font-mono">{inv.customerEmail}</div>
                     </td>
                     <td className="px-5 py-4">

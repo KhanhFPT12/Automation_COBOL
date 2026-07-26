@@ -289,28 +289,36 @@ exports.updatePlan = async (req, res, next) => {
 exports.getInvoices = async (_req, res, next) => {
   try {
     const invoices = await Invoice.find()
-      .populate('organization_id', 'first_name last_name email')
+      .populate('organization_id', 'fullName companyName representativeName email businessEmail')
       .populate('pending_plan_id', 'name')
       .sort({ created_at: -1 })
       .lean();
 
     return res.status(200).json({
       success: true,
-      data: invoices.map(inv => ({
-        id: inv._id,
-        invoiceNumber: inv.invoice_number,
-        amount: inv.amount,
-        total: inv.total,
-        currency: inv.currency,
-        status: Invoice.InvoiceStatusNames[inv.status] || 'draft',
-        paymentReference: inv.payment_reference,
-        createdAt: inv.created_at,
-        paidAt: inv.paid_at,
-        customerEmail: inv.organization_id ? inv.organization_id.email : 'Unknown',
-        customerName: inv.organization_id ? `${inv.organization_id.first_name || ''} ${inv.organization_id.last_name || ''}`.trim() : 'Unknown',
-        pendingPlanName: inv.pending_plan_id ? inv.pending_plan_id.name : 'Unknown',
-        pdfUrl: inv.pdf_url,
-      })),
+      data: invoices.map((inv) => {
+        const u = inv.organization_id;
+        const customerEmail = u ? (u.email || u.businessEmail || 'Unknown') : 'Unknown';
+        const customerName = u
+          ? (u.fullName || u.companyName || u.representativeName || (customerEmail !== 'Unknown' ? customerEmail.split('@')[0] : 'Customer'))
+          : 'Customer';
+
+        return {
+          id: inv._id,
+          invoiceNumber: inv.invoice_number,
+          amount: inv.amount,
+          total: inv.total,
+          currency: inv.currency,
+          status: Invoice.InvoiceStatusNames[inv.status] || 'draft',
+          paymentReference: inv.payment_reference,
+          createdAt: inv.created_at,
+          paidAt: inv.paid_at,
+          customerEmail,
+          customerName,
+          pendingPlanName: inv.pending_plan_id ? inv.pending_plan_id.name : 'Subscription',
+          pdfUrl: inv.pdf_url,
+        };
+      }),
     });
   } catch (error) {
     return next(error);
