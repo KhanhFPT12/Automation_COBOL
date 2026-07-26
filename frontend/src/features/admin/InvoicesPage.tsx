@@ -113,132 +113,148 @@ export function InvoicesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold text-slate-900">Invoice & Transaction Management</h1>
-        <p className="text-slate-500 text-sm mt-1">List of invoices for customer service package upgrades.</p>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-900 via-sky-800 to-slate-900 tracking-tight">
+          Invoice & Transaction
+        </h1>
+        <p className="text-slate-500 text-sm font-medium">Manage and review all customer service upgrades and payments.</p>
       </div>
 
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-sm rounded-xl">
+        <div className="p-4 bg-rose-50/80 backdrop-blur-sm border border-rose-200/50 text-rose-700 text-sm rounded-2xl shadow-sm animate-in fade-in zoom-in-95">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-xl flex items-center gap-2">
+        <div className="p-4 bg-emerald-50/80 backdrop-blur-sm border border-emerald-200/50 text-emerald-700 text-sm rounded-2xl shadow-sm flex items-center gap-2 animate-in fade-in zoom-in-95">
           <CheckCircle className="h-5 w-5 shrink-0" />
-          <span>{successMessage}</span>
+          <span className="font-medium">{successMessage}</span>
         </div>
       )}
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Status filters */}
-        <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white/60 backdrop-blur-xl p-4 rounded-3xl border border-slate-200/60 shadow-sm">
+        {/* Status filters - Segmented Control Style */}
+        <div className="flex flex-wrap items-center gap-1 bg-slate-100/80 p-1.5 rounded-2xl">
           {STATUS_FILTERS.map((s) => (
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
+              className={`text-xs font-bold px-4 py-2 rounded-xl transition-all duration-300 ${
                 filterStatus === s
-                  ? "bg-sky-600 text-white border-sky-600"
-                  : "text-slate-500 border-slate-200 bg-white hover:bg-slate-50"
+                  ? "bg-white text-sky-700 shadow-sm ring-1 ring-black/5"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
               }`}
             >
               {s === "all"
-                ? "All"
+                ? "All Invoices"
                 : s === "open"
-                ? "Pending Payment"
+                ? "Pending"
                 : s === "paid"
                 ? "Paid"
                 : s === "void"
-                ? "Cancelled/Expired"
+                ? "Cancelled"
                 : "Uncollectible"}
             </button>
           ))}
         </div>
 
         {/* Search input */}
-        <div className="relative md:w-80">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+        <div className="relative w-full lg:w-96 group">
+          <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-sky-500 transition-colors">
             <Search className="h-4 w-4" />
           </span>
           <input
             type="text"
-            placeholder="Search by Invoice ID, Email, Ref..."
+            placeholder="Search by ID, Email, Ref..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full text-sm pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white"
+            className="w-full text-sm pl-11 pr-4 py-2.5 bg-slate-50/50 border border-slate-200/80 rounded-2xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 focus:bg-white transition-all duration-300 placeholder:text-slate-400 font-medium text-slate-700"
           />
         </div>
       </div>
 
       {/* Invoices Table Card */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white/80 backdrop-blur-2xl rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/20 overflow-hidden relative">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+          <table className="w-full text-sm text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-100 text-xs text-slate-400 uppercase tracking-wide">
-                <th className="px-5 py-4 font-semibold">Invoice ID</th>
-                <th className="px-5 py-4 font-semibold">Customer</th>
-                <th className="px-5 py-4 font-semibold">Payment Reference</th>
-                <th className="px-5 py-4 font-semibold">Subscription Plan</th>
-                <th className="px-5 py-4 font-semibold">Amount</th>
-                <th className="px-5 py-4 font-semibold">Status</th>
-                <th className="px-5 py-4 font-semibold">Created Date</th>
-                <th className="px-5 py-4 font-semibold text-right">Actions</th>
+              <tr className="bg-slate-50/80 border-b border-slate-100 text-xs text-slate-500 font-bold uppercase tracking-wider">
+                <th className="px-6 py-5 rounded-tl-[2rem]">Invoice ID</th>
+                <th className="px-6 py-5">Customer</th>
+                <th className="px-6 py-5">Payment Ref</th>
+                <th className="px-6 py-5">Plan</th>
+                <th className="px-6 py-5">Amount</th>
+                <th className="px-6 py-5">Status</th>
+                <th className="px-6 py-5">Date</th>
+                <th className="px-6 py-5 text-right rounded-tr-[2rem]">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-100/80">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-slate-400">
-                    <Loader2 className="h-6 w-6 animate-spin inline mr-2 text-sky-600" />
-                    Loading data...
+                  <td colSpan={8} className="text-center py-20 text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                      <span className="font-medium text-slate-500">Loading your data...</span>
+                    </div>
                   </td>
                 </tr>
               ) : filteredInvoices.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-slate-400">
-                    No matching invoices found.
+                  <td colSpan={8} className="text-center py-20">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-slate-400" />
+                      </div>
+                      <p className="text-slate-500 font-medium">No invoices found matching your criteria.</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 filteredInvoices.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-5 py-4 font-semibold text-slate-900">{inv.invoiceNumber}</td>
-                    <td className="px-5 py-4">
-                      <div className="font-semibold text-slate-800">{inv.customerName || "N/A"}</div>
-                      <div className="text-xs text-slate-400 font-mono">{inv.customerEmail}</div>
+                  <tr key={inv.id} className="group hover:bg-sky-50/30 transition-colors duration-300">
+                    <td className="px-6 py-5">
+                      <span className="font-bold text-slate-700 group-hover:text-sky-700 transition-colors">
+                        {inv.invoiceNumber}
+                      </span>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-6 py-5">
+                      <div className="font-bold text-slate-800">{inv.customerName || "N/A"}</div>
+                      <div className="text-xs text-slate-400 font-medium mt-0.5">{inv.customerEmail}</div>
+                    </td>
+                    <td className="px-6 py-5">
                       {inv.paymentReference ? (
-                        <span className="font-mono bg-sky-50 text-sky-700 font-bold px-2 py-1 rounded text-xs select-all">
+                        <span className="font-mono bg-sky-100/50 text-sky-700 font-bold px-2.5 py-1 rounded-md text-xs select-all border border-sky-200/50">
                           {inv.paymentReference}
                         </span>
                       ) : (
-                        <span className="text-slate-400 italic text-xs">None</span>
+                        <span className="text-slate-300 italic text-xs font-medium">No Ref</span>
                       )}
                     </td>
-                    <td className="px-5 py-4 font-medium text-slate-700">{inv.pendingPlanName}</td>
-                    <td className="px-5 py-4 font-extrabold text-slate-900">
+                    <td className="px-6 py-5 font-semibold text-slate-600">
+                      {inv.pendingPlanName}
+                    </td>
+                    <td className="px-6 py-5 font-black text-slate-900 tracking-tight">
                       {formatMoney(inv.total, inv.currency)}
                     </td>
-                    <td className="px-5 py-4">{getStatusBadge(inv.status)}</td>
-                    <td className="px-5 py-4 text-xs text-slate-400">
-                      {new Date(inv.createdAt).toLocaleString("en-US")}
+                    <td className="px-6 py-5">{getStatusBadge(inv.status)}</td>
+                    <td className="px-6 py-5 text-xs text-slate-400 font-medium">
+                      {new Date(inv.createdAt).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+                      <div className="text-[10px] text-slate-300 mt-0.5">{new Date(inv.createdAt).toLocaleTimeString("en-US", { hour: '2-digit', minute:'2-digit' })}</div>
                     </td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex justify-end items-center gap-2">
+                    <td className="px-6 py-5 text-right">
+                      <div className="flex justify-end items-center gap-3 opacity-80 group-hover:opacity-100 transition-opacity">
                         {inv.pdfUrl && (
                           <a
                             href={inv.pdfUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-900 border border-slate-200 hover:border-slate-300 font-semibold px-2.5 py-1.5 rounded-lg text-xs transition bg-white"
+                            className="inline-flex items-center gap-1.5 text-slate-500 hover:text-sky-600 hover:bg-sky-50 font-bold px-3 py-1.5 rounded-xl text-xs transition-all duration-200"
                           >
-                            <FileText className="h-3.5 w-3.5" /> PDF
+                            <FileText className="h-4 w-4" /> PDF
                           </a>
                         )}
 
@@ -246,9 +262,9 @@ export function InvoicesPage() {
                           <button
                             type="button"
                             onClick={() => setConfirmingInvoice(inv)}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1.5 rounded-lg text-xs transition"
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-all duration-200 shadow-sm shadow-emerald-200"
                           >
-                            Manual Approve
+                            Approve
                           </button>
                         )}
                       </div>
@@ -263,28 +279,50 @@ export function InvoicesPage() {
 
       {/* Manual Payment Confirmation Modal */}
       {confirmingInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4" role="dialog" aria-modal="true">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-100">
-            <h3 className="text-lg font-bold text-slate-900">Manual Payment Confirmation</h3>
-            <div className="mt-4 space-y-3 text-sm text-slate-600">
-              <p>Are you sure you want to confirm the payment manually for this invoice?</p>
-              <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100 space-y-1.5 font-medium">
-                <div>Invoice ID: <span className="font-bold text-slate-900">{confirmingInvoice.invoiceNumber}</span></div>
-                <div>Customer: <span className="text-slate-900">{confirmingInvoice.customerName}</span></div>
-                <div>Plan: <span className="text-slate-900">{confirmingInvoice.pendingPlanName}</span></div>
-                <div>Amount: <span className="font-bold text-slate-900">{formatMoney(confirmingInvoice.total, confirmingInvoice.currency)}</span></div>
-                <div>Ref Code: <span className="font-mono font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded">{confirmingInvoice.paymentReference}</span></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setConfirmingInvoice(null)}></div>
+          <div className="relative w-full max-w-md rounded-[2rem] bg-white/95 backdrop-blur-2xl p-8 shadow-2xl border border-white/20 animate-in zoom-in-95 duration-300">
+            <h3 className="text-xl font-black text-slate-900 mb-2">Confirm Payment</h3>
+            <p className="text-sm text-slate-500 font-medium mb-6">Are you sure you want to manually approve this invoice?</p>
+            
+            <div className="bg-slate-50/80 backdrop-blur rounded-2xl p-5 border border-slate-200/60 space-y-3 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 font-medium">Invoice ID</span>
+                <span className="font-black text-slate-900">{confirmingInvoice.invoiceNumber}</span>
               </div>
-              <p className="text-xs text-rose-600 font-semibold">
-                ⚠️ This action will immediately upgrade the subscription plan for the customer account and record the revenue.
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 font-medium">Customer</span>
+                <span className="font-bold text-slate-800">{confirmingInvoice.customerName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 font-medium">Plan</span>
+                <span className="font-bold text-sky-600">{confirmingInvoice.pendingPlanName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 font-medium">Amount</span>
+                <span className="font-black text-slate-900 text-base">{formatMoney(confirmingInvoice.total, confirmingInvoice.currency)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 font-medium">Ref Code</span>
+                <span className="font-mono font-bold text-slate-700 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-sm">
+                  {confirmingInvoice.paymentReference || "N/A"}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-5 bg-rose-50/50 border border-rose-100 rounded-xl p-3 flex gap-2">
+              <HelpCircle className="h-5 w-5 text-rose-500 shrink-0" />
+              <p className="text-xs text-rose-700 font-medium leading-relaxed">
+                This action is irreversible. The customer's plan will be upgraded immediately.
               </p>
             </div>
-            <div className="mt-6 flex justify-end gap-3">
+
+            <div className="mt-8 flex justify-end gap-3">
               <button
                 type="button"
                 disabled={submittingConfirm}
                 onClick={() => setConfirmingInvoice(null)}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="rounded-xl px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
               >
                 Cancel
               </button>
@@ -292,10 +330,10 @@ export function InvoicesPage() {
                 type="button"
                 disabled={submittingConfirm}
                 onClick={() => void handleConfirmPayment()}
-                className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-900/20 disabled:opacity-50 transition-all"
               >
                 {submittingConfirm && <Loader2 className="h-4 w-4 animate-spin" />}
-                Confirm
+                Confirm Payment
               </button>
             </div>
           </div>

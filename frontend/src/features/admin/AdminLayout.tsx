@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -29,6 +29,7 @@ const NAV_ITEMS: { page: ActivePage; label: string; icon: typeof LayoutDashboard
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const { activePage, setActivePage, session, logout } = useAppStore();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   if (session.role !== "ADMIN") {
     return (
@@ -52,24 +53,64 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex flex-col">
       {/* Admin header - deliberately separate from the public site's Header */}
       <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
             <ShieldAlert className="h-5 w-5 text-sky-600" />
             <span className="font-display text-lg font-extrabold tracking-tight text-slate-800">
               ALSM <span className="text-sky-600 text-sm font-semibold">Admin</span>
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 relative">
             <NotificationBell />
-            <span className="flex items-center gap-1.5 text-xs font-mono font-semibold bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full border border-slate-200">
+            
+            <button 
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              className="flex items-center gap-1.5 text-xs font-mono font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-full border border-slate-200 transition-all cursor-pointer"
+            >
               <User className="h-3.5 w-3.5 text-sky-600" />
               {session.name || session.email}
-            </span>
+            </button>
+
+            {/* Profile Dropdown */}
+            {isProfileOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setIsProfileOpen(false)}
+                ></div>
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-50 animate-in slide-in-from-top-2 fade-in duration-200">
+                  <div className="px-4 py-2 border-b border-slate-50 mb-1">
+                    <p className="text-xs text-slate-500 font-medium">Signed in as</p>
+                    <p className="text-sm font-bold text-slate-900 truncate">{session.email}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      setActivePage("admin-settings");
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-sky-50 hover:text-sky-700 transition-colors flex items-center gap-2 font-medium"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Account Settings
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      logout();
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2 font-medium"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign out
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-8 flex-1 w-full">
+      <div className="mx-auto w-full px-4 py-8 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-8 flex-1">
         <aside className="lg:w-60 shrink-0">
           <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
             {NAV_ITEMS.map(({ page, label, icon: Icon }) => (
