@@ -15,6 +15,7 @@ type GridItemProps = {
   colEnd?: number;
   lineBreak?: boolean;
   classes?: string;
+  className?: string;
   children: ReactNode;
 };
 
@@ -25,6 +26,7 @@ export default function GridItem({
   colEnd,
   lineBreak,
   classes,
+  className,
   children,
 }: GridItemProps) {
   const theme = useSelector((state: RootState) => state.theme);
@@ -35,7 +37,7 @@ export default function GridItem({
         rowEnd ? 'row-end-' + rowEnd : ''
       } col-${col} ${colEnd ? 'col-end-' + colEnd : ''} ${
         classes ? classes : ''
-      } ${lineBreak ? `line-break-${theme.name}` : ''}`}
+      } ${className ? className : ''} ${lineBreak ? `line-break-${theme.name}` : ''}`}
     >
       {children}
     </div>

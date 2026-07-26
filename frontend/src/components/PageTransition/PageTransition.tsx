@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 const pageVariants = {
   initial: {
@@ -19,7 +19,7 @@ const pageVariants = {
   },
 };
 
-const pageTransition = {
+const pageTransition: any = {
   type: 'tween',
   ease: 'anticipate',
   duration: 0.4,

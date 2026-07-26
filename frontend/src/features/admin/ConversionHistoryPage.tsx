@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Loader2, CheckCircle2, XCircle, FileCode2, Search, Filter, Download, UserCircle, LayoutGrid, CalendarDays, BarChart, Database, RefreshCcw, Maximize2 } from "lucide-react";
+import { CheckCircle2, XCircle, FileCode2, Search, Filter, Download, LayoutGrid, CalendarDays, BarChart, Database, RefreshCcw, Maximize2 } from "lucide-react";
 import { adminApi } from "../../services/adminApi";
 import type { ConversionLogEntry, Pagination } from "../../types";
 
@@ -47,7 +47,7 @@ const UserDisplay = ({ user, logId }: { user: ConversionLogEntry["user"], logId:
   const displayUser = user || generateFakeUser(logId);
 
   const primaryName = displayUser.fullName || displayUser.companyName;
-  const secondaryName = displayUser.email || displayUser.businessEmail || `ID: ${logId.slice(-6)}`;
+  const secondaryName = displayUser.email || (displayUser as any).businessEmail || `ID: ${logId.slice(-6)}`;
   
   const displayName = primaryName || secondaryName || "Unknown Identity";
   const displaySub = primaryName ? secondaryName : "Direct Identity";
