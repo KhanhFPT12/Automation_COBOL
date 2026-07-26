@@ -20,34 +20,23 @@ const StatCard = ({ title, value, icon: Icon, colorClass, subtitle }: any) => (
   </div>
 );
 
-const generateFakeUser = (id: string) => {
-  const firstNames = ["James", "Emma", "Liam", "Olivia", "Noah", "Ava", "William", "Sophia", "Lucas", "Isabella", "David", "Sarah", "Michael", "Emily", "John", "Jessica"];
-  const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Chen", "Kim", "Nguyen", "Lee", "Wong", "Kumar"];
-  const companies = ["TechCorp", "GlobalSys", "InnovateX", "CloudNet", "DataFlow", "CyberShield", "FinTech Solutions", "Nexus Corp", "Quantum Systems", "Apex Dynamics"];
-  
-  // Use the ID to create a deterministic hash
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  const fName = firstNames[Math.abs(hash) % firstNames.length];
-  const lName = lastNames[Math.abs(hash >> 2) % lastNames.length];
-  const company = companies[Math.abs(hash >> 4) % companies.length];
-  
-  return {
-    fullName: `${fName} ${lName}`,
-    email: `${fName.toLowerCase()}.${lName.toLowerCase()}@${company.toLowerCase().replace(/\s+/g, '')}.com`,
-    companyName: company
-  };
-};
-
 const UserDisplay = ({ user, logId }: { user: ConversionLogEntry["user"], logId: string }) => {
-  // If user is missing from DB, generate a realistic fake one for UI purposes
-  const displayUser = user || generateFakeUser(logId);
+  if (!user) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center border-2 border-white shadow-xs text-slate-400 font-bold text-[10px]">
+          AN
+        </div>
+        <div>
+          <p className="text-sm font-bold text-slate-800">Anonymous User</p>
+          <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mt-0.5">Guest Record</p>
+        </div>
+      </div>
+    );
+  }
 
-  const primaryName = displayUser.fullName || displayUser.companyName;
-  const secondaryName = displayUser.email || (displayUser as any).businessEmail || `ID: ${logId.slice(-6)}`;
+  const primaryName = user.fullName || user.companyName;
+  const secondaryName = user.email || (user as any).businessEmail || `ID: ${logId.slice(-6)}`;
   
   const displayName = primaryName || secondaryName || "Unknown Identity";
   const displaySub = primaryName ? secondaryName : "Direct Identity";
@@ -65,9 +54,6 @@ const UserDisplay = ({ user, logId }: { user: ConversionLogEntry["user"], logId:
         <span className="text-slate-500 text-[10px] font-medium mt-0.5">
           {displaySub}
         </span>
-        {!user && (
-          <span className="text-[9px] text-amber-500/80 font-bold uppercase tracking-wider mt-0.5">Guest Record</span>
-        )}
       </div>
     </div>
   );
