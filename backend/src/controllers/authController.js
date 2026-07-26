@@ -89,6 +89,8 @@ exports.registerIndividual = async (req, res) => {
     } catch (emailErr) {
       emailSent = false;
       console.error('Verification email failed:', emailErr.message);
+      user.isEmailVerified = true;
+      await user.save({ validateBeforeSave: false });
     }
 
     return res.status(201).json({
@@ -96,7 +98,7 @@ exports.registerIndividual = async (req, res) => {
       emailSent,
       message: emailSent
         ? 'Registration successful! Please check your email to verify your account.'
-        : 'Registration successful! However, the verification email could not be sent. Please use "Resend Verification" on the login page.',
+        : 'Registration successful! Email verification skipped — you can log in now.',
     });
   } catch (err) {
     console.error('registerIndividual error:', err.message);
@@ -184,6 +186,8 @@ exports.registerEnterprise = async (req, res) => {
     } catch (emailErr) {
       emailSent = false;
       console.error('Verification email failed:', emailErr.message);
+      user.isEmailVerified = true;
+      await user.save({ validateBeforeSave: false });
     }
 
     return res.status(201).json({
@@ -191,7 +195,7 @@ exports.registerEnterprise = async (req, res) => {
       emailSent,
       message: emailSent
         ? 'Enterprise registration successful! Please check your business email to verify your account.'
-        : 'Enterprise registration successful! However, the verification email could not be sent. Please use "Resend Verification" on the login page.',
+        : 'Enterprise registration successful! Email verification skipped — you can log in now.',
     });
   } catch (err) {
     console.error('registerEnterprise error:', err.message);
@@ -472,6 +476,18 @@ exports.getMe = async (req, res) => {
 // ────────────────────────────────────────────────────────────────
 const { OAuth2Client } = require('google-auth-library');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const { fullName, phone } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+    if (fullName) user.fullName = fullName.trim();
+    if (phone) user.phone = phone.trim();
+    await user.save({ validateBeforeSave: false });
+    return res.json({ success: true, user });
+  } catch (err) { console.error(err); return res.status(500).json({ success: false, message: "Server error." }); }
+};
 
 exports.changePassword = async (req, res) => {
   try {
