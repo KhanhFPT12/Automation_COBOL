@@ -97,8 +97,15 @@ export function FileConverter() {
       } else {
         bmsSelectedBmsFiles.forEach((f) => formData.append("files", f));
       }
+      const token = localStorage.getItem("token");
+      const headers: HeadersInit = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      
       const resp = await fetch("/api/bms-converter/upload", {
         method: "POST",
+        headers,
         body: formData,
       });
       if (!resp.ok) {
