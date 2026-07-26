@@ -12,6 +12,7 @@ export function InvoicesPage() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  
   // Manual payment confirm states
   const [confirmingInvoice, setConfirmingInvoice] = useState<AdminInvoice | null>(null);
   const [submittingConfirm, setSubmittingConfirm] = useState(false);
