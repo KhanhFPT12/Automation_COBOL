@@ -130,36 +130,47 @@ exports.downloadInvoicePdf = async (req, res, next) => {
     if (!mongoose.isValidObjectId(req.params.invoiceId)) {
       return res.status(404).json({ success: false, message: 'Invoice not found.' });
     }
-    const invoice = await Invoice.findOne({
-      _id: req.params.invoiceId,
-      organization_id: req.user._id,
-    })
-      .select('invoice_number pdf_url')
-      .lean();
+
+    // Allow owner user or Admin
+    const query = { _id: req.params.invoiceId };
+    if (req.user.role !== 'ADMIN') {
+      query.organization_id = req.user._id;
+    }
+
+    const invoice = await Invoice.findOne(query);
 
     if (!invoice) {
       return res.status(404).json({ success: false, message: 'Invoice not found.' });
     }
-    if (!invoice.pdf_url) {
-      return res.status(409).json({
-        success: false,
-        message: 'Invoice PDF is still being processed.',
-      });
-    }
 
-    // Cloudinary URL → redirect; local path → download
-    if (invoice.pdf_url.startsWith('http')) {
+    // Cloudinary URL redirect if remote storage
+    if (invoice.pdf_url && invoice.pdf_url.startsWith('http')) {
       return res.redirect(invoice.pdf_url);
     }
 
     const filePath = getInvoicePdfPath(invoice._id);
+    let fileExists = false;
+
     try {
       await fs.access(filePath);
+      fileExists = true;
     } catch {
-      return res.status(409).json({
-        success: false,
-        message: 'Invoice PDF is still being processed.',
-      });
+      fileExists = false;
+    }
+
+    // On-demand PDF generation if file is missing on disk or pdf_url is empty
+    if (!fileExists || !invoice.pdf_url) {
+      try {
+        await generateInvoicePdf(invoice);
+        invoice.pdf_url = `/api/invoices/${invoice._id}/pdf`;
+        await invoice.save();
+      } catch (genErr) {
+        console.error(`[Invoice] On-demand PDF generation failed for invoice ${invoice.invoice_number}:`, genErr);
+        return res.status(500).json({
+          success: false,
+          message: 'Unable to generate PDF invoice at this moment. Please try again.',
+        });
+      }
     }
 
     return res.download(filePath, `${invoice.invoice_number}.pdf`, (error) => {
