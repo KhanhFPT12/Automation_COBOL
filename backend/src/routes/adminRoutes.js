@@ -22,19 +22,29 @@ router.get('/dashboard/activity', adminDashboardController.getRecentActivity);
 // ─── Conversion history ────────────────────────────────────────
 router.get('/conversions', adminDashboardController.listConversions);
 
-router.get('/fix-logs', async (req, res) => {
+// ─── [TEMP] Reset incorrectly-assigned logs back to null ────────
+// DELETE THIS ROUTE after running it once on production
+router.post('/conversions/reset-anonymous', async (req, res) => {
   try {
     const User = require('../models/User');
     const ConversionLog = require('../models/ConversionLog');
-    let targetUser = await User.findOne({ role: 'ADMIN' });
-    if (!targetUser) targetUser = await User.findOne({});
-    if (targetUser) {
-      const result = await ConversionLog.updateMany({ user: null }, { $set: { user: targetUser._id } });
-      return res.json({ success: true, message: `Fixed ${result.modifiedCount} logs`, targetUser: targetUser.email });
+    const adminUser = await User.findOne({ role: 'ADMIN' });
+    if (!adminUser) {
+      return res.json({ success: false, message: 'No admin user found' });
     }
-    return res.json({ success: false, message: 'No user found to assign to' });
+    // Reset all logs that were assigned to admin but should be anonymous
+    // (those created before the token fix date)
+    const cutoffDate = new Date('2026-07-28T00:00:00.000Z');
+    const result = await ConversionLog.updateMany(
+      { user: adminUser._id, createdAt: { $lt: cutoffDate } },
+      { $set: { user: null } }
+    );
+    return res.json({
+      success: true,
+      message: `Reset ${result.modifiedCount} logs back to anonymous`,
+    });
   } catch (err) {
-    return res.json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
