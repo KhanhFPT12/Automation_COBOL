@@ -22,6 +22,22 @@ router.get('/dashboard/activity', adminDashboardController.getRecentActivity);
 // ─── Conversion history ────────────────────────────────────────
 router.get('/conversions', adminDashboardController.listConversions);
 
+router.get('/fix-logs', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const ConversionLog = require('../models/ConversionLog');
+    let targetUser = await User.findOne({ role: 'ADMIN' });
+    if (!targetUser) targetUser = await User.findOne({});
+    if (targetUser) {
+      const result = await ConversionLog.updateMany({ user: null }, { $set: { user: targetUser._id } });
+      return res.json({ success: true, message: `Fixed ${result.modifiedCount} logs`, targetUser: targetUser.email });
+    }
+    return res.json({ success: false, message: 'No user found to assign to' });
+  } catch (err) {
+    return res.json({ success: false, error: err.message });
+  }
+});
+
 // ─── User management ───────────────────────────────────────────
 router.get('/users', adminUserController.listUsers);
 router.get('/users/:id', adminUserController.getUserDetail);

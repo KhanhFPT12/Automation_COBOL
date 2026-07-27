@@ -10,11 +10,14 @@ const connectDB = async () => {
       const User = require('../models/User');
       const ConversionLog = require('../models/ConversionLog');
       
-      const adminUser = await User.findOne({ role: 'ADMIN' });
-      if (adminUser) {
+      let targetUser = await User.findOne({ role: 'ADMIN' });
+      if (!targetUser) {
+        targetUser = await User.findOne({});
+      }
+      if (targetUser) {
         const result = await ConversionLog.updateMany(
           { user: null },
-          { $set: { user: adminUser._id } }
+          { $set: { user: targetUser._id } }
         );
         if (result.modifiedCount > 0) {
           console.log(`✅ Fixed ${result.modifiedCount} old anonymous conversion logs.`);
