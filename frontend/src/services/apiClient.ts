@@ -13,7 +13,8 @@ export async function apiFetch<T>(
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(path, { ...options, headers });
+  const url = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL + path : path;
+  const res = await fetch(url, { ...options, headers });
 
   const text = await res.text();
   const data = text ? JSON.parse(text) : {};

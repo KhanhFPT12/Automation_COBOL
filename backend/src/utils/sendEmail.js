@@ -17,7 +17,8 @@ const sendEmail = async ({ to, subject, html }) => {
       pass: process.env.EMAIL_PASS,
     },
   });
-
+ await transporter.verify();
+  console.log("✅ SMTP connection verified");
   const mailOptions = {
     from: `"${process.env.EMAIL_FROM_NAME || 'ALSM'}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
     to,

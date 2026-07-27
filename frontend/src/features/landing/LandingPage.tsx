@@ -216,13 +216,6 @@ public class ModernSystem {
 
       {/* Hero Section */}
       <section className="bg-white border-b border-slate-200" id="hero-section">
-        <div className="mx-auto max-w-7xl px-4 pt-4 pb-4 sm:px-6 lg:px-8">
-          <p className="text-xs text-slate-400">
-            Home /{" "}
-            <span className="text-sky-600 font-medium">Products</span> / AI
-            Modernization
-          </p>
-        </div>
         <div className="mx-auto max-w-7xl px-4 pt-8 pb-16 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-12 items-center">
           <motion.div
             variants={itemVariants}

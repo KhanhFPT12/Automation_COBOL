@@ -19,9 +19,9 @@ export function Header() {
           id="logo-container"
         >
           <img
-            src="/images/alsm-logo.png"
+            src="/images/alsm2-logo.png"
             alt="ALSM - Automating Legacy System Modernization"
-            className="h-10 w-auto object-contain"
+            className="h-14 sm:h-16 w-auto object-contain transition-transform duration-200 hover:scale-105"
             style={{ mixBlendMode: 'multiply' }}
             onError={(e) => {
               const target = e.currentTarget;
@@ -109,10 +109,12 @@ export function Header() {
               </button>
               <NotificationBell />
               <div className="relative">
-                <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full border border-slate-200 transition cursor-pointer" id="btn-user-menu">
-                  <User className="h-3.5 w-3.5 text-sky-600" />
-                  {session.name}
-                  <ChevronDown className={"h-3.5 w-3.5 transition " + (dropdownOpen ? "rotate-180" : "")} />
+                <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-50 to-blue-50 hover:from-sky-100 hover:to-blue-100 border border-sky-200 px-3 py-1.5 transition shadow-sm cursor-pointer" id="btn-user-menu">
+                  <div className="h-7 w-7 rounded-full bg-sky-600 flex items-center justify-center ring-2 ring-sky-200">
+                    <span className="text-xs font-bold text-white">{session.name ? session.name.charAt(0).toUpperCase() : "U"}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-700 max-w-28 truncate">{session.name}</span>
+                  <ChevronDown className={"h-3.5 w-3.5 text-slate-400 transition " + (dropdownOpen ? "rotate-180" : "")} />
                 </button>
                 {dropdownOpen && <>
                   <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />

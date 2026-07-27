@@ -11,14 +11,11 @@ import {
   MessageSquare,
   RefreshCw,
   ExternalLink,
-  MoreVertical,
   Phone,
   Video,
   Info,
-  CheckCircle2,
   Clock,
-  UserCircle,
-  FileWarning
+  UserCircle
 } from "lucide-react";
 import { apiFetch } from "../../services/apiClient";
 

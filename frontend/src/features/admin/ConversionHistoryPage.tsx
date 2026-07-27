@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Loader2, CheckCircle2, XCircle, FileCode2, Search, Filter, Download, UserCircle, LayoutGrid, CalendarDays, BarChart, Database, RefreshCcw, Maximize2 } from "lucide-react";
+import { CheckCircle2, XCircle, FileCode2, Search, Filter, Download, LayoutGrid, CalendarDays, BarChart, Database, RefreshCcw, Maximize2 } from "lucide-react";
 import { adminApi } from "../../services/adminApi";
 import type { ConversionLogEntry, Pagination } from "../../types";
 
@@ -20,23 +20,23 @@ const StatCard = ({ title, value, icon: Icon, colorClass, subtitle }: any) => (
   </div>
 );
 
-const UserDisplay = ({ user }: { user: ConversionLogEntry["user"] }) => {
+const UserDisplay = ({ user, logId }: { user: ConversionLogEntry["user"], logId: string }) => {
   if (!user) {
     return (
-      <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
-          <UserCircle className="h-4 w-4 text-slate-300" />
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center border-2 border-white shadow-xs text-slate-400 font-bold text-[10px]">
+          AN
         </div>
         <div>
-          <span className="text-slate-400 italic text-xs font-medium">Anonymous / Deleted User</span>
-          <p className="text-[10px] text-slate-300">System Record</p>
+          <p className="text-sm font-bold text-slate-800">Anonymous User</p>
+          <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mt-0.5">Guest Record</p>
         </div>
       </div>
     );
   }
 
   const primaryName = user.fullName || user.companyName;
-  const secondaryName = user.email || user.businessEmail || `ID: ${user._id.slice(-6)}`;
+  const secondaryName = user.email || (user as any).businessEmail || `ID: ${logId.slice(-6)}`;
   
   const displayName = primaryName || secondaryName || "Unknown Identity";
   const displaySub = primaryName ? secondaryName : "Direct Identity";
@@ -278,7 +278,7 @@ export function ConversionHistoryPage() {
                 conversions.map((c) => (
                   <tr key={c._id} className="hover:bg-slate-50/60 transition-colors group">
                     <td className="px-6 py-4">
-                      <UserDisplay user={c.user} />
+                      <UserDisplay user={c.user} logId={c._id} />
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${
