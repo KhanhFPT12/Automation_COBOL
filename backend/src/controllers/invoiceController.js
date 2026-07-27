@@ -8,11 +8,20 @@ const ensureInvoicePdf = async (invoice) => {
   if (invoice.pdf_url) return;
 
   try {
-    await generateInvoicePdf(invoice);
+    const User = require('../models/User');
+    const user = await User.findById(invoice.organization_id)
+      .select('fullName companyName email businessEmail representativeName')
+      .lean();
+    const customerName = user
+      ? (user.companyName || user.fullName || user.representativeName || user.email || user.businessEmail || 'Valued Customer')
+      : 'Valued Customer';
+
+    await generateInvoicePdf(invoice, customerName);
     invoice.pdf_url = `/api/invoices/${invoice._id}/pdf`;
     await invoice.save();
   } catch (error) {
-    console.error(`Unable to generate PDF for invoice ${invoice.invoice_number}:`, error);
+    console.error(`Unable to generate PDF for invoice ${invoice.invoice_number}:`, error.message || error);
+    console.error(error.stack);
   }
 };
 

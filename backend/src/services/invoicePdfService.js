@@ -16,7 +16,7 @@ const formatDate = (date) => new Date(date).toLocaleDateString('en-US');
 const getInvoicePdfPath = (invoiceId) =>
   path.join(INVOICE_STORAGE_DIR, `${invoiceId.toString()}.pdf`);
 
-const generateInvoicePdf = async (invoice) => {
+const generateInvoicePdf = async (invoice, customerName) => {
   await fsPromises.mkdir(INVOICE_STORAGE_DIR, { recursive: true });
   const outputPath = getInvoicePdfPath(invoice._id);
 
@@ -29,9 +29,23 @@ const generateInvoicePdf = async (invoice) => {
     document.on('error', reject);
     document.pipe(output);
 
+    // --- LOGO ---
+    const logoPath = path.resolve(__dirname, '../../../frontend/public/images/alsm2-logo.png');
+    try {
+      if (fs.existsSync(logoPath)) {
+        document.image(logoPath, 50, 40, { width: 110 });
+        document.moveDown(4);
+      }
+    } catch (e) { /* logo not found, skip */ }
+    document.moveDown(1);
+
+    // --- HEADER ---
     document.fontSize(24).fillColor('#0f172a').text('INVOICE', { align: 'right' });
     document.moveDown(0.5);
-    document.fontSize(11).fillColor('#475569');
+    document.fontSize(10).fillColor('#475569').text('Bill To:');
+    document.fontSize(12).fillColor('#0f172a').text(customerName || 'Valued Customer');
+    document.moveDown(0.5);
+    document.fontSize(10).fillColor('#475569');
     document.text(`Invoice number: ${invoice.invoice_number}`);
     document.text(`Invoice date: ${formatDate(invoice.invoice_date)}`);
     document.text(`Due date: ${formatDate(invoice.due_date)}`);
