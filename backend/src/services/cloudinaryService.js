@@ -15,16 +15,20 @@ cloudinary.config({
 exports.uploadToCloudinary = (fileBuffer, originalName, mimeType) => {
   return new Promise((resolve, reject) => {
     const isImage = mimeType && mimeType.startsWith("image/");
-    const resourceType = isImage ? "image" : "raw";
+    const safeBaseName = originalName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_");
+    const publicId = `${Date.now()}_${safeBaseName}`;
 
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: "alsm_chat_attachments",
-        resource_type: resourceType,
-        public_id: `${Date.now()}_${originalName.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+        resource_type: "auto",
+        public_id: publicId,
       },
       (error, result) => {
-        if (error) return reject(error);
+        if (error) {
+          console.error("Cloudinary upload_stream error:", error);
+          return reject(error);
+        }
         resolve({
           url: result.secure_url,
           publicId: result.public_id,

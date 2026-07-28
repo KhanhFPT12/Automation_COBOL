@@ -31,6 +31,7 @@ import { AdminChatPageWrapper } from "./page/AdminChatPage";
 import { ChatWidget } from "./features/chat/ChatWidget";
 import { ResetPassword } from "./features/auth/ResetPassword";
 import { NotificationSync } from "./components/NotificationSync";
+import { AdminLayout } from "./features/admin/AdminLayout";
 
 export default function App() {
   const { activePage, initAuth, session, setActivePage } = useAppStore();
@@ -52,7 +53,7 @@ export default function App() {
   }, []);
 
   const isAdmin = session.role === 'ADMIN';
-  const isAdminPage = activePage.startsWith('admin-') || activePage === 'meeting-detail';
+  const isAdminPage = activePage.startsWith('admin-') || activePage === 'meeting-detail' || activePage === 'converter' || activePage === 'product-experience';
 
   // Admins never see the public site (Home, Solutions, Book a Meeting, ...).
   // Whenever an admin session lands on a non-admin page - right after
@@ -128,14 +129,17 @@ export default function App() {
   };
 
   if (isAdmin) {
-    // Completely separate shell: no public Header/Footer. While the
-    // redirect effect above is settling (isAdminPage still false right
-    // after login), render nothing rather than flashing a user-facing page.
     if (!isAdminPage) return null;
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900" id="admin-root-shell">
         <NotificationSync />
-        {renderActiveView()}
+        {activePage === 'converter' ? (
+          <AdminLayout>
+            <ConverterPage />
+          </AdminLayout>
+        ) : (
+          renderActiveView()
+        )}
       </div>
     );
   }

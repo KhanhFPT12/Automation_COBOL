@@ -408,10 +408,11 @@ export function AdminChatPage() {
       const formData = new FormData();
       formData.append("file", file);
 
+      const token = localStorage.getItem("alsm_token") || localStorage.getItem("token") || "";
       const res = await fetch("/api/chat/upload", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });

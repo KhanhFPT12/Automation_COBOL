@@ -308,14 +308,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:flex-row lg:gap-8 lg:px-8 lg:py-8">
         <aside className="shrink-0 lg:w-64">
           <div className="admin-sidebar lg:sticky lg:top-[104px] lg:rounded-2xl lg:border lg:border-slate-200/80 lg:bg-white lg:p-3 lg:shadow-sm">
-            <div className="mb-3.5 hidden items-center gap-3 rounded-2xl bg-gradient-to-br from-[#0061FF] via-[#2563EB] to-[#6366F1] p-4 text-white shadow-md shadow-blue-500/20 lg:flex relative overflow-hidden">
-              <div className="absolute -right-4 -bottom-4 h-16 w-16 rounded-full bg-white/10 blur-xl pointer-events-none" />
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md ring-1 ring-white/30 text-white shadow-xs">
-                <Sparkles className="h-4.5 w-4.5 text-white animate-pulse" />
+            <div className="mb-3.5 hidden items-center gap-3 rounded-2xl bg-gradient-to-r from-slate-50 via-sky-50/70 to-white p-3.5 text-slate-900 border border-sky-100 shadow-2xs lg:flex relative overflow-hidden">
+              <div className="absolute -right-4 -bottom-4 h-16 w-16 rounded-full bg-sky-100/50 blur-xl pointer-events-none" />
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-100/90 text-[#0061FF] border border-sky-200/80 shadow-2xs">
+                <Sparkles className="h-4.5 w-4.5 text-[#0061FF]" />
               </span>
               <div>
-                <p className="text-xs font-extrabold tracking-wide uppercase text-white leading-tight">Control Center</p>
-                <p className="text-[11px] font-medium text-blue-100/90 leading-tight mt-0.5">Platform operations</p>
+                <p className="text-xs font-black tracking-wide uppercase text-slate-900 leading-tight">Control Center</p>
+                <p className="text-[11px] font-medium text-slate-500 leading-tight mt-0.5">Platform operations</p>
               </div>
             </div>
             <nav className="flex gap-1.5 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
@@ -327,14 +327,14 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                     onClick={() => setActivePage(page)}
                     className={`group shrink-0 flex items-center gap-2.5 text-sm font-semibold px-3.5 py-2.5 rounded-xl transition-all duration-200 text-left ${
                       isActive
-                        ? "bg-gradient-to-r from-[#0061FF] to-[#3B82F6] text-white shadow-md shadow-[#0061FF]/25 font-extrabold"
-                        : "text-slate-600 hover:bg-[#F8FAFC] hover:text-[#0F172A]"
+                        ? "bg-sky-50/90 text-[#0061FF] border border-sky-200/80 font-extrabold shadow-2xs"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
                     <span className={`flex h-7 w-7 items-center justify-center rounded-lg transition-all ${
                       isActive 
-                        ? "bg-white/20 text-white shadow-xs" 
-                        : "bg-slate-100 text-slate-400 group-hover:bg-[#0061FF]/10 group-hover:text-[#0061FF]"
+                        ? "bg-[#0061FF] text-white shadow-xs" 
+                        : "bg-slate-100 text-slate-400 group-hover:bg-sky-100 group-hover:text-[#0061FF]"
                     }`}>
                       <Icon className="h-4 w-4 shrink-0" />
                     </span>
@@ -353,7 +353,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                         {unreadChats > 99 ? "99+" : unreadChats}
                       </span>
                     )}
-                    <ChevronRight className={`ml-auto hidden h-3.5 w-3.5 transition-opacity lg:block ${isActive ? "text-white opacity-80" : "opacity-40 group-hover:opacity-100"}`} />
+                    <ChevronRight className={`ml-auto hidden h-3.5 w-3.5 transition-opacity lg:block ${isActive ? "text-[#0061FF] opacity-100" : "opacity-30 group-hover:opacity-100 text-slate-400"}`} />
                   </button>
                 );
               })}

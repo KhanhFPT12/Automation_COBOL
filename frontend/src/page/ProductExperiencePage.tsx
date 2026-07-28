@@ -83,7 +83,7 @@ export function ProductExperiencePage() {
         selectedBmsFiles.forEach((f) => formData.append("files", f));
       }
 
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("alsm_token") || localStorage.getItem("token") || "";
       const headers: HeadersInit = {};
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;

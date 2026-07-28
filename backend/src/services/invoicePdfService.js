@@ -4,12 +4,16 @@ const path = require('path');
 const PDFDocument = require('pdfkit');
 
 const INVOICE_STORAGE_DIR = path.resolve(__dirname, '../../storage/invoices');
+const FONT_REGULAR_PATH = path.resolve(__dirname, '../assets/fonts/Arial.ttf');
+const FONT_BOLD_PATH = path.resolve(__dirname, '../assets/fonts/Arial-Bold.ttf');
+const LOGO_PATH = path.resolve(__dirname, '../assets/images/alsm2-logo.png');
 
 const formatMoney = (amount, currency) => {
-  if (currency === 'VND') {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  if (!amount && amount !== 0) return '0 ₫';
+  if (currency === 'VND' || !currency) {
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' ₫';
   }
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(amount);
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
 };
 
 const formatDate = (date) => {
@@ -33,7 +37,7 @@ const generateInvoicePdf = async (invoice) => {
     try {
       await invoice.populate('organization_id', 'fullName companyName representativeName email businessEmail');
       await invoice.populate('pending_plan_id', 'name');
-    } catch { /* ignore if already populated or plain object */ }
+    } catch { /* ignore if plain object */ }
   }
 
   const org = invoice.organization_id || {};
@@ -53,62 +57,91 @@ const generateInvoicePdf = async (invoice) => {
     doc.on('error', reject);
     doc.pipe(output);
 
-    // ─── 1. TOP HEADER BANNER (Electric Blue Gradient Accent) ────────────────
-    doc.rect(0, 0, 595.28, 90).fill('#0061FF');
+    // ─── REGISTER UNICODE FONTS ──────────────────────────────────────────────
+    const hasRegularFont = fs.existsSync(FONT_REGULAR_PATH);
+    const hasBoldFont = fs.existsSync(FONT_BOLD_PATH);
 
-    // Branding Text Left
-    doc.fontSize(20).font('Helvetica-Bold').fillColor('#FFFFFF').text('ALSM PLATFORM', 40, 26);
-    doc.fontSize(9).font('Helvetica').fillColor('#DBEAFE').text('Automating Legacy System Modernization', 40, 52);
+    if (hasRegularFont && hasBoldFont) {
+      doc.registerFont('AppFont', FONT_REGULAR_PATH);
+      doc.registerFont('AppFont-Bold', FONT_BOLD_PATH);
+    } else {
+      doc.registerFont('AppFont', 'Helvetica');
+      doc.registerFont('AppFont-Bold', 'Helvetica-Bold');
+    }
+
+    // ─── 1. TOP HEADER BANNER (Clean Modern SaaS Light Theme) ────────────────
+    // Top 5px Electric Blue Accent Bar
+    doc.rect(0, 0, 595.28, 5).fill('#0061FF');
+
+    // Header Background Box (Light Slate Tint so logo pops out)
+    doc.rect(0, 5, 595.28, 95).fill('#FAFCFF');
+    doc.strokeColor('#E2E8F0').lineWidth(1).moveTo(0, 100).lineTo(595.28, 100).stroke();
+
+    // Draw Group Logo on clean background
+    const hasLogo = fs.existsSync(LOGO_PATH);
+    if (hasLogo) {
+      try {
+        doc.image(LOGO_PATH, 40, 18, { height: 48 });
+      } catch {
+        doc.fontSize(20).font('AppFont-Bold').fillColor('#0F172A').text('ALSM PLATFORM', 40, 24);
+      }
+    } else {
+      doc.fontSize(20).font('AppFont-Bold').fillColor('#0F172A').text('ALSM PLATFORM', 40, 24);
+    }
+
+    // Sub-heading Left
+    doc.fontSize(8.5).font('AppFont').fillColor('#64748B').text('Automating Legacy System Modernization', 40, 72);
 
     // Header Right: TAX INVOICE
-    doc.fontSize(16).font('Helvetica-Bold').fillColor('#FFFFFF').text('TAX INVOICE', 380, 28, { align: 'right', width: 175 });
-    doc.fontSize(9).font('Helvetica').fillColor('#DBEAFE').text(`#${invoice.invoice_number}`, 380, 50, { align: 'right', width: 175 });
+    doc.fontSize(16).font('AppFont-Bold').fillColor('#0F172A').text('TAX INVOICE', 360, 22, { align: 'right', width: 195 });
+    doc.fontSize(9).font('AppFont-Bold').fillColor('#0061FF').text(`Invoice No: #${invoice.invoice_number}`, 360, 46, { align: 'right', width: 195 });
+    doc.fontSize(8).font('AppFont').fillColor('#64748B').text('Invoice ID: ' + (invoice._id ? invoice._id.toString() : 'ALSM-INV'), 360, 64, { align: 'right', width: 195 });
 
-    doc.y = 110;
+    doc.y = 118;
 
-    // ─── 2. STATUS & INVOICE METADATA ROW ────────────────────────────────────
+    // ─── 2. METADATA & CUSTOMER CARDS ────────────────────────────────────────
     const metaY = doc.y;
 
-    // Left Column: Customer Info
-    doc.rect(40, metaY, 250, 85).fillAndStroke('#F8FAFC', '#E2E8F0');
-    doc.fontSize(9).font('Helvetica-Bold').fillColor('#0F172A').text('BILLED TO:', 52, metaY + 12);
-    doc.fontSize(10).font('Helvetica-Bold').fillColor('#0061FF').text(customerName, 52, metaY + 28);
-    doc.fontSize(9).font('Helvetica').fillColor('#475569').text(customerEmail, 52, metaY + 44);
-    doc.fontSize(8).font('Helvetica').fillColor('#64748B').text('Account ID: ' + (org._id ? org._id.toString() : 'ALSM-USER'), 52, metaY + 60);
+    // Left Box: Customer Details
+    doc.rect(40, metaY, 250, 88).fillAndStroke('#F8FAFC', '#E2E8F0');
+    doc.fontSize(8.5).font('AppFont-Bold').fillColor('#0F172A').text('BILLED TO:', 52, metaY + 12);
+    doc.fontSize(10).font('AppFont-Bold').fillColor('#0061FF').text(customerName, 52, metaY + 28, { width: 226 });
+    doc.fontSize(8.5).font('AppFont').fillColor('#475569').text(`Email: ${customerEmail}`, 52, metaY + 45, { width: 226 });
+    doc.fontSize(8).font('AppFont').fillColor('#64748B').text('Account ID: ' + (org._id ? org._id.toString() : 'ALSM-USER'), 52, metaY + 62);
 
-    // Right Column: Invoice Details & Status Badge
-    doc.rect(305, metaY, 250, 85).fillAndStroke('#F8FAFC', '#E2E8F0');
-    doc.fontSize(9).font('Helvetica-Bold').fillColor('#0F172A').text('INVOICE DETAILS:', 317, metaY + 12);
-    doc.fontSize(8.5).font('Helvetica').fillColor('#475569').text(`Issue Date: ${formatDate(invoice.invoice_date || invoice.created_at)}`, 317, metaY + 28);
-    doc.fontSize(8.5).font('Helvetica').fillColor('#475569').text(`Due Date: ${formatDate(invoice.due_date)}`, 317, metaY + 42);
-    doc.fontSize(8.5).font('Helvetica').fillColor('#475569').text(`Payment Ref: ${invoice.payment_reference || 'N/A'}`, 317, metaY + 56);
+    // Right Box: Payment & Status Info
+    doc.rect(305, metaY, 250, 88).fillAndStroke('#F8FAFC', '#E2E8F0');
+    doc.fontSize(8.5).font('AppFont-Bold').fillColor('#0F172A').text('INVOICE DETAILS:', 317, metaY + 12);
+    doc.fontSize(8.5).font('AppFont').fillColor('#475569').text(`Issue Date: ${formatDate(invoice.invoice_date || invoice.created_at)}`, 317, metaY + 28);
+    doc.fontSize(8.5).font('AppFont').fillColor('#475569').text(`Due Date: ${formatDate(invoice.due_date)}`, 317, metaY + 43);
+    doc.fontSize(8.5).font('AppFont').fillColor('#475569').text(`Payment Ref: ${invoice.payment_reference || 'N/A'}`, 317, metaY + 58);
 
-    // Status Badge Pill Top Right inside Box
+    // Status Badge Top Right inside Box
     const badgeColor = isPaid ? '#059669' : '#D97706';
     const badgeBg = isPaid ? '#D1FAE5' : '#FEF3C7';
-    doc.roundedRect(485, metaY + 12, 60, 18, 9).fillAndStroke(badgeBg, badgeColor);
-    doc.fontSize(8).font('Helvetica-Bold').fillColor(badgeColor).text(statusLabel, 485, metaY + 16, { width: 60, align: 'center' });
+    doc.roundedRect(440, metaY + 10, 105, 18, 9).fillAndStroke(badgeBg, badgeColor);
+    doc.fontSize(7.5).font('AppFont-Bold').fillColor(badgeColor).text(statusLabel, 440, metaY + 14, { width: 105, align: 'center' });
 
-    doc.y = metaY + 105;
+    doc.y = metaY + 108;
 
     // ─── 3. TABLE OF CHARGES ──────────────────────────────────────────────────
     const tableTop = doc.y;
 
-    // Header Row Background
-    doc.rect(40, tableTop, 515, 24).fill('#0F172A');
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#FFFFFF');
-    doc.text('#', 50, tableTop + 7, { width: 20 });
-    doc.text('DESCRIPTION / SERVICE PLAN', 80, tableTop + 7, { width: 230 });
-    doc.text('PERIOD', 310, tableTop + 7, { width: 100 });
-    doc.text('QTY', 415, tableTop + 7, { width: 35, align: 'right' });
-    doc.text('AMOUNT', 460, tableTop + 7, { width: 85, align: 'right' });
+    // Table Header Row
+    doc.rect(40, tableTop, 515, 26).fill('#0F172A');
+    doc.fontSize(8.5).font('AppFont-Bold').fillColor('#FFFFFF');
+    doc.text('#', 50, tableTop + 8, { width: 20 });
+    doc.text('DESCRIPTION / SERVICE PLAN', 80, tableTop + 8, { width: 220 });
+    doc.text('PERIOD', 300, tableTop + 8, { width: 100 });
+    doc.text('QTY', 405, tableTop + 8, { width: 30, align: 'right' });
+    doc.text('AMOUNT', 445, tableTop + 8, { width: 100, align: 'right' });
 
-    let currentY = tableTop + 24;
+    let currentY = tableTop + 26;
 
     const items = (invoice.line_items && invoice.line_items.length > 0)
       ? invoice.line_items
       : [{
-          description: `Subscription Upgrade - ${invoice.pending_plan_id?.name || 'Pro Plan'}`,
+          description: `Subscription Plan - ${invoice.pending_plan_id?.name || 'Pro Plan'}`,
           quantity: 1,
           amount: invoice.amount || invoice.total,
           period_start: invoice.created_at,
@@ -117,20 +150,20 @@ const generateInvoicePdf = async (invoice) => {
 
     items.forEach((item, index) => {
       const rowBg = index % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
-      doc.rect(40, currentY, 515, 32).fillAndStroke(rowBg, '#F1F5F9');
+      doc.rect(40, currentY, 515, 34).fillAndStroke(rowBg, '#F1F5F9');
 
-      doc.fontSize(8.5).font('Helvetica').fillColor('#475569').text(String(index + 1), 50, currentY + 10, { width: 20 });
-      doc.fontSize(9).font('Helvetica-Bold').fillColor('#0F172A').text(item.description || 'Modernization Service', 80, currentY + 10, { width: 220 });
+      doc.fontSize(8.5).font('AppFont').fillColor('#475569').text(String(index + 1), 50, currentY + 11, { width: 20 });
+      doc.fontSize(9).font('AppFont-Bold').fillColor('#0F172A').text(item.description || 'ALSM Code Modernization Service', 80, currentY + 11, { width: 210 });
 
       const periodText = item.period_start && item.period_end
         ? `${formatDate(item.period_start)} - ${formatDate(item.period_end)}`
         : 'Monthly Billing';
-      doc.fontSize(8).font('Helvetica').fillColor('#64748B').text(periodText, 310, currentY + 11, { width: 100 });
+      doc.fontSize(8).font('AppFont').fillColor('#64748B').text(periodText, 300, currentY + 12, { width: 100 });
 
-      doc.fontSize(8.5).font('Helvetica').fillColor('#334155').text(String(item.quantity || 1), 415, currentY + 10, { width: 35, align: 'right' });
-      doc.fontSize(9).font('Helvetica-Bold').fillColor('#0F172A').text(formatMoney(item.amount, invoice.currency), 460, currentY + 10, { width: 85, align: 'right' });
+      doc.fontSize(8.5).font('AppFont').fillColor('#334155').text(String(item.quantity || 1), 405, currentY + 11, { width: 30, align: 'right' });
+      doc.fontSize(9).font('AppFont-Bold').fillColor('#0F172A').text(formatMoney(item.amount, invoice.currency), 445, currentY + 11, { width: 100, align: 'right' });
 
-      currentY += 32;
+      currentY += 34;
     });
 
     doc.y = currentY + 15;
@@ -138,42 +171,42 @@ const generateInvoicePdf = async (invoice) => {
     // ─── 4. SUMMARY & TOTALS SECTION ─────────────────────────────────────────
     const summaryY = doc.y;
 
-    // Left Note
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#0F172A').text('PAYMENT TERMS & NOTES:', 40, summaryY);
-    doc.fontSize(8).font('Helvetica').fillColor('#64748B').text(
-      'Thank you for upgrading your ALSM subscription.\nAll service licenses are credited automatically upon successful payment.',
+    // Left Terms / Notes
+    doc.fontSize(8.5).font('AppFont-Bold').fillColor('#0F172A').text('PAYMENT TERMS & NOTES:', 40, summaryY);
+    doc.fontSize(8).font('AppFont').fillColor('#64748B').text(
+      'Thank you for upgrading your subscription on the ALSM Platform.\nCOBOL source code conversion limits are credited automatically upon successful payment.',
       40, summaryY + 14, { width: 260 }
     );
 
     // Right Summary Table Box
-    const totalsX = 330;
-    doc.rect(totalsX, summaryY, 225, 85).fillAndStroke('#F8FAFC', '#E2E8F0');
+    const totalsX = 320;
+    doc.rect(totalsX, summaryY, 235, 90).fillAndStroke('#F8FAFC', '#E2E8F0');
 
     let sumRowY = summaryY + 10;
 
     // Subtotal
-    doc.fontSize(8.5).font('Helvetica').fillColor('#475569').text('Subtotal:', totalsX + 15, sumRowY);
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#0F172A').text(formatMoney(invoice.amount || invoice.total, invoice.currency), totalsX + 110, sumRowY, { width: 100, align: 'right' });
+    doc.fontSize(8.5).font('AppFont').fillColor('#475569').text('Subtotal:', totalsX + 12, sumRowY);
+    doc.fontSize(8.5).font('AppFont-Bold').fillColor('#0F172A').text(formatMoney(invoice.amount || invoice.total, invoice.currency), totalsX + 115, sumRowY, { width: 105, align: 'right' });
 
     sumRowY += 18;
     // Tax
-    doc.fontSize(8.5).font('Helvetica').fillColor('#475569').text(`Tax (${invoice.tax_rate || 0}% VAT):`, totalsX + 15, sumRowY);
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#0F172A').text(formatMoney(invoice.tax_amount || 0, invoice.currency), totalsX + 110, sumRowY, { width: 100, align: 'right' });
+    doc.fontSize(8.5).font('AppFont').fillColor('#475569').text(`Tax (${invoice.tax_rate || 0}% VAT):`, totalsX + 12, sumRowY);
+    doc.fontSize(8.5).font('AppFont-Bold').fillColor('#0F172A').text(formatMoney(invoice.tax_amount || 0, invoice.currency), totalsX + 115, sumRowY, { width: 105, align: 'right' });
 
     sumRowY += 20;
     // Grand Total Banner
-    doc.rect(totalsX, sumRowY, 225, 37).fill('#0061FF');
-    doc.fontSize(10).font('Helvetica-Bold').fillColor('#FFFFFF').text('TOTAL PAID:', totalsX + 15, sumRowY + 11);
-    doc.fontSize(11).font('Helvetica-Bold').fillColor('#FFFFFF').text(formatMoney(invoice.total, invoice.currency), totalsX + 100, sumRowY + 10, { width: 110, align: 'right' });
+    doc.rect(totalsX, sumRowY, 235, 42).fill('#0061FF');
+    doc.fontSize(9.5).font('AppFont-Bold').fillColor('#FFFFFF').text('TOTAL PAID:', totalsX + 12, sumRowY + 13);
+    doc.fontSize(11).font('AppFont-Bold').fillColor('#FFFFFF').text(formatMoney(invoice.total, invoice.currency), totalsX + 115, sumRowY + 12, { width: 108, align: 'right' });
 
     // ─── 5. FOOTER BRANDING BANNER ───────────────────────────────────────────
     const footerY = 770;
     doc.strokeColor('#CBD5E1').moveTo(40, footerY).lineTo(555, footerY).stroke();
 
-    doc.fontSize(8).font('Helvetica-Bold').fillColor('#0061FF').text('ALSM PLATFORM - AUTOMATING LEGACY SYSTEM MODERNIZATION', 40, footerY + 10, { align: 'center' });
-    doc.fontSize(7.5).font('Helvetica').fillColor('#94A3B8').text(
+    doc.fontSize(8).font('AppFont-Bold').fillColor('#0061FF').text('ALSM PLATFORM - AUTOMATING LEGACY SYSTEM MODERNIZATION', 40, footerY + 10, { align: 'center' });
+    doc.fontSize(7.5).font('AppFont').fillColor('#94A3B8').text(
       'Support Email: support@alsm.io  |  Website: https://alsm.io  |  Official Automated Computer Generated Document',
-      40, footerY + 22, { align: 'center' }
+      40, footerY + 23, { align: 'center' }
     );
 
     doc.end();

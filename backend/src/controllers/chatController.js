@@ -144,20 +144,49 @@ exports.uploadAttachment = async (req, res) => {
       return res.status(400).json({ success: false, message: "No file uploaded." });
     }
     const { buffer, originalname, mimetype, size } = req.file;
-    const result = await uploadToCloudinary(buffer, originalname, mimetype);
 
-    return res.json({
-      success: true,
-      attachment: {
+    let attachment;
+    try {
+      // 1. Primary: Upload to Cloudinary
+      const result = await uploadToCloudinary(buffer, originalname, mimetype);
+      attachment = {
         url: result.url,
         fileName: originalname,
         fileType: result.resourceType,
         fileSize: size,
-      },
+      };
+    } catch (cloudErr) {
+      console.warn("Cloudinary upload failed, using local storage fallback:", cloudErr.message || cloudErr);
+
+      // 2. Fallback: Save to local uploads folder
+      const fs = require("fs");
+      const path = require("path");
+      const uploadsDir = path.join(__dirname, "../../public/uploads/chat");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      const safeName = `${Date.now()}_${originalname.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const filePath = path.join(uploadsDir, safeName);
+      fs.writeFileSync(filePath, buffer);
+
+      const baseUrl = process.env.API_URL || "http://localhost:5000";
+      const isImage = mimetype && mimetype.startsWith("image/");
+      attachment = {
+        url: `${baseUrl}/uploads/chat/${safeName}`,
+        fileName: originalname,
+        fileType: isImage ? "image" : "document",
+        fileSize: size,
+      };
+    }
+
+    return res.json({
+      success: true,
+      attachment,
     });
   } catch (err) {
     console.error("uploadAttachment error:", err);
-    return res.status(500).json({ success: false, message: "Failed to upload file to Cloudinary." });
+    return res.status(500).json({ success: false, message: err.message || "Failed to upload file." });
   }
 };
 

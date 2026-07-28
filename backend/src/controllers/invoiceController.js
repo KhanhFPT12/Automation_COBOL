@@ -149,28 +149,16 @@ exports.downloadInvoicePdf = async (req, res, next) => {
     }
 
     const filePath = getInvoicePdfPath(invoice._id);
-    let fileExists = false;
 
+    // Always generate/update the PDF with the latest template (Logo + Vietnamese Unicode font support)
     try {
-      await fs.access(filePath);
-      fileExists = true;
-    } catch {
-      fileExists = false;
-    }
-
-    // On-demand PDF generation if file is missing on disk or pdf_url is empty
-    if (!fileExists || !invoice.pdf_url) {
-      try {
-        await generateInvoicePdf(invoice);
+      await generateInvoicePdf(invoice);
+      if (!invoice.pdf_url) {
         invoice.pdf_url = `/api/invoices/${invoice._id}/pdf`;
         await invoice.save();
-      } catch (genErr) {
-        console.error(`[Invoice] On-demand PDF generation failed for invoice ${invoice.invoice_number}:`, genErr);
-        return res.status(500).json({
-          success: false,
-          message: 'Unable to generate PDF invoice at this moment. Please try again.',
-        });
       }
+    } catch (genErr) {
+      console.error(`[Invoice] PDF generation failed for invoice ${invoice.invoice_number}:`, genErr);
     }
 
     return res.download(filePath, `${invoice.invoice_number}.pdf`, (error) => {
